@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getAaps, getProjets, dataSource } from "@/services/data-store";
 import { aapEchelle } from "@/utils/echelle";
 import { joursRestants } from "@/utils/scoring-engine";
 import type { AAP } from "@/types/aap";
+import { FicheAap } from "@/components/FicheAap";
 import { BarChart } from "@/components/BarChart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertCircle, TrendingUp, Target, Database, Layers, Loader2 } from "lucide-react";
@@ -34,6 +35,7 @@ const SOURCE_SHORT: Record<string, string> = {
 function Dashboard() {
   const { data: aaps = [], isLoading } = useQuery({ queryKey: ["aaps"], queryFn: () => getAaps() });
   const { data: projets = [] } = useQuery({ queryKey: ["projets"], queryFn: () => getProjets() });
+  const [selectedAap, setSelectedAap] = useState<AAP | null>(null);
 
   const ouverts = useMemo(() => aaps.filter((a) => a.statut === "open"), [aaps]);
 
@@ -109,11 +111,10 @@ function Dashboard() {
         >
           <div className="space-y-2">
             {fermImm.slice(0, 7).map(({ a, j }) => (
-              <a
+              <button
+                type="button"
                 key={a.id}
-                href={a.lien_officiel}
-                target="_blank"
-                rel="noreferrer"
+                onClick={() => setSelectedAap(a)}
                 className="w-full text-left p-3 rounded-lg border border-border hover:border-pink/40 hover:bg-pink/[0.02] transition flex items-start gap-3"
               >
                 <div className="flex-1 min-w-0">
@@ -121,7 +122,7 @@ function Dashboard() {
                   <div className="text-[10px] text-muted mt-1 truncate">{SOURCE_SHORT[a.source] ?? a.source} · {new Date(a.date_cloture!).toLocaleDateString("fr-FR")}</div>
                 </div>
                 <JoursBadge jours={j} />
-              </a>
+              </button>
             ))}
             {fermImm.length === 0 && <EmptyState text="Aucune fermeture imminente." />}
           </div>
@@ -196,6 +197,8 @@ function Dashboard() {
           </Tabs>
         </div>
       </div>
+
+      <FicheAap aap={selectedAap} onClose={() => setSelectedAap(null)} />
     </>
   );
 }

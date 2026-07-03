@@ -16,6 +16,7 @@ import type { Dispositif, Thematiques, ActeursCibles } from "@/types/dispositif"
 import { THEMATIQUE_LABELS, ACTEUR_LABELS } from "@/types/dispositif";
 import type { AAP } from "@/types/aap";
 import { aapEchelle } from "@/utils/echelle";
+import { FicheAap } from "@/components/FicheAap";
 
 export const Route = createFileRoute("/explorer")({
   head: () => ({
@@ -252,6 +253,7 @@ function Explorer() {
   const [vue, setVue] = useState<"liste" | "cartes">("liste");
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [selectedAap, setSelectedAap] = useState<AAP | null>(null);
 
   // Filtres avancés (Phase 5.3)
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -603,12 +605,11 @@ function Explorer() {
                       </div>
                     )}
                     {rattaches.map((a) => (
-                      <a
+                      <button
+                        type="button"
                         key={a.id}
-                        href={a.lien_officiel}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="block rounded-md border border-border bg-white p-3 flex items-start justify-between gap-3 hover:border-navy transition"
+                        onClick={(e) => { e.stopPropagation(); setSelectedAap(a); }}
+                        className="w-full text-left rounded-md border border-border bg-white p-3 flex items-start justify-between gap-3 hover:border-navy transition"
                       >
                         <div className="min-w-0">
                           <div className="text-sm font-medium text-text truncate">{a.titre}</div>
@@ -620,7 +621,7 @@ function Explorer() {
                           <div className="text-xs font-semibold text-navy">{budgetLabel(a)}</div>
                           <div className="text-[11px] text-muted">{trlLabel(a.trl_min, a.trl_max) ?? "—"}</div>
                         </div>
-                      </a>
+                      </button>
                     ))}
                   </div>
                 )}
@@ -639,12 +640,11 @@ function Explorer() {
       {!loading && mode === "aap" && (
         <div className={vue === "cartes" ? "grid grid-cols-1 md:grid-cols-2 gap-3" : "space-y-3"}>
           {filteredAaps.map((a) => (
-            <a
+            <button
+              type="button"
               key={a.id}
-              href={a.lien_officiel}
-              target="_blank"
-              rel="noreferrer"
-              className="card-flat p-4 hover:border-navy transition cursor-pointer flex gap-4"
+              onClick={() => setSelectedAap(a)}
+              className="card-flat p-4 hover:border-navy transition cursor-pointer flex gap-4 text-left w-full"
             >
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-navy text-sm">{a.titre}</div>
@@ -695,7 +695,7 @@ function Explorer() {
                 </div>
                 <ChevronRight className="w-5 h-5 text-muted mt-2" />
               </div>
-            </a>
+            </button>
           ))}
           {filteredAaps.length === 0 && (
             <div className="text-sm text-muted italic text-center py-8">
@@ -704,6 +704,8 @@ function Explorer() {
           )}
         </div>
       )}
+
+      <FicheAap aap={selectedAap} onClose={() => setSelectedAap(null)} />
     </div>
   );
 }
