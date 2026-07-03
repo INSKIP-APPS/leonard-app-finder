@@ -74,6 +74,8 @@ const TRLS = [
 ];
 
 const REGIONS_FR = [
+  "Europe",
+  "France (national)",
   "Auvergne-Rhône-Alpes", "Bourgogne-Franche-Comté", "Bretagne", "Centre-Val de Loire",
   "Corse", "Grand Est", "Hauts-de-France", "Île-de-France", "Normandie",
   "Nouvelle-Aquitaine", "Occitanie", "Pays de la Loire", "Provence-Alpes-Côte d'Azur",
@@ -224,7 +226,7 @@ function Matching() {
 
       {step === "form" && (
         <div className="card-flat p-6 mt-6 max-w-4xl">
-          <Block title="Informations générales">
+          <Block title="Le projet">
             <div className="grid grid-cols-1 gap-4">
               <Field label="Nom du projet">
                 <TextInput value={nomProjet} onChange={setNomProjet} placeholder="Ex : Jumeau numérique chantier urbain" />
@@ -238,10 +240,7 @@ function Matching() {
                 />
               </Field>
             </div>
-          </Block>
-
-          <Block title="Profil du porteur de projet">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 mt-4">
               <Field label="Pôle ou rattachement principal">
                 <Select value={pole} onChange={setPole} options={POLES} />
               </Field>
@@ -252,12 +251,11 @@ function Matching() {
                 <TextInput value={entitePorteuse} onChange={setEntitePorteuse} placeholder="Ex : Actemium Paris, MyStartup…" />
               </Field>
             </div>
-          </Block>
-
-          <Block title="Nature du projet">
-            <Field label="Type de projet">
-              <MultiSelect options={TYPES_PROJET} values={typesProjet} onChange={setTypesProjet} placeholder="Choisir un ou plusieurs types" />
-            </Field>
+            <div className="mt-4">
+              <Field label="Type de projet">
+                <MultiSelect options={TYPES_PROJET} values={typesProjet} onChange={setTypesProjet} placeholder="Choisir un ou plusieurs types" />
+              </Field>
+            </div>
             <div className="mt-4">
               <Field label="Secteur(s) et thématique(s)">
                 <MultiSelect options={SECTEURS} values={secteursSel} onChange={setSecteursSel} placeholder="Choisir un ou plusieurs secteurs" />
@@ -591,8 +589,8 @@ function SliderField({ label, value, onChange }: { label: string; value: number;
 }
 
 function Stepper({ step }: { step: string }) {
-  const steps = ["1 · Projet & porteur", "2 · Nature du projet", "3 · Résultats"];
-  const activeIdx = step === "form" ? 1 : 2;
+  const steps = ["1 · Le projet", "2 · Résultats"];
+  const activeIdx = step === "form" ? 0 : 1;
   return (
     <div className="flex items-center gap-3">
       {steps.map((s, i) => {

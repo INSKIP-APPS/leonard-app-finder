@@ -6,9 +6,17 @@ import { aapEchelle } from "@/utils/echelle";
 import { joursRestants } from "@/utils/scoring-engine";
 import type { AAP } from "@/types/aap";
 import { FicheAap } from "@/components/FicheAap";
+import { useSavedIds } from "@/utils/savedAaps";
+
+// Pertinence VINCI = nombre de thématiques « métier » concrètes (on écarte la
+// R&D générique, trop peu discriminante pour prioriser un secteur d'activité).
+const GENERIC_THEME = "Recherche & développement";
+function vinciRelevance(a: AAP): number {
+  return (a.thematiques ?? []).filter((t) => t !== GENERIC_THEME).length;
+}
 import { BarChart } from "@/components/BarChart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle, TrendingUp, Target, Database, Layers, Loader2 } from "lucide-react";
+import { AlertCircle, TrendingUp, Target, Bookmark, Layers, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -39,16 +47,23 @@ function Dashboard() {
 
   const ouverts = useMemo(() => aaps.filter((a) => a.statut === "open"), [aaps]);
 
-  const fermImm = useMemo(
+  const dated = useMemo(
     () =>
       ouverts
         .map((a) => ({ a, j: joursRestants(a.date_cloture) }))
-        .filter((x): x is { a: AAP; j: number } => x.j !== null && x.j >= 0 && x.j <= 30)
-        .sort((x, y) => x.j - y.j),
+        .filter((x): x is { a: AAP; j: number } => x.j !== null && x.j >= 0),
     [ouverts],
+  );
+  const ferm30 = useMemo(() => dated.filter((x) => x.j <= 30), [dated]);
+  // À saisir en priorité : pertinence VINCI d'abord, échéance ensuite (fenêtre 120 j).
+  const prioritaires = useMemo(
+    () => [...dated].filter((x) => x.j <= 120).sort((x, y) => vinciRelevance(y.a) - vinciRelevance(x.a) || x.j - y.j),
+    [dated],
   );
 
   const nbSources = useMemo(() => new Set(aaps.map((a) => a.source)).size, [aaps]);
+  const savedIds = useSavedIds();
+  const savedAaps = useMemo(() => aaps.filter((a) => savedIds.includes(a.id)), [aaps, savedIds]);
 
   const parTheme = useMemo(() => {
     const c: Record<string, number> = {};
@@ -94,7 +109,7 @@ function Dashboard() {
       {/* KPIs globaux (réels) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
         <KpiTile label="AAP ouverts" value={ouverts.length} sub="disponibles" icon={<TrendingUp className="w-4 h-4" />} />
-        <KpiTile label="Fermetures < 30j" value={fermImm.length} sub="à traiter vite" icon={<AlertCircle className="w-4 h-4" />} accent />
+        <KpiTile label="Fermetures < 30j" value={ferm30.length} sub="à traiter vite" icon={<AlertCircle className="w-4 h-4" />} accent />
         <KpiTile label="Sources connectées" value={nbSources} sub="plateformes" icon={<Layers className="w-4 h-4" />} />
         <KpiTile label="Demandes de matching" value={projets.length} sub="historisées" icon={<Target className="w-4 h-4" />} />
       </div>
@@ -104,13 +119,13 @@ function Dashboard() {
         <Panel
           className="col-span-12 lg:col-span-6"
           icon={<AlertCircle className="w-4 h-4 text-pink" />}
-          title="Fermetures imminentes"
-          count={fermImm.length}
+          title="À saisir en priorité"
+          count={prioritaires.length}
           accent="pink"
-          subtitle="AAP ouverts, deadline < 30 jours"
+          subtitle="Pertinence VINCI d'abord · échéance < 120 j"
         >
           <div className="space-y-2">
-            {fermImm.slice(0, 7).map(({ a, j }) => (
+            {prioritaires.slice(0, 7).map(({ a, j }) => (
               <button
                 type="button"
                 key={a.id}
@@ -124,7 +139,7 @@ function Dashboard() {
                 <JoursBadge jours={j} />
               </button>
             ))}
-            {fermImm.length === 0 && <EmptyState text="Aucune fermeture imminente." />}
+            {prioritaires.length === 0 && <EmptyState text="Aucune échéance à venir." />}
           </div>
         </Panel>
 
@@ -161,17 +176,26 @@ function Dashboard() {
           </Panel>
 
           <Panel
-            icon={<Database className="w-4 h-4 text-sky" />}
-            title="Couverture des sources"
-            accent="sky"
-            subtitle={`${ouverts.length.toLocaleString("fr-FR")} AAP ouverts`}
+            icon={<Bookmark className="w-4 h-4 text-pink" />}
+            title="AAP sauvegardés"
+            count={savedAaps.length}
+            accent="pink"
+            subtitle="Vos AAP mis de côté"
           >
-            <div className="space-y-1.5">
-              {parSource.slice(0, 8).map((s) => (
-                <div key={s.label} className="flex items-center justify-between text-xs">
-                  <span className="text-navy truncate">{s.label}</span>
-                  <span className="text-muted tabular-nums font-medium">{s.value}</span>
-                </div>
+            {savedAaps.length === 0 && (
+              <EmptyState text="Aucun AAP sauvegardé. Ouvrez une fiche et cliquez « Sauvegarder » pour le retrouver ici." />
+            )}
+            <div className="space-y-2">
+              {savedAaps.slice(0, 8).map((a) => (
+                <button
+                  type="button"
+                  key={a.id}
+                  onClick={() => setSelectedAap(a)}
+                  className="w-full text-left p-3 rounded-lg border border-border hover:border-pink/40 hover:bg-pink/[0.02] transition"
+                >
+                  <div className="text-xs font-semibold text-navy line-clamp-1">{a.titre}</div>
+                  <div className="text-[10px] text-muted mt-1 truncate">{SOURCE_SHORT[a.source] ?? a.source}{a.date_cloture ? ` · clôture ${new Date(a.date_cloture).toLocaleDateString("fr-FR")}` : ""}</div>
+                </button>
               ))}
             </div>
           </Panel>

@@ -76,9 +76,6 @@ function trlLabel(min: number | null, max: number | null): string | null {
   return `TRL ${min ?? max}`;
 }
 
-function descriptionOfDispositif(d: Dispositif): string {
-  return d.commentaires || d.thematiques_texte || d.programme || "";
-}
 
 function statutDispositifBadge(d: Dispositif) {
   const s = d.statut_ouverture;
@@ -581,7 +578,6 @@ function Explorer() {
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-muted mt-2 line-clamp-2">{descriptionOfDispositif(d)}</p>
                   </div>
                   <div className="flex flex-col items-end justify-between shrink-0 text-right">
                     <div>
@@ -684,7 +680,6 @@ function Explorer() {
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-muted mt-2 line-clamp-2">{a.description}</p>
               </div>
               <div className="flex flex-col items-end justify-between shrink-0 text-right">
                 <div>

@@ -1,7 +1,8 @@
-import { X, ExternalLink, FileDown, Calendar, Coins, Users, Layers, Tag } from "lucide-react";
+import { X, ExternalLink, FileDown, Calendar, Coins, Users, Layers, Tag, Bookmark, BookmarkCheck } from "lucide-react";
 import type { AAP } from "@/types/aap";
 import { aapEchelle } from "@/utils/echelle";
 import { joursRestants } from "@/utils/scoring-engine";
+import { useSavedIds, toggleSaved } from "@/utils/savedAaps";
 
 // ──────────────────────────────────────────────────────────────────────
 // Fiche détaillée d'un AAP (modale). Un clic sur un AAP l'ouvre au lieu de
@@ -118,6 +119,7 @@ function InfoLine({ icon, label, value }: { icon: React.ReactNode; label: string
 }
 
 export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => void }) {
+  const saved = useSavedIds().includes(aap?.id ?? "");
   if (!aap) return null;
   const jr = joursRestants(aap.date_cloture);
   const echelle = aapEchelle(aap);
@@ -179,21 +181,29 @@ export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => voi
         )}
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-2 p-5 border-t border-border bg-bg rounded-b-xl">
+        <div className="flex items-center justify-between gap-2 p-5 border-t border-border bg-bg rounded-b-xl">
           <button
-            onClick={() => exporterPdf(aap)}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-border text-sm font-medium text-navy hover:border-navy transition"
+            onClick={() => toggleSaved(aap.id)}
+            className={`inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm font-medium transition ${saved ? "border-pink/40 bg-pink/10 text-pink" : "border-border text-navy hover:border-navy"}`}
           >
-            <FileDown className="w-4 h-4" /> Exporter en PDF
+            {saved ? <><BookmarkCheck className="w-4 h-4" /> Sauvegardé</> : <><Bookmark className="w-4 h-4" /> Sauvegarder</>}
           </button>
-          <a
-            href={aap.lien_officiel}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-navy text-white text-sm font-medium hover:opacity-90 transition"
-          >
-            Voir l'appel officiel <ExternalLink className="w-4 h-4" />
-          </a>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => exporterPdf(aap)}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-border text-sm font-medium text-navy hover:border-navy transition"
+            >
+              <FileDown className="w-4 h-4" /> Exporter en PDF
+            </button>
+            <a
+              href={aap.lien_officiel}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-navy text-white text-sm font-medium hover:opacity-90 transition"
+            >
+              Voir l'appel officiel <ExternalLink className="w-4 h-4" />
+            </a>
+          </div>
         </div>
       </div>
     </div>
