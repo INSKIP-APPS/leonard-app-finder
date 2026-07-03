@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronRight, X, SlidersHorizontal, Check, AlertTriangle, ExternalLink, Sparkles, HelpCircle, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronRight, X, SlidersHorizontal, Check, AlertTriangle, Sparkles, HelpCircle, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getAaps, saveMatchingRequest } from "@/services/data-store";
 import { matchProjet, type ProjetInput, type ScoredAap } from "@/utils/scoring-engine";
 import { affinerAvecClaude, type MatchMode } from "@/services/claude-matching";
 import { TIERS, TIER_ORDER, tierFor, TierBadge } from "@/utils/tier";
+import { FicheAap } from "@/components/FicheAap";
 
 
 export const Route = createFileRoute("/matching")({
@@ -93,6 +94,7 @@ const PARTENAIRES = [
 
 function Matching() {
   const [step, setStep] = useState<"form" | "results">("form");
+  const [selectedAap, setSelectedAap] = useState<AAP | null>(null);
 
   // Informations générales
   const [nomProjet, setNomProjet] = useState("");
@@ -435,7 +437,7 @@ function Matching() {
                 </div>
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                   {group.map((r) => (
-                    <ResultCard key={r.aap.id} scored={r} />
+                    <ResultCard key={r.aap.id} scored={r} onOpen={setSelectedAap} />
                   ))}
                 </div>
               </div>
@@ -444,6 +446,8 @@ function Matching() {
 
         </div>
       )}
+
+      <FicheAap aap={selectedAap} onClose={() => setSelectedAap(null)} />
     </>
   );
 }
@@ -482,14 +486,13 @@ function fmtDate(iso: string | null): string {
   return d && m && y ? `${d}/${m}/${y}` : iso.slice(0, 10);
 }
 
-function ResultCard({ scored }: { scored: ScoredAap }) {
+function ResultCard({ scored, onOpen }: { scored: ScoredAap; onOpen: (a: AAP) => void }) {
   const { aap, score, sous_scores, raisons, points_attention, enrichi, score_structurel, score_semantique, elements_manquants } = scored;
   return (
-    <a
-      href={aap.lien_officiel}
-      target="_blank"
-      rel="noreferrer"
-      className={`card-flat p-4 hover:border-navy transition flex flex-col gap-3 ${enrichi ? "border-purple/40" : ""}`}
+    <button
+      type="button"
+      onClick={() => onOpen(aap)}
+      className={`card-flat p-4 hover:border-navy transition flex flex-col gap-3 text-left w-full ${enrichi ? "border-purple/40" : ""}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -561,10 +564,10 @@ function ResultCard({ scored }: { scored: ScoredAap }) {
       <div className="flex items-center justify-between text-xs text-muted border-t border-border pt-2 mt-auto">
         <span>Clôture {fmtDate(aap.date_cloture)}</span>
         <span className="inline-flex items-center gap-1 text-navy font-medium">
-          {fmtMillions(aap.budget_par_projet ?? aap.budget_total)} <ExternalLink className="w-3 h-3" />
+          {fmtMillions(aap.budget_par_projet ?? aap.budget_total)} <ChevronRight className="w-3 h-3" />
         </span>
       </div>
-    </a>
+    </button>
   );
 }
 
