@@ -1,0 +1,157 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Palette Leonard / VINCI — institutionnelle, sobre */
+  --color-navy: #001D3D;
+  --color-navy-soft: #14365C;
+  --color-sky: #2D8FD5;
+  --color-pink: #E63972;
+  --color-purple: #3c006e;
+  --color-bg: #F4F6F9;
+  --color-surface: #ffffff;
+  --color-text: #0E1A2B;
+  --color-muted: #64748B;
+  --color-border: #E4E8EE;
+  --color-border-strong: #D2D8E1;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted-bg: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: #F4F6F9;
+  --foreground: #0E1A2B;
+  --card: #ffffff;
+  --card-foreground: #0E1A2B;
+  --popover: #ffffff;
+  --popover-foreground: #0E1A2B;
+  --primary: #001D3D;
+  --primary-foreground: #ffffff;
+  --secondary: #EEF2F7;
+  --secondary-foreground: #001D3D;
+  --muted: #F1F4F8;
+  --muted-foreground: #64748B;
+  --accent: #E8F1FA;
+  --accent-foreground: #001D3D;
+  --destructive: #E63972;
+  --destructive-foreground: #ffffff;
+  --border: #E4E8EE;
+  --input: #E4E8EE;
+  --ring: #2D8FD5;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html, body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4 {
+    color: var(--color-navy);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+  h1 { letter-spacing: -0.025em; }
+}
+
+@utility label-caps {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+@utility card-flat {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  box-shadow: 0 1px 2px rgba(14, 26, 43, 0.03), 0 4px 16px -8px rgba(14, 26, 43, 0.06);
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+}
+
+@utility card-hover {
+  &:hover {
+    box-shadow: 0 1px 2px rgba(14, 26, 43, 0.04), 0 16px 40px -16px rgba(0, 29, 61, 0.18);
+    transform: translateY(-2px);
+    border-color: var(--color-border-strong);
+  }
+}
+
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+.live-dot {
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+@keyframes bar-grow {
+  from { width: 0%; }
+}
+.bar-fill {
+  animation: bar-grow 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up {
+  animation: fade-up 0.45s ease-out both;
+}
+
+@media print {
+  .no-print { display: none !important; }
+  /* Hide everything, then reveal only the fiche */
+  body * { visibility: hidden !important; }
+  .print-fiche, .print-fiche * { visibility: visible !important; }
+  .print-fiche {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+  .print-backdrop { display: none !important; }
+  @page { margin: 16mm; }
+}
+
+

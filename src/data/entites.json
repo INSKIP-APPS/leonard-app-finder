@@ -1,0 +1,136 @@
+[
+  {
+    "id": "vc",
+    "nom": "VINCI Construction",
+    "secteurs_prioritaires": ["Construction", "Numérique", "Eau"],
+    "trl_habituel": "TRL 4–7",
+    "mots_cles_metier": ["BIM", "jumeau numérique", "matériaux bas-carbone", "robotique", "préfabrication"],
+    "profil": "BU",
+    "description_profil": "Leader mondial de la construction, VINCI Construction conçoit, finance et réalise des projets de bâtiments, génie civil et travaux spécialisés. Forte priorité à la décarbonation, à l'industrialisation des process et à la numérisation des chantiers (BIM, jumeau numérique, robotique).",
+    "filiales": [
+      {
+        "id": "gtm",
+        "nom": "GTM",
+        "secteurs": ["Construction"],
+        "mots_cles": ["bâtiment", "génie civil", "ouvrage d'art", "réhabilitation"],
+        "projets": [
+          {
+            "id": "gtm-p1",
+            "nom": "Chantier bas-carbone Île-de-France",
+            "mots_cles": ["béton bas-carbone", "matériaux biosourcés", "réemploi"],
+            "trl": 6
+          }
+        ]
+      },
+      {
+        "id": "citinea",
+        "nom": "CITINEA",
+        "secteurs": ["Construction"],
+        "mots_cles": ["logement", "rénovation énergétique", "tertiaire", "promotion immobilière"],
+        "projets": [
+          {
+            "id": "citinea-p1",
+            "nom": "Rénovation énergétique grands ensembles Lyon",
+            "mots_cles": ["rénovation énergétique", "isolation", "pompe à chaleur"],
+            "trl": 7
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ve",
+    "nom": "VINCI Energies",
+    "secteurs_prioritaires": ["Énergie", "Numérique", "Mobilité"],
+    "trl_habituel": "TRL 5–8",
+    "mots_cles_metier": ["smart grids", "IoT", "efficacité énergétique", "recharge", "data center"],
+    "profil": "BU",
+    "description_profil": "VINCI Energies accélère la transition énergétique et numérique : infrastructures électriques, efficacité énergétique, automatismes industriels, télécoms, data centers, mobilités électriques et recharge.",
+    "filiales": [
+      {
+        "id": "actemium",
+        "nom": "Actemium",
+        "secteurs": ["Énergie", "Construction"],
+        "mots_cles": ["industrie 4.0", "automatismes", "process industriel", "robotique", "hydrogène"],
+        "projets": [
+          {
+            "id": "actemium-p1",
+            "nom": "Microgrid hydrogène site industriel",
+            "mots_cles": ["hydrogène", "microgrid", "stockage énergie"],
+            "trl": 6
+          },
+          {
+            "id": "actemium-p2",
+            "nom": "Ligne d'assemblage robotisée",
+            "mots_cles": ["robotique", "cobotique", "industrie 4.0"],
+            "trl": 7
+          }
+        ]
+      },
+      {
+        "id": "axians",
+        "nom": "Axians",
+        "secteurs": ["Numérique"],
+        "mots_cles": ["télécoms", "cloud", "cybersécurité", "data center", "IoT", "5G"],
+        "projets": [
+          {
+            "id": "axians-p1",
+            "nom": "Plateforme IoT supervision réseaux",
+            "mots_cles": ["IoT", "supervision", "cybersécurité", "edge computing"],
+            "trl": 7
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "va",
+    "nom": "VINCI Autoroutes",
+    "secteurs_prioritaires": ["Mobilité", "Énergie"],
+    "trl_habituel": "TRL 6–9",
+    "mots_cles_metier": ["mobilité décarbonée", "corridors verts", "recharge", "péage", "infra routière"],
+    "profil": "BU",
+    "description_profil": "Premier concessionnaire d'autoroutes en Europe, VINCI Autoroutes investit dans la mobilité décarbonée : corridors verts, recharge haute puissance, aires de services solaires, services aux véhicules lourds.",
+    "filiales": []
+  },
+  {
+    "id": "vc2",
+    "nom": "VINCI Concessions",
+    "secteurs_prioritaires": ["Construction", "Eau", "Énergie"],
+    "trl_habituel": "TRL 6–9",
+    "mots_cles_metier": ["résilience climatique", "gestion infra", "biodiversité", "aéroports", "stadiums"],
+    "profil": "BU",
+    "description_profil": "VINCI Concessions opère des infrastructures de transport et de service (aéroports, autoroutes, lignes ferroviaires) en intégrant résilience climatique, gestion durable et biodiversité dans la durée du contrat.",
+    "filiales": []
+  },
+  {
+    "id": "st",
+    "nom": "Catalyst",
+    "secteurs_prioritaires": ["Numérique", "Énergie", "Construction"],
+    "trl_habituel": "TRL 1–5",
+    "mots_cles_metier": ["deeptech", "co-portage", "preuve de concept", "incubation", "scale-up"],
+    "profil": "Startup",
+    "description_profil": "Programme d'accélération Leonard pour startups deeptech ciblant la construction, l'énergie et la mobilité. Mise en relation avec les BU VINCI, co-portage de projets innovants, accompagnement de la preuve de concept à l'industrialisation.",
+    "filiales": []
+  },
+  {
+    "id": "seed",
+    "nom": "SEED",
+    "secteurs_prioritaires": ["Construction", "Énergie", "Mobilité"],
+    "trl_habituel": "TRL 2–5",
+    "mots_cles_metier": ["amorçage", "deeptech", "early stage", "preuve de concept"],
+    "profil": "Startup",
+    "description_profil": "Programme SEED Leonard pour startups en phase d'amorçage : accompagnement, mise en relation avec les BU et financement d'amorçage.",
+    "filiales": []
+  },
+  {
+    "id": "intrap",
+    "nom": "INTRAP",
+    "secteurs_prioritaires": ["Construction", "Numérique", "Énergie", "Mobilité"],
+    "trl_habituel": "TRL 3–7",
+    "mots_cles_metier": ["intrapreneuriat", "innovation interne", "BU VINCI"],
+    "profil": "BU",
+    "description_profil": "Programme d'intrapreneuriat Leonard : accompagnement des collaborateurs VINCI portant des projets d'innovation interne, de l'idéation au déploiement industriel.",
+    "filiales": []
+  }
+]
