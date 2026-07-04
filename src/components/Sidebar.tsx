@@ -23,9 +23,13 @@ export function Sidebar() {
         collapsed ? "w-[64px]" : "w-[240px]"
       }`}
     >
-      <div className={`h-24 flex items-center border-b border-border overflow-hidden ${collapsed ? "justify-center px-2" : "justify-center px-5"}`}>
+      <div
+        className={`h-24 flex items-center border-b border-border overflow-hidden ${collapsed ? "justify-center px-2" : "justify-center px-5"}`}
+      >
         {collapsed ? (
-          <div className="w-9 h-9 rounded-md bg-navy text-white flex items-center justify-center font-bold">L</div>
+          <div className="w-9 h-9 rounded-md bg-navy text-white flex items-center justify-center font-bold">
+            L
+          </div>
         ) : (
           <Logo />
         )}

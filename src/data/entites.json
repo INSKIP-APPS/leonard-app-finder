@@ -4,7 +4,13 @@
     "nom": "VINCI Construction",
     "secteurs_prioritaires": ["Construction", "Numérique", "Eau"],
     "trl_habituel": "TRL 4–7",
-    "mots_cles_metier": ["BIM", "jumeau numérique", "matériaux bas-carbone", "robotique", "préfabrication"],
+    "mots_cles_metier": [
+      "BIM",
+      "jumeau numérique",
+      "matériaux bas-carbone",
+      "robotique",
+      "préfabrication"
+    ],
     "profil": "BU",
     "description_profil": "Leader mondial de la construction, VINCI Construction conçoit, finance et réalise des projets de bâtiments, génie civil et travaux spécialisés. Forte priorité à la décarbonation, à l'industrialisation des process et à la numérisation des chantiers (BIM, jumeau numérique, robotique).",
     "filiales": [
@@ -51,7 +57,13 @@
         "id": "actemium",
         "nom": "Actemium",
         "secteurs": ["Énergie", "Construction"],
-        "mots_cles": ["industrie 4.0", "automatismes", "process industriel", "robotique", "hydrogène"],
+        "mots_cles": [
+          "industrie 4.0",
+          "automatismes",
+          "process industriel",
+          "robotique",
+          "hydrogène"
+        ],
         "projets": [
           {
             "id": "actemium-p1",
@@ -88,7 +100,13 @@
     "nom": "VINCI Autoroutes",
     "secteurs_prioritaires": ["Mobilité", "Énergie"],
     "trl_habituel": "TRL 6–9",
-    "mots_cles_metier": ["mobilité décarbonée", "corridors verts", "recharge", "péage", "infra routière"],
+    "mots_cles_metier": [
+      "mobilité décarbonée",
+      "corridors verts",
+      "recharge",
+      "péage",
+      "infra routière"
+    ],
     "profil": "BU",
     "description_profil": "Premier concessionnaire d'autoroutes en Europe, VINCI Autoroutes investit dans la mobilité décarbonée : corridors verts, recharge haute puissance, aires de services solaires, services aux véhicules lourds.",
     "filiales": []
@@ -98,7 +116,13 @@
     "nom": "VINCI Concessions",
     "secteurs_prioritaires": ["Construction", "Eau", "Énergie"],
     "trl_habituel": "TRL 6–9",
-    "mots_cles_metier": ["résilience climatique", "gestion infra", "biodiversité", "aéroports", "stadiums"],
+    "mots_cles_metier": [
+      "résilience climatique",
+      "gestion infra",
+      "biodiversité",
+      "aéroports",
+      "stadiums"
+    ],
     "profil": "BU",
     "description_profil": "VINCI Concessions opère des infrastructures de transport et de service (aéroports, autoroutes, lignes ferroviaires) en intégrant résilience climatique, gestion durable et biodiversité dans la durée du contrat.",
     "filiales": []

@@ -22,7 +22,11 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Tableau de bord — Leonard Veille AAP" },
-      { name: "description", content: "Cockpit veille : KPIs de la base d'AAP, fermetures imminentes, dernières demandes de matching." },
+      {
+        name: "description",
+        content:
+          "Cockpit veille : KPIs de la base d'AAP, fermetures imminentes, dernières demandes de matching.",
+      },
     ],
   }),
   component: Dashboard,
@@ -35,7 +39,7 @@ const SOURCE_SHORT: Record<string, string> = {
   "les-aides.fr": "les-aides.fr",
   "appelsprojetsrecherche.fr": "Recherche (ANR…)",
   "ADEME (Agir pour la transition)": "ADEME",
-  "Bpifrance": "Bpifrance",
+  Bpifrance: "Bpifrance",
   "Banque des Territoires (France 2030)": "Banque des Territoires",
   "Région Île-de-France (opendata)": "Île-de-France",
 };
@@ -57,7 +61,10 @@ function Dashboard() {
   const ferm30 = useMemo(() => dated.filter((x) => x.j <= 30), [dated]);
   // À saisir en priorité : pertinence VINCI d'abord, échéance ensuite (fenêtre 120 j).
   const prioritaires = useMemo(
-    () => [...dated].filter((x) => x.j <= 120).sort((x, y) => vinciRelevance(y.a) - vinciRelevance(x.a) || x.j - y.j),
+    () =>
+      [...dated]
+        .filter((x) => x.j <= 120)
+        .sort((x, y) => vinciRelevance(y.a) - vinciRelevance(x.a) || x.j - y.j),
     [dated],
   );
 
@@ -68,23 +75,38 @@ function Dashboard() {
   const parTheme = useMemo(() => {
     const c: Record<string, number> = {};
     for (const a of ouverts) for (const t of a.thematiques ?? []) c[t] = (c[t] ?? 0) + 1;
-    return Object.entries(c).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value).slice(0, 10);
+    return Object.entries(c)
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10);
   }, [ouverts]);
 
   const parSource = useMemo(() => {
     const c: Record<string, number> = {};
-    for (const a of ouverts) { const s = SOURCE_SHORT[a.source] ?? a.source; c[s] = (c[s] ?? 0) + 1; }
-    return Object.entries(c).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+    for (const a of ouverts) {
+      const s = SOURCE_SHORT[a.source] ?? a.source;
+      c[s] = (c[s] ?? 0) + 1;
+    }
+    return Object.entries(c)
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value);
   }, [ouverts]);
 
   const parGeo = useMemo(() => {
     const order = ["EU", "National", "Régional", "Local"];
     const c: Record<string, number> = {};
-    for (const a of ouverts) { const e = aapEchelle(a); c[e] = (c[e] ?? 0) + 1; }
+    for (const a of ouverts) {
+      const e = aapEchelle(a);
+      c[e] = (c[e] ?? 0) + 1;
+    }
     return order.filter((k) => c[k]).map((k) => ({ label: k, value: c[k] }));
   }, [ouverts]);
 
-  const today = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  const today = new Date().toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 
   if (isLoading) {
     return (
@@ -99,19 +121,44 @@ function Dashboard() {
       <header className="mb-5 flex items-end justify-between fade-up">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Cockpit veille AAP</h1>
-          <div className="text-xs text-muted mt-1">Mis à jour le {today} · source {dataSource === "supabase" ? "Supabase (live)" : "locale"}</div>
+          <div className="text-xs text-muted mt-1">
+            Mis à jour le {today} · source{" "}
+            {dataSource === "supabase" ? "Supabase (live)" : "locale"}
+          </div>
         </div>
         <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-border text-xs font-medium">
-          <span className="w-2 h-2 rounded-full bg-sky live-dot" /> {aaps.length.toLocaleString("fr-FR")} AAP en base
+          <span className="w-2 h-2 rounded-full bg-sky live-dot" />{" "}
+          {aaps.length.toLocaleString("fr-FR")} AAP en base
         </span>
       </header>
 
       {/* KPIs globaux (réels) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-        <KpiTile label="AAP ouverts" value={ouverts.length} sub="disponibles" icon={<TrendingUp className="w-4 h-4" />} />
-        <KpiTile label="Fermetures < 30j" value={ferm30.length} sub="à traiter vite" icon={<AlertCircle className="w-4 h-4" />} accent />
-        <KpiTile label="Sources connectées" value={nbSources} sub="plateformes" icon={<Layers className="w-4 h-4" />} />
-        <KpiTile label="Demandes de matching" value={projets.length} sub="historisées" icon={<Target className="w-4 h-4" />} />
+        <KpiTile
+          label="AAP ouverts"
+          value={ouverts.length}
+          sub="disponibles"
+          icon={<TrendingUp className="w-4 h-4" />}
+        />
+        <KpiTile
+          label="Fermetures < 30j"
+          value={ferm30.length}
+          sub="à traiter vite"
+          icon={<AlertCircle className="w-4 h-4" />}
+          accent
+        />
+        <KpiTile
+          label="Sources connectées"
+          value={nbSources}
+          sub="plateformes"
+          icon={<Layers className="w-4 h-4" />}
+        />
+        <KpiTile
+          label="Demandes de matching"
+          value={projets.length}
+          sub="historisées"
+          icon={<Target className="w-4 h-4" />}
+        />
       </div>
 
       <div className="grid grid-cols-12 gap-4">
@@ -133,8 +180,13 @@ function Dashboard() {
                 className="w-full text-left p-3 rounded-lg border border-border hover:border-pink/40 hover:bg-pink/[0.02] transition flex items-start gap-3"
               >
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold text-navy line-clamp-2 leading-snug">{a.titre}</div>
-                  <div className="text-[10px] text-muted mt-1 truncate">{SOURCE_SHORT[a.source] ?? a.source} · {new Date(a.date_cloture!).toLocaleDateString("fr-FR")}</div>
+                  <div className="text-xs font-semibold text-navy line-clamp-2 leading-snug">
+                    {a.titre}
+                  </div>
+                  <div className="text-[10px] text-muted mt-1 truncate">
+                    {SOURCE_SHORT[a.source] ?? a.source} ·{" "}
+                    {new Date(a.date_cloture!).toLocaleDateString("fr-FR")}
+                  </div>
                 </div>
                 <JoursBadge jours={j} />
               </button>
@@ -156,22 +208,29 @@ function Dashboard() {
               <EmptyState text="Aucune demande pour l'instant. Lancez un matching pour l'historiser ici." />
             )}
             <div className="space-y-2">
-              {[...projets].reverse().slice(0, 6).map((p, i) => {
-                const nb = (p as { data?: { nb_resultats?: number } }).data?.nb_resultats;
-                return (
-                  <Link
-                    key={p.id ?? i}
-                    to="/matching"
-                    className="block w-full text-left p-3 rounded-lg border border-border hover:border-sky/40 hover:bg-sky/[0.02] transition"
-                  >
-                    <div className="text-xs font-semibold text-navy line-clamp-1">{p.nom}</div>
-                    <div className="text-[10px] text-muted mt-1 line-clamp-1">{p.description || "—"}</div>
-                    {typeof nb === "number" && (
-                      <div className="text-[10px] text-sky font-medium mt-1">{nb} AAP compatibles</div>
-                    )}
-                  </Link>
-                );
-              })}
+              {[...projets]
+                .reverse()
+                .slice(0, 6)
+                .map((p, i) => {
+                  const nb = (p as { data?: { nb_resultats?: number } }).data?.nb_resultats;
+                  return (
+                    <Link
+                      key={p.id ?? i}
+                      to="/matching"
+                      className="block w-full text-left p-3 rounded-lg border border-border hover:border-sky/40 hover:bg-sky/[0.02] transition"
+                    >
+                      <div className="text-xs font-semibold text-navy line-clamp-1">{p.nom}</div>
+                      <div className="text-[10px] text-muted mt-1 line-clamp-1">
+                        {p.description || "—"}
+                      </div>
+                      {typeof nb === "number" && (
+                        <div className="text-[10px] text-sky font-medium mt-1">
+                          {nb} AAP compatibles
+                        </div>
+                      )}
+                    </Link>
+                  );
+                })}
             </div>
           </Panel>
 
@@ -194,7 +253,12 @@ function Dashboard() {
                   className="w-full text-left p-3 rounded-lg border border-border hover:border-pink/40 hover:bg-pink/[0.02] transition"
                 >
                   <div className="text-xs font-semibold text-navy line-clamp-1">{a.titre}</div>
-                  <div className="text-[10px] text-muted mt-1 truncate">{SOURCE_SHORT[a.source] ?? a.source}{a.date_cloture ? ` · clôture ${new Date(a.date_cloture).toLocaleDateString("fr-FR")}` : ""}</div>
+                  <div className="text-[10px] text-muted mt-1 truncate">
+                    {SOURCE_SHORT[a.source] ?? a.source}
+                    {a.date_cloture
+                      ? ` · clôture ${new Date(a.date_cloture).toLocaleDateString("fr-FR")}`
+                      : ""}
+                  </div>
                 </button>
               ))}
             </div>
@@ -206,8 +270,13 @@ function Dashboard() {
           <Tabs defaultValue="thematique">
             <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
               <div>
-                <h3 className="text-base flex items-center gap-2"><TrendingUp className="w-4 h-4 text-sky" />Répartition des AAP ouverts</h3>
-                <div className="text-[11px] text-muted mt-1">{ouverts.length.toLocaleString("fr-FR")} AAP ouverts — vue par critère</div>
+                <h3 className="text-base flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-sky" />
+                  Répartition des AAP ouverts
+                </h3>
+                <div className="text-[11px] text-muted mt-1">
+                  {ouverts.length.toLocaleString("fr-FR")} AAP ouverts — vue par critère
+                </div>
               </div>
               <TabsList className="bg-bg">
                 <TabsTrigger value="thematique">Thématique</TabsTrigger>
@@ -215,9 +284,15 @@ function Dashboard() {
                 <TabsTrigger value="geo">Géographie</TabsTrigger>
               </TabsList>
             </div>
-            <TabsContent value="thematique" className="mt-0"><BarChart title="" data={parTheme} bare /></TabsContent>
-            <TabsContent value="source" className="mt-0"><BarChart title="" data={parSource} bare /></TabsContent>
-            <TabsContent value="geo" className="mt-0"><BarChart title="" data={parGeo} bare /></TabsContent>
+            <TabsContent value="thematique" className="mt-0">
+              <BarChart title="" data={parTheme} bare />
+            </TabsContent>
+            <TabsContent value="source" className="mt-0">
+              <BarChart title="" data={parSource} bare />
+            </TabsContent>
+            <TabsContent value="geo" className="mt-0">
+              <BarChart title="" data={parGeo} bare />
+            </TabsContent>
           </Tabs>
         </div>
       </div>
@@ -228,8 +303,22 @@ function Dashboard() {
 }
 
 function Panel({
-  icon, title, count, subtitle, accent, children, className,
-}: { icon: React.ReactNode; title: string; count?: number; subtitle?: string; accent: "pink" | "sky"; children: React.ReactNode; className?: string }) {
+  icon,
+  title,
+  count,
+  subtitle,
+  accent,
+  children,
+  className,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  count?: number;
+  subtitle?: string;
+  accent: "pink" | "sky";
+  children: React.ReactNode;
+  className?: string;
+}) {
   const dot = accent === "pink" ? "bg-pink" : "bg-sky";
   return (
     <section className={`card-flat p-4 fade-up ${className ?? ""}`}>
@@ -243,7 +332,8 @@ function Panel({
         </div>
         {typeof count === "number" && (
           <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-navy">
-            <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />{count}
+            <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+            {count}
           </span>
         )}
       </header>
@@ -257,21 +347,46 @@ function EmptyState({ text }: { text: string }) {
 }
 
 function JoursBadge({ jours }: { jours: number }) {
-  const tone = jours <= 7 ? "bg-pink/10 text-pink" : jours <= 15 ? "bg-[#FFF4E6] text-orange-700" : "bg-bg text-muted";
-  return <span className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full ${tone}`}>J-{jours}</span>;
+  const tone =
+    jours <= 7
+      ? "bg-pink/10 text-pink"
+      : jours <= 15
+        ? "bg-[#FFF4E6] text-orange-700"
+        : "bg-bg text-muted";
+  return (
+    <span className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full ${tone}`}>
+      J-{jours}
+    </span>
+  );
 }
 
 function KpiTile({
-  label, value, sub, icon, accent = false,
-}: { label: string; value: number; sub: string; icon: React.ReactNode; accent?: boolean }) {
+  label,
+  value,
+  sub,
+  icon,
+  accent = false,
+}: {
+  label: string;
+  value: number;
+  sub: string;
+  icon: React.ReactNode;
+  accent?: boolean;
+}) {
   return (
     <div className="card-flat p-4 group hover:border-sky/40 transition-colors fade-up flex flex-col justify-between gap-3 min-h-[110px]">
       <div className="flex items-center justify-between">
         <div className="label-caps text-[10px]">{label}</div>
-        <span className={accent ? "text-pink" : "text-muted group-hover:text-sky transition-colors"}>{icon}</span>
+        <span
+          className={accent ? "text-pink" : "text-muted group-hover:text-sky transition-colors"}
+        >
+          {icon}
+        </span>
       </div>
       <div>
-        <div className={`text-3xl font-bold leading-none tabular-nums ${accent ? "text-pink" : "text-navy group-hover:text-sky"} transition-colors`}>
+        <div
+          className={`text-3xl font-bold leading-none tabular-nums ${accent ? "text-pink" : "text-navy group-hover:text-sky"} transition-colors`}
+        >
           {value.toLocaleString("fr-FR")}
         </div>
         <div className="text-[10px] text-muted mt-1">{sub}</div>

@@ -52,15 +52,8 @@
     "budget_par_projet": 13500000,
     "trl_min": 7,
     "trl_max": 7,
-    "mots_cles": [
-      "Efficacité énergétique",
-      "Mobilité décarbonée",
-      "HORIZON-CL5-2027-03"
-    ],
-    "thematiques": [
-      "Efficacité énergétique",
-      "Mobilité décarbonée"
-    ],
+    "mots_cles": ["Efficacité énergétique", "Mobilité décarbonée", "HORIZON-CL5-2027-03"],
+    "thematiques": ["Efficacité énergétique", "Mobilité décarbonée"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL5-2027-03-D5-05",
     "dispositif_id": "disp-001",
@@ -84,15 +77,8 @@
     "budget_par_projet": 13500000,
     "trl_min": 6,
     "trl_max": 6,
-    "mots_cles": [
-      "Mobilité décarbonée",
-      "Infrastructures durables",
-      "HORIZON-CL5-2027-03"
-    ],
-    "thematiques": [
-      "Mobilité décarbonée",
-      "Infrastructures durables"
-    ],
+    "mots_cles": ["Mobilité décarbonée", "Infrastructures durables", "HORIZON-CL5-2027-03"],
+    "thematiques": ["Mobilité décarbonée", "Infrastructures durables"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL5-2027-03-D5-06",
     "dispositif_id": "disp-001",
@@ -122,10 +108,7 @@
       "HORIZON-CL4-2027-04",
       "Computer sciences, information science and bioinformatics"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2027-04-DIGITAL-EMERGING-10",
     "dispositif_id": "disp-002",
@@ -155,10 +138,7 @@
       "HORIZON-CL4-2027-04",
       "Computer sciences, information science and bioinformatics"
     ],
-    "thematiques": [
-      "Efficacité énergétique",
-      "Infrastructures durables"
-    ],
+    "thematiques": ["Efficacité énergétique", "Infrastructures durables"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2027-04-DATA-03",
     "dispositif_id": "disp-002",
@@ -188,10 +168,7 @@
       "HORIZON-CL4-2027-04",
       "Computer graphics, computer vision, multi media, computer games"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2027-04-HUMAN-02",
     "dispositif_id": "disp-002",
@@ -215,13 +192,8 @@
     "budget_par_projet": 7000000,
     "trl_min": 6,
     "trl_max": 7,
-    "mots_cles": [
-      "Numérique (IA / IoT / BIM)",
-      "HORIZON-CL5-2027-06"
-    ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)"
-    ],
+    "mots_cles": ["Numérique (IA / IoT / BIM)", "HORIZON-CL5-2027-06"],
+    "thematiques": ["Numérique (IA / IoT / BIM)"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL5-2027-06-D6-11",
     "dispositif_id": "disp-001",
@@ -330,10 +302,7 @@
       "Robotique & automatisation",
       "HORIZON-CL4-2027-02-two-stage"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Robotique & automatisation"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Robotique & automatisation"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2027-02-DIGITAL-EMERGING-52-two-stage",
     "dispositif_id": "disp-002",
@@ -357,9 +326,7 @@
     "budget_par_projet": 7000000,
     "trl_min": null,
     "trl_max": null,
-    "mots_cles": [
-      "HORIZON-CL5-2027-06"
-    ],
+    "mots_cles": ["HORIZON-CL5-2027-06"],
     "thematiques": [],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL5-2027-06-D6-05",
@@ -505,9 +472,7 @@
       "Nanophysics: nanoelectronics, nanophotonics, nanomagnetism, nanoelectromechanics, etc.",
       "Optical engineering, photonics, lasers"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2027-05-DIGITAL-EMERGING-03",
     "dispositif_id": "disp-002",
@@ -647,15 +612,8 @@
     "budget_par_projet": 12500000,
     "trl_min": 5,
     "trl_max": 7,
-    "mots_cles": [
-      "Construction & BTP",
-      "Mobilité décarbonée",
-      "HORIZON-CL4-2027-01"
-    ],
-    "thematiques": [
-      "Construction & BTP",
-      "Mobilité décarbonée"
-    ],
+    "mots_cles": ["Construction & BTP", "Mobilité décarbonée", "HORIZON-CL4-2027-01"],
+    "thematiques": ["Construction & BTP", "Mobilité décarbonée"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2027-01-MAT-PROD-22",
     "dispositif_id": "disp-002",
@@ -685,11 +643,7 @@
       "Économie circulaire",
       "HORIZON-CL4-2027-01"
     ],
-    "thematiques": [
-      "Énergies renouvelables",
-      "Mobilité décarbonée",
-      "Économie circulaire"
-    ],
+    "thematiques": ["Énergies renouvelables", "Mobilité décarbonée", "Économie circulaire"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2027-01-MAT-PROD-17",
     "dispositif_id": "disp-002",
@@ -719,11 +673,7 @@
       "Gestion de l'eau",
       "HORIZON-CL4-2027-01"
     ],
-    "thematiques": [
-      "Efficacité énergétique",
-      "Économie circulaire",
-      "Gestion de l'eau"
-    ],
+    "thematiques": ["Efficacité énergétique", "Économie circulaire", "Gestion de l'eau"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2027-01-MAT-PROD-16",
     "dispositif_id": "disp-002",
@@ -756,10 +706,7 @@
       "Agronomy",
       "Fertilisation"
     ],
-    "thematiques": [
-      "Énergies renouvelables",
-      "Matériaux & biosourcés"
-    ],
+    "thematiques": ["Énergies renouvelables", "Matériaux & biosourcés"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-JU-CBE-2026-IAFlag-02",
     "dispositif_id": "disp-012",
@@ -819,13 +766,8 @@
     "budget_par_projet": 12500000,
     "trl_min": null,
     "trl_max": null,
-    "mots_cles": [
-      "Numérique (IA / IoT / BIM)",
-      "HORIZON-CL4-2027-01"
-    ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)"
-    ],
+    "mots_cles": ["Numérique (IA / IoT / BIM)", "HORIZON-CL4-2027-01"],
+    "thematiques": ["Numérique (IA / IoT / BIM)"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2027-01-MAT-PROD-42",
     "dispositif_id": "disp-002",
@@ -859,11 +801,7 @@
       "Materials engineering (biomaterials, metals, ceramics, polymers, composites, etc.)",
       "Polymers and plastics"
     ],
-    "thematiques": [
-      "Mobilité décarbonée",
-      "Économie circulaire",
-      "Matériaux & biosourcés"
-    ],
+    "thematiques": ["Mobilité décarbonée", "Économie circulaire", "Matériaux & biosourcés"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-JU-CBE-2026-IA-05",
     "dispositif_id": "disp-012",
@@ -921,15 +859,8 @@
     "budget_par_projet": 2500000,
     "trl_min": 4,
     "trl_max": 4,
-    "mots_cles": [
-      "Numérique (IA / IoT / BIM)",
-      "Recherche & développement",
-      "HORIZON-CL4-2027-06"
-    ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Recherche & développement"
-    ],
+    "mots_cles": ["Numérique (IA / IoT / BIM)", "Recherche & développement", "HORIZON-CL4-2027-06"],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2027-01-MAT-PROD-61",
     "dispositif_id": "disp-002",
@@ -953,15 +884,8 @@
     "budget_par_projet": 2500000,
     "trl_min": 4,
     "trl_max": 4,
-    "mots_cles": [
-      "Économie circulaire",
-      "Recherche & développement",
-      "HORIZON-CL4-2027-06"
-    ],
-    "thematiques": [
-      "Économie circulaire",
-      "Recherche & développement"
-    ],
+    "mots_cles": ["Économie circulaire", "Recherche & développement", "HORIZON-CL4-2027-06"],
+    "thematiques": ["Économie circulaire", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2027-01-MAT-PROD-62",
     "dispositif_id": "disp-002",
@@ -1064,10 +988,7 @@
       "Textiles",
       "Textiles including synthetic dyes, colours, fibres"
     ],
-    "thematiques": [
-      "Économie circulaire",
-      "Matériaux & biosourcés"
-    ],
+    "thematiques": ["Économie circulaire", "Matériaux & biosourcés"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-JU-CBE-2026-RIA-03",
     "dispositif_id": "disp-012",
@@ -1091,15 +1012,8 @@
     "budget_par_projet": 15000000,
     "trl_min": null,
     "trl_max": null,
-    "mots_cles": [
-      "Infrastructures durables",
-      "Recherche & développement",
-      "HORIZON-CL5-2027-01"
-    ],
-    "thematiques": [
-      "Infrastructures durables",
-      "Recherche & développement"
-    ],
+    "mots_cles": ["Infrastructures durables", "Recherche & développement", "HORIZON-CL5-2027-01"],
+    "thematiques": ["Infrastructures durables", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL5-2027-01-D1-13",
     "dispositif_id": "disp-001",
@@ -1129,11 +1043,7 @@
       "Recherche & développement",
       "HORIZON-CL5-2026-09"
     ],
-    "thematiques": [
-      "Mobilité décarbonée",
-      "Matériaux & biosourcés",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Mobilité décarbonée", "Matériaux & biosourcés", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL5-2026-09-D2-01",
     "dispositif_id": "disp-001",
@@ -1157,9 +1067,7 @@
     "budget_par_projet": 15000000,
     "trl_min": null,
     "trl_max": null,
-    "mots_cles": [
-      "HORIZON-CL5-2027-01"
-    ],
+    "mots_cles": ["HORIZON-CL5-2027-01"],
     "thematiques": [],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL5-2027-01-D1-10",
@@ -1184,13 +1092,8 @@
     "budget_par_projet": 15000000,
     "trl_min": null,
     "trl_max": null,
-    "mots_cles": [
-      "Mobilité décarbonée",
-      "HORIZON-CL5-2027-01"
-    ],
-    "thematiques": [
-      "Mobilité décarbonée"
-    ],
+    "mots_cles": ["Mobilité décarbonée", "HORIZON-CL5-2027-01"],
+    "thematiques": ["Mobilité décarbonée"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL5-2027-01-D1-12",
     "dispositif_id": "disp-001",
@@ -1223,10 +1126,7 @@
       "Market analysis",
       "Market development"
     ],
-    "thematiques": [
-      "Économie circulaire",
-      "Matériaux & biosourcés"
-    ],
+    "thematiques": ["Économie circulaire", "Matériaux & biosourcés"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-JU-CBE-2026-CSA-01",
     "dispositif_id": "disp-012",
@@ -1298,11 +1198,7 @@
       "Économie circulaire",
       "HORIZON-CL4-2027-01"
     ],
-    "thematiques": [
-      "Mobilité décarbonée",
-      "Numérique (IA / IoT / BIM)",
-      "Économie circulaire"
-    ],
+    "thematiques": ["Mobilité décarbonée", "Numérique (IA / IoT / BIM)", "Économie circulaire"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2027-01-MAT-PROD-02",
     "dispositif_id": "disp-002",
@@ -1336,11 +1232,7 @@
       "New materials: oxides, alloys, composite, organic-inorganic hybrid, nanoparticles",
       "Polymers and plastics"
     ],
-    "thematiques": [
-      "Mobilité décarbonée",
-      "Économie circulaire",
-      "Matériaux & biosourcés"
-    ],
+    "thematiques": ["Mobilité décarbonée", "Économie circulaire", "Matériaux & biosourcés"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-JU-CBE-2026-IA-04",
     "dispositif_id": "disp-012",
@@ -1373,10 +1265,7 @@
       "Industrial biotechnology",
       "Materials engineering (biomaterials, metals, ceramics, polymers, composites, etc.)"
     ],
-    "thematiques": [
-      "Matériaux & biosourcés",
-      "Infrastructures durables"
-    ],
+    "thematiques": ["Matériaux & biosourcés", "Infrastructures durables"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-JU-CBE-2026-IAFlag-03",
     "dispositif_id": "disp-012",
@@ -1410,11 +1299,7 @@
       "Industrial bioengineering",
       "Industrial biotechnology"
     ],
-    "thematiques": [
-      "Mobilité décarbonée",
-      "Économie circulaire",
-      "Matériaux & biosourcés"
-    ],
+    "thematiques": ["Mobilité décarbonée", "Économie circulaire", "Matériaux & biosourcés"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-JU-CBE-2026-IA-01",
     "dispositif_id": "disp-012",
@@ -1447,10 +1332,7 @@
       "Industrial biotechnology",
       "Polymers and plastics"
     ],
-    "thematiques": [
-      "Économie circulaire",
-      "Matériaux & biosourcés"
-    ],
+    "thematiques": ["Économie circulaire", "Matériaux & biosourcés"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-JU-CBE-2026-IA-02",
     "dispositif_id": "disp-012",
@@ -1479,10 +1361,7 @@
       "Aménagement & urbanisme",
       "HORIZON-EIC-2026-PRIZE-ICAPITAL"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Aménagement & urbanisme"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Aménagement & urbanisme"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-EIC-2026-PRIZE-ICAPITAL-01",
     "dispositif_id": "disp-005",
@@ -1514,10 +1393,7 @@
       "Human computer interaction and interface, visualization and natural language processing",
       "Wearable technologies"
     ],
-    "thematiques": [
-      "Efficacité énergétique",
-      "Numérique (IA / IoT / BIM)"
-    ],
+    "thematiques": ["Efficacité énergétique", "Numérique (IA / IoT / BIM)"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2027-04-HUMAN-01",
     "dispositif_id": "disp-002",
@@ -1585,11 +1461,7 @@
       "Recherche & développement",
       "HORIZON-MSCA-2027-SE-01"
     ],
-    "thematiques": [
-      "Mobilité décarbonée",
-      "Aménagement & urbanisme",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Mobilité décarbonée", "Aménagement & urbanisme", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-MSCA-2027-SE-01-01",
     "dispositif_id": "disp-050",
@@ -1618,10 +1490,7 @@
       "Aménagement & urbanisme",
       "HORIZON-EIC-2026-PRIZE-ICAPITAL"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Aménagement & urbanisme"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Aménagement & urbanisme"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-EIC-2026-PRIZE-ICAPITAL-02",
     "dispositif_id": "disp-005",
@@ -1651,11 +1520,7 @@
       "Recherche & développement",
       "HORIZON-WIDERA-2027-05"
     ],
-    "thematiques": [
-      "Économie circulaire",
-      "Infrastructures durables",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Économie circulaire", "Infrastructures durables", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-WIDERA-2027-05-ERA-01",
     "dispositif_id": null,
@@ -1679,13 +1544,8 @@
     "budget_par_projet": 6000000,
     "trl_min": null,
     "trl_max": null,
-    "mots_cles": [
-      "Numérique (IA / IoT / BIM)",
-      "HORIZON-WIDERA-2027-05"
-    ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)"
-    ],
+    "mots_cles": ["Numérique (IA / IoT / BIM)", "HORIZON-WIDERA-2027-05"],
+    "thematiques": ["Numérique (IA / IoT / BIM)"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-WIDERA-2027-05-ERA-05",
     "dispositif_id": null,
@@ -1709,13 +1569,8 @@
     "budget_par_projet": 6000000,
     "trl_min": null,
     "trl_max": null,
-    "mots_cles": [
-      "Numérique (IA / IoT / BIM)",
-      "HORIZON-WIDERA-2027-05"
-    ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)"
-    ],
+    "mots_cles": ["Numérique (IA / IoT / BIM)", "HORIZON-WIDERA-2027-05"],
+    "thematiques": ["Numérique (IA / IoT / BIM)"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-WIDERA-2027-05-ERA-04",
     "dispositif_id": null,
@@ -1739,9 +1594,7 @@
     "budget_par_projet": 600000,
     "trl_min": null,
     "trl_max": null,
-    "mots_cles": [
-      "HORIZON-WIDERA-2026-03"
-    ],
+    "mots_cles": ["HORIZON-WIDERA-2026-03"],
     "thematiques": [],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-WIDERA-2026-03-WIDENING-01",
@@ -1766,9 +1619,7 @@
     "budget_par_projet": null,
     "trl_min": null,
     "trl_max": null,
-    "mots_cles": [
-      "HORIZON-MSCA-2027-COFUND-02"
-    ],
+    "mots_cles": ["HORIZON-MSCA-2027-COFUND-02"],
     "thematiques": [],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-MSCA-2027-COFUND-02-01",
@@ -1793,13 +1644,8 @@
     "budget_par_projet": 6000000,
     "trl_min": null,
     "trl_max": null,
-    "mots_cles": [
-      "Aménagement & urbanisme",
-      "HORIZON-WIDERA-2027-05"
-    ],
-    "thematiques": [
-      "Aménagement & urbanisme"
-    ],
+    "mots_cles": ["Aménagement & urbanisme", "HORIZON-WIDERA-2027-05"],
+    "thematiques": ["Aménagement & urbanisme"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-WIDERA-2027-05-ERA-03",
     "dispositif_id": null,
@@ -1823,15 +1669,8 @@
     "budget_par_projet": 6000000,
     "trl_min": null,
     "trl_max": null,
-    "mots_cles": [
-      "Mobilité décarbonée",
-      "Numérique (IA / IoT / BIM)",
-      "HORIZON-WIDERA-2027-05"
-    ],
-    "thematiques": [
-      "Mobilité décarbonée",
-      "Numérique (IA / IoT / BIM)"
-    ],
+    "mots_cles": ["Mobilité décarbonée", "Numérique (IA / IoT / BIM)", "HORIZON-WIDERA-2027-05"],
+    "thematiques": ["Mobilité décarbonée", "Numérique (IA / IoT / BIM)"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-WIDERA-2027-05-ERA-02",
     "dispositif_id": null,
@@ -1867,11 +1706,7 @@
       "Regenerative medicine",
       "Tissue engineering"
     ],
-    "thematiques": [
-      "Construction & BTP",
-      "Numérique (IA / IoT / BIM)",
-      "Matériaux & biosourcés"
-    ],
+    "thematiques": ["Construction & BTP", "Numérique (IA / IoT / BIM)", "Matériaux & biosourcés"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-HLTH-2027-03-TOOL-02",
     "dispositif_id": null,
@@ -1903,10 +1738,7 @@
       "Agricultural engineering, food safety",
       "Food biotechnology"
     ],
-    "thematiques": [
-      "Économie circulaire",
-      "Matériaux & biosourcés"
-    ],
+    "thematiques": ["Économie circulaire", "Matériaux & biosourcés"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-JU-CBE-2026-IAFlag-04",
     "dispositif_id": "disp-012",
@@ -1945,10 +1777,7 @@
       "Start-up companies",
       "Technology development"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-EIE-2027-01-CONNECT-01",
     "dispositif_id": null,
@@ -1972,14 +1801,8 @@
     "budget_par_projet": 10000000,
     "trl_min": null,
     "trl_max": null,
-    "mots_cles": [
-      "Recherche & développement",
-      "HORIZON-EIE-2027-01",
-      "Market-creating innovation"
-    ],
-    "thematiques": [
-      "Recherche & développement"
-    ],
+    "mots_cles": ["Recherche & développement", "HORIZON-EIE-2027-01", "Market-creating innovation"],
+    "thematiques": ["Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-EIE-2027-01-CONNECT-03",
     "dispositif_id": null,
@@ -2013,11 +1836,7 @@
       "Polymer chemistry",
       "Polymers and plastics"
     ],
-    "thematiques": [
-      "Économie circulaire",
-      "Matériaux & biosourcés",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Économie circulaire", "Matériaux & biosourcés", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-JU-CBE-2026-RIA-02",
     "dispositif_id": "disp-012",
@@ -2050,9 +1869,7 @@
       "Organisational management / development",
       "Start-up companies"
     ],
-    "thematiques": [
-      "Recherche & développement"
-    ],
+    "thematiques": ["Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-EIE-2027-01-CONNECT-02",
     "dispositif_id": null,
@@ -2120,9 +1937,7 @@
     "budget_par_projet": 4800000,
     "trl_min": null,
     "trl_max": null,
-    "mots_cles": [
-      "HORIZON-CL5-2027-04-Two-Stage"
-    ],
+    "mots_cles": ["HORIZON-CL5-2027-04-Two-Stage"],
     "thematiques": [],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL5-2027-04-Two-Stage-D5-09",
@@ -2147,15 +1962,8 @@
     "budget_par_projet": 93000000,
     "trl_min": 4,
     "trl_max": 5,
-    "mots_cles": [
-      "Construction & BTP",
-      "Rénovation bâtiment",
-      "HORIZON-CL5-2026-09"
-    ],
-    "thematiques": [
-      "Construction & BTP",
-      "Rénovation bâtiment"
-    ],
+    "mots_cles": ["Construction & BTP", "Rénovation bâtiment", "HORIZON-CL5-2026-09"],
+    "thematiques": ["Construction & BTP", "Rénovation bâtiment"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL5-2026-09-D4-04",
     "dispositif_id": "disp-001",
@@ -2185,11 +1993,7 @@
       "Recherche & développement",
       "HORIZON-CL5-2027-03"
     ],
-    "thematiques": [
-      "Mobilité décarbonée",
-      "Infrastructures durables",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Mobilité décarbonée", "Infrastructures durables", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL5-2027-03-D5-04",
     "dispositif_id": "disp-001",
@@ -2379,11 +2183,7 @@
       "Économie circulaire",
       "HORIZON-CL5-2027-04-Two-Stage"
     ],
-    "thematiques": [
-      "Énergies renouvelables",
-      "Mobilité décarbonée",
-      "Économie circulaire"
-    ],
+    "thematiques": ["Énergies renouvelables", "Mobilité décarbonée", "Économie circulaire"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL5-2027-04-Two-Stage-D2-07",
     "dispositif_id": "disp-001",
@@ -2445,13 +2245,8 @@
     "budget_par_projet": 15000000,
     "trl_min": null,
     "trl_max": null,
-    "mots_cles": [
-      "Construction & BTP",
-      "HORIZON-CL5-2027-01"
-    ],
-    "thematiques": [
-      "Construction & BTP"
-    ],
+    "mots_cles": ["Construction & BTP", "HORIZON-CL5-2027-01"],
+    "thematiques": ["Construction & BTP"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL5-2027-01-D1-08",
     "dispositif_id": "disp-001",
@@ -2555,11 +2350,7 @@
       "Infrastructures durables",
       "HORIZON-CL5-2026-09"
     ],
-    "thematiques": [
-      "Construction & BTP",
-      "Efficacité énergétique",
-      "Infrastructures durables"
-    ],
+    "thematiques": ["Construction & BTP", "Efficacité énergétique", "Infrastructures durables"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL5-2026-09-D4-01",
     "dispositif_id": "disp-001",
@@ -2953,10 +2744,7 @@
       "Bioprocessing technologies (industrial processes relying on biological agents to drive the process) biocatalysis, fermentation",
       "Industrial biotechnology"
     ],
-    "thematiques": [
-      "Économie circulaire",
-      "Matériaux & biosourcés"
-    ],
+    "thematiques": ["Économie circulaire", "Matériaux & biosourcés"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-JU-CBE-2026-RIA-01",
     "dispositif_id": "disp-012",
@@ -3016,15 +2804,8 @@
     "budget_par_projet": 15000000,
     "trl_min": null,
     "trl_max": null,
-    "mots_cles": [
-      "Numérique (IA / IoT / BIM)",
-      "Adaptation climatique",
-      "HORIZON-CL5-2027-01"
-    ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Adaptation climatique"
-    ],
+    "mots_cles": ["Numérique (IA / IoT / BIM)", "Adaptation climatique", "HORIZON-CL5-2027-01"],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Adaptation climatique"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL5-2027-01-D1-09",
     "dispositif_id": "disp-001",
@@ -3158,15 +2939,8 @@
     "budget_par_projet": 12500000,
     "trl_min": null,
     "trl_max": null,
-    "mots_cles": [
-      "Numérique (IA / IoT / BIM)",
-      "Recherche & développement",
-      "HORIZON-CL4-2027-01"
-    ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Recherche & développement"
-    ],
+    "mots_cles": ["Numérique (IA / IoT / BIM)", "Recherche & développement", "HORIZON-CL4-2027-01"],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2027-01-MAT-PROD-49",
     "dispositif_id": "disp-002",
@@ -3199,10 +2973,7 @@
       "Industrial bioengineering",
       "Industrial biotechnology"
     ],
-    "thematiques": [
-      "Économie circulaire",
-      "Matériaux & biosourcés"
-    ],
+    "thematiques": ["Économie circulaire", "Matériaux & biosourcés"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-JU-CBE-2026-IAFlag-01",
     "dispositif_id": "disp-012",
@@ -3431,13 +3202,8 @@
     "budget_par_projet": 40000000,
     "trl_min": 7,
     "trl_max": 8,
-    "mots_cles": [
-      "Énergies renouvelables",
-      "HORIZON-CL5-2026-11"
-    ],
-    "thematiques": [
-      "Énergies renouvelables"
-    ],
+    "mots_cles": ["Énergies renouvelables", "HORIZON-CL5-2026-11"],
+    "thematiques": ["Énergies renouvelables"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL5-2026-11-D3-14",
     "dispositif_id": "disp-001",
@@ -3533,15 +3299,8 @@
     "budget_par_projet": 10000000,
     "trl_min": null,
     "trl_max": null,
-    "mots_cles": [
-      "Numérique (IA / IoT / BIM)",
-      "Infrastructures durables",
-      "HORIZON-CL5-2027-07"
-    ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Infrastructures durables"
-    ],
+    "mots_cles": ["Numérique (IA / IoT / BIM)", "Infrastructures durables", "HORIZON-CL5-2027-07"],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Infrastructures durables"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL5-2027-07-D3-28",
     "dispositif_id": "disp-001",
@@ -3571,11 +3330,7 @@
       "Recherche & développement",
       "HORIZON-CL5-2027-03"
     ],
-    "thematiques": [
-      "Efficacité énergétique",
-      "Économie circulaire",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Efficacité énergétique", "Économie circulaire", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL5-2027-03-D5-08",
     "dispositif_id": "disp-001",
@@ -3674,10 +3429,7 @@
       "Social Sciences and Humanities",
       "Social sciences, interdisciplinary"
     ],
-    "thematiques": [
-      "Construction & BTP",
-      "Aménagement & urbanisme"
-    ],
+    "thematiques": ["Construction & BTP", "Aménagement & urbanisme"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-NEB-2026-01-REGEN-01",
     "dispositif_id": null,
@@ -3715,11 +3467,7 @@
       "Social Sciences and Humanities",
       "Social sciences, interdisciplinary"
     ],
-    "thematiques": [
-      "Construction & BTP",
-      "Économie circulaire",
-      "Aménagement & urbanisme"
-    ],
+    "thematiques": ["Construction & BTP", "Économie circulaire", "Aménagement & urbanisme"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-NEB-2026-01-REGEN-03",
     "dispositif_id": null,
@@ -3758,10 +3506,7 @@
       "Social sciences, interdisciplinary",
       "Social studies of science and technology"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Infrastructures durables"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Infrastructures durables"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL2-2027-01-DEMOCRACY-06",
     "dispositif_id": null,
@@ -3805,10 +3550,7 @@
       "Social structure, inequalities, social mobility, interethnic relations",
       "Vulnerable users"
     ],
-    "thematiques": [
-      "Infrastructures durables",
-      "Aménagement & urbanisme"
-    ],
+    "thematiques": ["Infrastructures durables", "Aménagement & urbanisme"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL2-2027-01-DEMOCRACY-08",
     "dispositif_id": null,
@@ -3866,13 +3608,8 @@
     "budget_par_projet": 15000000,
     "trl_min": 8,
     "trl_max": 8,
-    "mots_cles": [
-      "Recherche & développement",
-      "HORIZON-CL4-2026-03"
-    ],
-    "thematiques": [
-      "Recherche & développement"
-    ],
+    "mots_cles": ["Recherche & développement", "HORIZON-CL4-2026-03"],
+    "thematiques": ["Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2026-SPACE-03-85",
     "dispositif_id": "disp-002",
@@ -3947,11 +3684,7 @@
       "Social structure, inequalities, social mobility, interethnic relations",
       "Structures vulnerability prediction"
     ],
-    "thematiques": [
-      "Construction & BTP",
-      "Numérique (IA / IoT / BIM)",
-      "Infrastructures durables"
-    ],
+    "thematiques": ["Construction & BTP", "Numérique (IA / IoT / BIM)", "Infrastructures durables"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL2-2027-01-DEMOCRACY-02",
     "dispositif_id": null,
@@ -3981,10 +3714,7 @@
       "HORIZON-CL2-2027-01",
       "Education, general (including training, pedagogy, didactics)"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Robotique & automatisation"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Robotique & automatisation"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL2-2027-01-TRANSFO-05",
     "dispositif_id": null,
@@ -4013,9 +3743,7 @@
       "HORIZON-CL2-2027-01",
       "Education, general (including training, pedagogy, didactics)"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL2-2027-01-TRANSFO-06",
     "dispositif_id": null,
@@ -4061,9 +3789,7 @@
       "Private investment",
       "Social sciences, interdisciplinary"
     ],
-    "thematiques": [
-      "Recherche & développement"
-    ],
+    "thematiques": ["Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL2-2027-01-HERITAGE-01",
     "dispositif_id": null,
@@ -4087,10 +3813,7 @@
     "budget_par_projet": 5000000,
     "trl_min": null,
     "trl_max": null,
-    "mots_cles": [
-      "HORIZON-CL2-2027-01",
-      "Social economics"
-    ],
+    "mots_cles": ["HORIZON-CL2-2027-01", "Social economics"],
     "thematiques": [],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL2-2027-01-TRANSFO-03",
@@ -4173,10 +3896,7 @@
       "Social structure, inequalities, social mobility, interethnic relations",
       "Violence, conflict and conflict resolution"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Infrastructures durables"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Infrastructures durables"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL2-2027-01-DEMOCRACY-04",
     "dispositif_id": null,
@@ -4218,9 +3938,7 @@
       "Social sciences, interdisciplinary",
       "Training"
     ],
-    "thematiques": [
-      "Mobilité décarbonée"
-    ],
+    "thematiques": ["Mobilité décarbonée"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL2-2027-01-HERITAGE-05",
     "dispositif_id": null,
@@ -4250,11 +3968,7 @@
       "Recherche & développement",
       "HORIZON-CL4-2027-03"
     ],
-    "thematiques": [
-      "Économie circulaire",
-      "Infrastructures durables",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Économie circulaire", "Infrastructures durables", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2027-SPACE-03-21",
     "dispositif_id": "disp-002",
@@ -4321,11 +4035,7 @@
       "HORIZON-CL2-2027-01",
       "Ageing, work, social policies"
     ],
-    "thematiques": [
-      "Mobilité décarbonée",
-      "Infrastructures durables",
-      "Aménagement & urbanisme"
-    ],
+    "thematiques": ["Mobilité décarbonée", "Infrastructures durables", "Aménagement & urbanisme"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL2-2027-01-TRANSFO-02",
     "dispositif_id": null,
@@ -4349,9 +4059,7 @@
     "budget_par_projet": 15000000,
     "trl_min": 6,
     "trl_max": 6,
-    "mots_cles": [
-      "HORIZON-CL4-2027-03"
-    ],
+    "mots_cles": ["HORIZON-CL4-2027-03"],
     "thematiques": [],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2027-SPACE-03-84",
@@ -4426,13 +4134,8 @@
     "budget_par_projet": 15000000,
     "trl_min": 5,
     "trl_max": 5,
-    "mots_cles": [
-      "Recherche & développement",
-      "HORIZON-CL4-2026-03"
-    ],
-    "thematiques": [
-      "Recherche & développement"
-    ],
+    "mots_cles": ["Recherche & développement", "HORIZON-CL4-2026-03"],
+    "thematiques": ["Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2026-SPACE-03-82",
     "dispositif_id": "disp-002",
@@ -4456,13 +4159,8 @@
     "budget_par_projet": 15000000,
     "trl_min": 6,
     "trl_max": 6,
-    "mots_cles": [
-      "Recherche & développement",
-      "HORIZON-CL4-2026-03"
-    ],
-    "thematiques": [
-      "Recherche & développement"
-    ],
+    "mots_cles": ["Recherche & développement", "HORIZON-CL4-2026-03"],
+    "thematiques": ["Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2026-SPACE-03-81",
     "dispositif_id": "disp-002",
@@ -4552,9 +4250,7 @@
       "Social Sciences and Humanities",
       "Visual arts, performing arts, design"
     ],
-    "thematiques": [
-      "Recherche & développement"
-    ],
+    "thematiques": ["Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL2-2027-01-HERITAGE-04",
     "dispositif_id": null,
@@ -4658,10 +4354,7 @@
       "Social sciences, interdisciplinary",
       "Sociology"
     ],
-    "thematiques": [
-      "Infrastructures durables",
-      "Aménagement & urbanisme"
-    ],
+    "thematiques": ["Infrastructures durables", "Aménagement & urbanisme"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL2-2027-01-TRANSFO-08",
     "dispositif_id": null,
@@ -4806,11 +4499,7 @@
       "Recherche & développement",
       "HORIZON-WIDERA-2027-03"
     ],
-    "thematiques": [
-      "Mobilité décarbonée",
-      "Aménagement & urbanisme",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Mobilité décarbonée", "Aménagement & urbanisme", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-WIDERA-2027-03-WIDENING-01",
     "dispositif_id": null,
@@ -4847,10 +4536,7 @@
       "Sustainability",
       "Sustainable development and climate action"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Aménagement & urbanisme"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Aménagement & urbanisme"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-NEB-2026-01-BUSINESS-02",
     "dispositif_id": null,
@@ -4988,11 +4674,7 @@
       "Social Sciences and Humanities",
       "Social sciences, interdisciplinary"
     ],
-    "thematiques": [
-      "Construction & BTP",
-      "Efficacité énergétique",
-      "Économie circulaire"
-    ],
+    "thematiques": ["Construction & BTP", "Efficacité énergétique", "Économie circulaire"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-NEB-2026-01-REGEN-02",
     "dispositif_id": null,
@@ -5035,11 +4717,7 @@
       "Sustainable development and climate action",
       "Vulnerable users"
     ],
-    "thematiques": [
-      "Construction & BTP",
-      "Infrastructures durables",
-      "Aménagement & urbanisme"
-    ],
+    "thematiques": ["Construction & BTP", "Infrastructures durables", "Aménagement & urbanisme"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-NEB-2026-01-BUSINESS-01",
     "dispositif_id": null,
@@ -5077,11 +4755,7 @@
       "Social Sciences and Humanities",
       "Social sciences, interdisciplinary"
     ],
-    "thematiques": [
-      "Construction & BTP",
-      "Rénovation bâtiment",
-      "Économie circulaire"
-    ],
+    "thematiques": ["Construction & BTP", "Rénovation bâtiment", "Économie circulaire"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-NEB-2027-01-REGEN-02",
     "dispositif_id": null,
@@ -5126,9 +4800,7 @@
       "Sustainable development and climate action",
       "Vulnerable users"
     ],
-    "thematiques": [
-      "Aménagement & urbanisme"
-    ],
+    "thematiques": ["Aménagement & urbanisme"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-NEB-2027-01-BUSINESS-02",
     "dispositif_id": null,
@@ -5173,11 +4845,7 @@
       "Vulnerable users",
       "Wellbeing"
     ],
-    "thematiques": [
-      "Mobilité décarbonée",
-      "Numérique (IA / IoT / BIM)",
-      "Aménagement & urbanisme"
-    ],
+    "thematiques": ["Mobilité décarbonée", "Numérique (IA / IoT / BIM)", "Aménagement & urbanisme"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-NEB-2027-01-PARTICIPATION-02",
     "dispositif_id": null,
@@ -5359,10 +5027,7 @@
       "Earth Observation / Services and applications",
       "Forestry"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL6-2027-02-CLIMATE-03",
     "dispositif_id": "disp-003",
@@ -5428,11 +5093,7 @@
       "Recherche & développement",
       "HORIZON-WIDERA-2026-05"
     ],
-    "thematiques": [
-      "Mobilité décarbonée",
-      "Aménagement & urbanisme",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Mobilité décarbonée", "Aménagement & urbanisme", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-WIDERA-2026-05-WIDENING-01",
     "dispositif_id": null,
@@ -5492,9 +5153,7 @@
     "budget_par_projet": 15000000,
     "trl_min": 6,
     "trl_max": 6,
-    "mots_cles": [
-      "HORIZON-CL4-2027-03"
-    ],
+    "mots_cles": ["HORIZON-CL4-2027-03"],
     "thematiques": [],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2027-SPACE-03-83",
@@ -5519,13 +5178,8 @@
     "budget_par_projet": 15000000,
     "trl_min": 8,
     "trl_max": 8,
-    "mots_cles": [
-      "Recherche & développement",
-      "HORIZON-CL4-2026-03"
-    ],
-    "thematiques": [
-      "Recherche & développement"
-    ],
+    "mots_cles": ["Recherche & développement", "HORIZON-CL4-2026-03"],
+    "thematiques": ["Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2026-SPACE-03-11",
     "dispositif_id": "disp-002",
@@ -5554,10 +5208,7 @@
       "Recherche & développement",
       "HORIZON-WIDERA-2027-01"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-WIDERA-2027-01-WIDENING-01",
     "dispositif_id": null,
@@ -5694,10 +5345,7 @@
       "Fresh water ecosystems",
       "Freshwater ecology"
     ],
-    "thematiques": [
-      "Gestion de l'eau",
-      "Infrastructures durables"
-    ],
+    "thematiques": ["Gestion de l'eau", "Infrastructures durables"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL6-2026-01-BIODIV-02",
     "dispositif_id": "disp-003",
@@ -5738,9 +5386,7 @@
       "Protection of environment (before, during and after)",
       "Species interactions (e.g. food-webs, symbiosis, parasitism, mutualism, bio-invasion)"
     ],
-    "thematiques": [
-      "Infrastructures durables"
-    ],
+    "thematiques": ["Infrastructures durables"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL6-2026-01-BIODIV-01",
     "dispositif_id": "disp-003",
@@ -5776,9 +5422,7 @@
       "Security Management and Governance",
       "Security support in programming environments"
     ],
-    "thematiques": [
-      "Infrastructures durables"
-    ],
+    "thematiques": ["Infrastructures durables"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL3-2026-02-CS-ECCC-02",
     "dispositif_id": "disp-004",
@@ -5811,9 +5455,7 @@
       "Human rights",
       "Security"
     ],
-    "thematiques": [
-      "Recherche & développement"
-    ],
+    "thematiques": ["Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL3-2027-01-BM-01",
     "dispositif_id": "disp-004",
@@ -5846,9 +5488,7 @@
       "Police authorities",
       "Security"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL3-2027-01-FCT-01",
     "dispositif_id": "disp-004",
@@ -5890,10 +5530,7 @@
       "Software testing processes and tools",
       "Systems Engineering and Integrated Systems Design"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Infrastructures durables"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Infrastructures durables"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL3-2026-02-CS-ECCC-01",
     "dispositif_id": "disp-004",
@@ -5926,9 +5563,7 @@
       "Protection of public spaces",
       "Security"
     ],
-    "thematiques": [
-      "Recherche & développement"
-    ],
+    "thematiques": ["Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL3-2027-01-FCT-04",
     "dispositif_id": "disp-004",
@@ -6064,10 +5699,7 @@
       "Nature-based solutions",
       "Political science"
     ],
-    "thematiques": [
-      "Adaptation climatique",
-      "Infrastructures durables"
-    ],
+    "thematiques": ["Adaptation climatique", "Infrastructures durables"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL6-2026-01-BIODIV-04",
     "dispositif_id": "disp-003",
@@ -6101,10 +5733,7 @@
       "Innovation policy",
       "Public administration"
     ],
-    "thematiques": [
-      "Économie circulaire",
-      "Matériaux & biosourcés"
-    ],
+    "thematiques": ["Économie circulaire", "Matériaux & biosourcés"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL6-2026-01-CIRCBIO-06",
     "dispositif_id": "disp-003",
@@ -6182,10 +5811,7 @@
       "Waste management",
       "Waste recycling"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Économie circulaire"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Économie circulaire"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL6-2026-01-CIRCBIO-01",
     "dispositif_id": "disp-003",
@@ -6225,11 +5851,7 @@
       "Waste management",
       "Waste recycling"
     ],
-    "thematiques": [
-      "Construction & BTP",
-      "Rénovation bâtiment",
-      "Économie circulaire"
-    ],
+    "thematiques": ["Construction & BTP", "Rénovation bâtiment", "Économie circulaire"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL6-2027-01-CIRCBIO-02",
     "dispositif_id": "disp-003",
@@ -6315,11 +5937,7 @@
       "Sustainable innovation",
       "Waste recycling"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Économie circulaire",
-      "Matériaux & biosourcés"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Économie circulaire", "Matériaux & biosourcés"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL6-2026-01-CIRCBIO-03",
     "dispositif_id": "disp-003",
@@ -6359,9 +5977,7 @@
       "Waste management",
       "Waste recycling"
     ],
-    "thematiques": [
-      "Économie circulaire"
-    ],
+    "thematiques": ["Économie circulaire"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL6-2026-01-CIRCBIO-02",
     "dispositif_id": "disp-003",
@@ -6493,10 +6109,7 @@
       "Security",
       "Training"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL3-2027-01-DRS-02",
     "dispositif_id": "disp-004",
@@ -6571,10 +6184,7 @@
       "Technology commercialisation",
       "Technology development"
     ],
-    "thematiques": [
-      "Économie circulaire",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Économie circulaire", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL3-2027-01-SSRI-03",
     "dispositif_id": "disp-004",
@@ -6680,10 +6290,7 @@
       "Ensure Identification and control of goods and people",
       "Security"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL3-2027-01-BM-02",
     "dispositif_id": "disp-004",
@@ -6723,9 +6330,7 @@
       "Software and Hardware Security Engineering",
       "Symmetric cryptography"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL3-2026-02-CS-ECCC-03",
     "dispositif_id": "disp-004",
@@ -6765,11 +6370,7 @@
       "Habitat and species restoration and rehabilitation",
       "Water resources"
     ],
-    "thematiques": [
-      "Construction & BTP",
-      "Robotique & automatisation",
-      "Économie circulaire"
-    ],
+    "thematiques": ["Construction & BTP", "Robotique & automatisation", "Économie circulaire"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL6-2026-01-ZEROPOLLUTION-02",
     "dispositif_id": "disp-003",
@@ -6850,10 +6451,7 @@
       "Social sciences, interdisciplinary",
       "Transport Railway"
     ],
-    "thematiques": [
-      "Infrastructures durables",
-      "Aménagement & urbanisme"
-    ],
+    "thematiques": ["Infrastructures durables", "Aménagement & urbanisme"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-NEB-2027-01-REGEN-03",
     "dispositif_id": null,
@@ -6938,9 +6536,7 @@
       "Technology commercialisation",
       "Technology development"
     ],
-    "thematiques": [
-      "Recherche & développement"
-    ],
+    "thematiques": ["Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL3-2027-01-SSRI-02",
     "dispositif_id": "disp-004",
@@ -7009,9 +6605,7 @@
       "Social issues",
       "Veterinary science"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL6-2027-02-FARM2FORK-06",
     "dispositif_id": "disp-003",
@@ -7123,10 +6717,7 @@
       "Vulnerable users",
       "Wellbeing"
     ],
-    "thematiques": [
-      "Mobilité décarbonée",
-      "Aménagement & urbanisme"
-    ],
+    "thematiques": ["Mobilité décarbonée", "Aménagement & urbanisme"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-NEB-2026-01-PARTICIPATION-02",
     "dispositif_id": null,
@@ -7226,9 +6817,7 @@
     "budget_par_projet": 5000000,
     "trl_min": null,
     "trl_max": null,
-    "mots_cles": [
-      "HORIZON-CL2-2027-01"
-    ],
+    "mots_cles": ["HORIZON-CL2-2027-01"],
     "thematiques": [],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL2-2027-01-DEMOCRACY-03",
@@ -7392,10 +6981,7 @@
       "Cultural anthropology",
       "Ethnography"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Aménagement & urbanisme"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Aménagement & urbanisme"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL2-2027-01-HERITAGE-08",
     "dispositif_id": null,
@@ -7439,9 +7025,7 @@
       "Sociology of development",
       "Vulnerable users"
     ],
-    "thematiques": [
-      "Aménagement & urbanisme"
-    ],
+    "thematiques": ["Aménagement & urbanisme"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL2-2027-01-DEMOCRACY-05",
     "dispositif_id": null,
@@ -7477,9 +7061,7 @@
       "Social sciences, interdisciplinary",
       "Transformation of societies, democratization, social movements"
     ],
-    "thematiques": [
-      "Adaptation climatique"
-    ],
+    "thematiques": ["Adaptation climatique"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL2-2027-01-DEMOCRACY-07",
     "dispositif_id": null,
@@ -7503,15 +7085,8 @@
     "budget_par_projet": 15000000,
     "trl_min": 5,
     "trl_max": 5,
-    "mots_cles": [
-      "Robotique & automatisation",
-      "Recherche & développement",
-      "HORIZON-CL4-2026-03"
-    ],
-    "thematiques": [
-      "Robotique & automatisation",
-      "Recherche & développement"
-    ],
+    "mots_cles": ["Robotique & automatisation", "Recherche & développement", "HORIZON-CL4-2026-03"],
+    "thematiques": ["Robotique & automatisation", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL4-2026-SPACE-03-86",
     "dispositif_id": "disp-002",
@@ -7718,9 +7293,7 @@
       "Tangible cultural heritage",
       "Vulnerable users"
     ],
-    "thematiques": [
-      "Aménagement & urbanisme"
-    ],
+    "thematiques": ["Aménagement & urbanisme"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-NEB-2027-01-PARTICIPATION-03",
     "dispositif_id": null,
@@ -7831,10 +7404,7 @@
       "Knowledge and Technology transfer",
       "Research to business"
     ],
-    "thematiques": [
-      "Aménagement & urbanisme",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Aménagement & urbanisme", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL6-2027-02-FARM2FORK-09",
     "dispositif_id": "disp-003",
@@ -7876,10 +7446,7 @@
       "Water recycling and re-use",
       "Water technology"
     ],
-    "thematiques": [
-      "Gestion de l'eau",
-      "Adaptation climatique"
-    ],
+    "thematiques": ["Gestion de l'eau", "Adaptation climatique"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL6-2026-01-ZEROPOLLUTION-03",
     "dispositif_id": "disp-003",
@@ -7925,11 +7492,7 @@
       "Industrial sectoral change",
       "Innovation policy"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Économie circulaire",
-      "Aménagement & urbanisme"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Économie circulaire", "Aménagement & urbanisme"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL6-2026-01-CIRCBIO-04",
     "dispositif_id": "disp-003",
@@ -7968,10 +7531,7 @@
       "Waste management",
       "Waste recycling"
     ],
-    "thematiques": [
-      "Mobilité décarbonée",
-      "Économie circulaire"
-    ],
+    "thematiques": ["Mobilité décarbonée", "Économie circulaire"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL6-2027-01-CIRCBIO-01",
     "dispositif_id": "disp-003",
@@ -8017,9 +7577,7 @@
       "Socioeconomic stressors",
       "Strategic foresight analysis/defence analysis"
     ],
-    "thematiques": [
-      "Aménagement & urbanisme"
-    ],
+    "thematiques": ["Aménagement & urbanisme"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-NEB-2027-01-BUSINESS-03",
     "dispositif_id": null,
@@ -8135,10 +7693,7 @@
       "Operators of critical infrastructure",
       "Security"
     ],
-    "thematiques": [
-      "Infrastructures durables",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Infrastructures durables", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL3-2027-01-INFRA-02",
     "dispositif_id": "disp-004",
@@ -8260,11 +7815,7 @@
       "Food and drink",
       "Innovation management"
     ],
-    "thematiques": [
-      "Économie circulaire",
-      "Aménagement & urbanisme",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Économie circulaire", "Aménagement & urbanisme", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL6-2027-02-COMMUNITIES-02",
     "dispositif_id": "disp-003",
@@ -8347,9 +7898,7 @@
       "Societal issues in crime and terrorism",
       "Violent radicalisation"
     ],
-    "thematiques": [
-      "Recherche & développement"
-    ],
+    "thematiques": ["Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL3-2027-01-FCT-03",
     "dispositif_id": "disp-004",
@@ -8430,9 +7979,7 @@
       "Plant breeding and plant protection",
       "Security"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL6-2027-02-FARM2FORK-07",
     "dispositif_id": "disp-003",
@@ -8518,10 +8065,7 @@
       "Common agricultural policy (CAP)",
       "Crop harvesting equipment"
     ],
-    "thematiques": [
-      "Matériaux & biosourcés",
-      "Adaptation climatique"
-    ],
+    "thematiques": ["Matériaux & biosourcés", "Adaptation climatique"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL6-2027-02-FARM2FORK-05",
     "dispositif_id": "disp-003",
@@ -8558,10 +8102,7 @@
       "Genetics and heredity",
       "Marine biology"
     ],
-    "thematiques": [
-      "Adaptation climatique",
-      "Aménagement & urbanisme"
-    ],
+    "thematiques": ["Adaptation climatique", "Aménagement & urbanisme"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL6-2026-01-BIODIV-03",
     "dispositif_id": "disp-003",
@@ -8590,10 +8131,7 @@
       "Recherche & développement",
       "HORIZON-EURATOM-LS-2026-01"
     ],
-    "thematiques": [
-      "Infrastructures durables",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Infrastructures durables", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-EURATOM-LS-2026-01-05",
     "dispositif_id": null,
@@ -8724,9 +8262,7 @@
       "Environmental sciences",
       "Other agricultural sciences"
     ],
-    "thematiques": [
-      "Recherche & développement"
-    ],
+    "thematiques": ["Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL6-2026-01-BIODIV-06",
     "dispositif_id": "disp-003",
@@ -8767,10 +8303,7 @@
       "Viral Haemorrhagic Fevers",
       "Viruses"
     ],
-    "thematiques": [
-      "Infrastructures durables",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Infrastructures durables", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-HLTH-2027-01-DISEASE-07",
     "dispositif_id": null,
@@ -8853,10 +8386,7 @@
       "Medical biotechnology",
       "Pharmaceutical development"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-HLTH-2027-01-IND-01",
     "dispositif_id": null,
@@ -8899,10 +8429,7 @@
       "Tick",
       "Viruses"
     ],
-    "thematiques": [
-      "Infrastructures durables",
-      "Recherche & développement"
-    ],
+    "thematiques": ["Infrastructures durables", "Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-HLTH-2027-01-DISEASE-05",
     "dispositif_id": null,
@@ -8941,9 +8468,7 @@
       "MRSA",
       "Patient safety"
     ],
-    "thematiques": [
-      "Recherche & développement"
-    ],
+    "thematiques": ["Recherche & développement"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-HLTH-2027-01-DISEASE-08",
     "dispositif_id": null,
@@ -9031,10 +8556,7 @@
       "Quality of health care",
       "Self-management"
     ],
-    "thematiques": [
-      "Numérique (IA / IoT / BIM)",
-      "Aménagement & urbanisme"
-    ],
+    "thematiques": ["Numérique (IA / IoT / BIM)", "Aménagement & urbanisme"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-CL2-2027-02-TRANSFO-09-two-stage",
     "dispositif_id": null,
@@ -9069,9 +8591,7 @@
       "Surgery",
       "Tomography"
     ],
-    "thematiques": [
-      "Infrastructures durables"
-    ],
+    "thematiques": ["Infrastructures durables"],
     "acteurs_eligibles": [],
     "lien_officiel": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/HORIZON-MISS-2027-02-CANCER-03",
     "dispositif_id": "disp-008",

@@ -1,6 +1,6 @@
 // ──────────────────────────────────────────────────────────────────────
-// Schéma TypeScript « AAP » — appel à projets scrapé depuis l'API
-// EU Funding & Tenders (SEDIA). Voir src/services/eu-api.ts.
+// Schéma TypeScript « AAP » — appel à projets scrapé (SEDIA, Aides-territoires,
+// les-aides.fr…). Le scraping tourne côté serveur : voir supabase/functions/.
 // ──────────────────────────────────────────────────────────────────────
 
 /** Statut d'un topic sur le portail Funding & Tenders */

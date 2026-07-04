@@ -19,7 +19,9 @@ import type { AAP } from "@/types/aap";
 let _localDispositifs: Dispositif[] | null = null;
 let _localAaps: AAP[] | null = null;
 async function loadLocalDispositifs(): Promise<Dispositif[]> {
-  if (!_localDispositifs) _localDispositifs = (await import("@/data/dispositifs.json")).default as unknown as Dispositif[];
+  if (!_localDispositifs)
+    _localDispositifs = (await import("@/data/dispositifs.json"))
+      .default as unknown as Dispositif[];
   return _localDispositifs;
 }
 async function loadLocalAaps(): Promise<AAP[]> {
@@ -56,7 +58,7 @@ export interface AapFilter {
 /** Priorité des sources : plus le nombre est petit, plus la source est prioritaire (conservée). */
 const SOURCE_PRIORITY: Record<string, number> = {
   "ADEME (Agir pour la transition)": 1,
-  "Bpifrance": 2,
+  Bpifrance: 2,
   "Banque des Territoires (France 2030)": 3,
   "appelsprojetsrecherche.fr": 4,
   "les-aides.fr": 5,
@@ -83,17 +85,30 @@ export function dedupeAaps(aaps: AAP[]): AAP[] {
   const clusters = new Map<string, AAP[]>();
   for (const a of aaps) {
     const key = empreinte(a);
-    if (!key) { clusters.set(`__${a.id}`, [a]); continue; } // titre vide → jamais fusionné
+    if (!key) {
+      clusters.set(`__${a.id}`, [a]);
+      continue;
+    } // titre vide → jamais fusionné
     const arr = clusters.get(key);
     if (arr) arr.push(a);
     else clusters.set(key, [a]);
   }
   const out: AAP[] = [];
   for (const group of clusters.values()) {
-    if (group.length === 1) { out.push(group[0]); continue; }
+    if (group.length === 1) {
+      out.push(group[0]);
+      continue;
+    }
     const sorted = [...group].sort((x, y) => sourceRank(x.source) - sourceRank(y.source));
     const rep = { ...sorted[0] };
-    const autres = [...new Set(sorted.slice(1).map((g) => g.source).filter((s) => s && s !== rep.source))];
+    const autres = [
+      ...new Set(
+        sorted
+          .slice(1)
+          .map((g) => g.source)
+          .filter((s) => s && s !== rep.source),
+      ),
+    ];
     rep.sources_multiples = autres.length ? autres : null;
     if (rep.date_cloture == null) {
       const sibling = sorted.find((g) => g.date_cloture != null);
@@ -120,7 +135,10 @@ export async function getAaps(filter: AapFilter = {}): Promise<AAP[]> {
   const PAGE = 1000;
   const all: AAP[] = [];
   for (let from = 0; ; from += PAGE) {
-    let q = supabase.from("aaps").select("data").range(from, from + PAGE - 1);
+    let q = supabase
+      .from("aaps")
+      .select("data")
+      .range(from, from + PAGE - 1);
     if (filter.dispositifId) q = q.eq("dispositif_id", filter.dispositifId);
     if (filter.statut) q = q.eq("statut", filter.statut);
     if (filter.cluster) q = q.eq("cluster", filter.cluster);
@@ -313,12 +331,15 @@ export async function getScrapeLogs(limit = 30): Promise<ScrapeLog[]> {
 }
 
 /** Fréquence courante (déduite de l'expression cron), ou null. */
-export async function getScrapeFrequency(): Promise<{ frequency: ScrapeFrequency | null; cron: string | null }> {
+export async function getScrapeFrequency(): Promise<{
+  frequency: ScrapeFrequency | null;
+  cron: string | null;
+}> {
   if (!supabase) return { frequency: null, cron: null };
   const { data, error } = await supabase.rpc("get_scrape_schedule");
   if (error) throw new Error(`getScrapeFrequency: ${error.message}`);
   const cron = (data as string | null) ?? null;
-  return { frequency: cron ? CRON_TO_FREQUENCY[cron] ?? null : null, cron };
+  return { frequency: cron ? (CRON_TO_FREQUENCY[cron] ?? null) : null, cron };
 }
 
 /** Change la fréquence du scraping (preset validé côté serveur). */

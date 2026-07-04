@@ -51,9 +51,19 @@ export interface ScoredAap {
 
 // ── Secteur du formulaire → labels de thématiques (taxonomie CDC) ────
 const SECTEUR_TO_THEMATIQUE_KEYS: Record<string, (keyof Thematiques)[]> = {
-  Construction: ["construction_btp", "renovation_batiment", "infrastructures_durables", "amenagement_urbanisme"],
+  Construction: [
+    "construction_btp",
+    "renovation_batiment",
+    "infrastructures_durables",
+    "amenagement_urbanisme",
+  ],
   Numérique: ["numerique_ia_iot_bim", "robotique_automatisation"],
-  Énergie: ["transition_energetique", "energies_renouvelables", "efficacite_energetique", "hydrogene"],
+  Énergie: [
+    "transition_energetique",
+    "energies_renouvelables",
+    "efficacite_energetique",
+    "hydrogene",
+  ],
   Mobilité: ["mobilite_decarbonee"],
   Eau: ["gestion_eau"],
   Environnement: ["adaptation_climatique", "economie_circulaire"],
@@ -74,7 +84,10 @@ function clamp(n: number, lo = 0, hi = 100): number {
 }
 
 function norm(s: string): string {
-  return (s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+  return (s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "");
 }
 
 /** Parse un montant en euros depuis un texte libre ("2,5 M€", "800 k€", "1 000 000"). */
@@ -99,8 +112,19 @@ export function joursRestants(dateCloture: string | null): number | null {
 
 // ── 4.1 — Critères d'exclusion ───────────────────────────────────────
 
-/** Renvoie la raison d'exclusion, ou null si l'AAP passe le filtre. */
-export function exclusion(aap: AAP, projet: ProjetInput, projThemes: string[]): string | null {
+/**
+ * Renvoie la raison d'exclusion, ou null si l'AAP passe le filtre.
+ * `kws` (mots-clés du projet) et `hay` (texte normalisé de l'AAP) peuvent être
+ * fournis par l'appelant pour éviter de les recalculer par AAP (chemin chaud :
+ * matchProjet les hoiste) ; sinon ils sont dérivés ici, à l'identique.
+ */
+export function exclusion(
+  aap: AAP,
+  projet: ProjetInput,
+  projThemes: string[],
+  kws?: string[],
+  hay?: string,
+): string | null {
   // Deadline passée
   const jr = joursRestants(aap.date_cloture);
   if (aap.statut === "closed" || (jr !== null && jr < 0)) return "Appel clôturé";
@@ -108,19 +132,29 @@ export function exclusion(aap: AAP, projet: ProjetInput, projThemes: string[]): 
   // TRL éloigné de plus de 2 points de la fourchette cible
   if (projet.trl != null && aap.trl_min != null && aap.trl_max != null) {
     const gap =
-      projet.trl < aap.trl_min ? aap.trl_min - projet.trl : projet.trl > aap.trl_max ? projet.trl - aap.trl_max : 0;
-    if (gap > 2) return `TRL projet (${projet.trl}) trop éloigné de la cible (TRL ${aap.trl_min}–${aap.trl_max})`;
+      projet.trl < aap.trl_min
+        ? aap.trl_min - projet.trl
+        : projet.trl > aap.trl_max
+          ? projet.trl - aap.trl_max
+          : 0;
+    if (gap > 2)
+      return `TRL projet (${projet.trl}) trop éloigné de la cible (TRL ${aap.trl_min}–${aap.trl_max})`;
   }
 
   // Aucun lien sectoriel : si le projet a précisé des secteurs et qu'il n'y a
   // aucun recoupement thématique NI aucun mot-clé commun → exclu.
   if (projThemes.length > 0) {
     const themeOverlap = aap.thematiques.some((t) => projThemes.includes(t));
-    const hay = norm(`${aap.titre} ${aap.description} ${aap.mots_cles.join(" ")}`);
-    const kwOverlap = keywordsFromProjet(projet).some((k) => hay.includes(k));
+    const h = hay ?? aapHaystack(aap);
+    const kwOverlap = (kws ?? keywordsFromProjet(projet)).some((k) => h.includes(k));
     if (!themeOverlap && !kwOverlap) return "Aucun lien sectoriel ou thématique avec le projet";
   }
   return null;
+}
+
+/** Texte normalisé d'un AAP pour la recherche de mots-clés (coûteux : à calculer 1× par AAP). */
+function aapHaystack(aap: AAP): string {
+  return norm(`${aap.titre} ${aap.description} ${aap.mots_cles.join(" ")}`);
 }
 
 // ── Mots-clés du projet (pour la pertinence sémantique légère) ───────
@@ -140,6 +174,8 @@ function scoreAdequation(
   aap: AAP,
   projet: ProjetInput,
   projThemes: string[],
+  kws: string[],
+  hay: string,
 ): { score: number; raisons: string[] } {
   const raisons: string[] = [];
 
@@ -160,14 +196,19 @@ function scoreAdequation(
   let trlScore = 0;
   if (trlComparable) {
     const gap =
-      projet.trl! < aap.trl_min! ? aap.trl_min! - projet.trl! : projet.trl! > aap.trl_max! ? projet.trl! - aap.trl_max! : 0;
+      projet.trl! < aap.trl_min!
+        ? aap.trl_min! - projet.trl!
+        : projet.trl! > aap.trl_max!
+          ? projet.trl! - aap.trl_max!
+          : 0;
     trlScore = gap === 0 ? 100 : gap === 1 ? 70 : 40;
-    if (gap === 0) raisons.push(`TRL du projet (${projet.trl}) dans la cible de l'AAP (${aap.trl_min}–${aap.trl_max})`);
+    if (gap === 0)
+      raisons.push(
+        `TRL du projet (${projet.trl}) dans la cible de l'AAP (${aap.trl_min}–${aap.trl_max})`,
+      );
   }
 
-  // Pertinence mots-clés (20%)
-  const hay = norm(`${aap.titre} ${aap.description} ${aap.mots_cles.join(" ")}`);
-  const kws = keywordsFromProjet(projet);
+  // Pertinence mots-clés (20%) — kws/hay fournis par l'appelant (hoistés)
   const hits = kws.filter((k) => hay.includes(k));
   const kwScore = clamp(Math.min(hits.length, 5) * 20);
   if (hits.length >= 2) raisons.push(`Mots-clés en commun : ${hits.slice(0, 4).join(", ")}`);
@@ -180,7 +221,11 @@ function scoreAdequation(
 
   // Pondération dynamique : poids de base, TRL neutralisé (et redistribué) si non comparable.
   const W = { theme: 0.4, trl: 0.25, kw: 0.2, profil: 0.1, geo: 0.05 };
-  let wTheme = W.theme, wTrl = W.trl, wKw = W.kw, wProfil = W.profil, wGeo = W.geo;
+  let wTheme = W.theme,
+    wTrl = W.trl,
+    wKw = W.kw,
+    wProfil = W.profil,
+    wGeo = W.geo;
   if (!trlComparable) {
     const reste = W.theme + W.kw + W.profil + W.geo; // 0.75
     wTrl = 0;
@@ -264,10 +309,17 @@ function scoreFinancier(aap: AAP, projet: ProjetInput): number {
 }
 
 // ── 4.5 — Score composite + assemblage ───────────────────────────────
-export function scoreProjet(aap: AAP, projet: ProjetInput, projThemes: string[]): ScoredAap | null {
-  if (exclusion(aap, projet, projThemes)) return null;
+export function scoreProjet(
+  aap: AAP,
+  projet: ProjetInput,
+  projThemes: string[],
+  kws?: string[],
+): ScoredAap | null {
+  const projKws = kws ?? keywordsFromProjet(projet);
+  const hay = aapHaystack(aap);
+  if (exclusion(aap, projet, projThemes, projKws, hay)) return null;
 
-  const { score: adequation, raisons } = scoreAdequation(aap, projet, projThemes);
+  const { score: adequation, raisons } = scoreAdequation(aap, projet, projThemes, projKws, hay);
   const { score: accessibilite, points } = scoreAccessibilite(aap);
   const financier = scoreFinancier(aap, projet);
 
@@ -288,8 +340,9 @@ export function scoreProjet(aap: AAP, projet: ProjetInput, projThemes: string[])
  */
 export function matchProjet(aaps: AAP[], projet: ProjetInput): ScoredAap[] {
   const projThemes = secteursToThematiques(projet.secteurs);
+  const kws = keywordsFromProjet(projet); // hoisté : ne dépend que du projet
   return aaps
-    .map((a) => scoreProjet(a, projet, projThemes))
+    .map((a) => scoreProjet(a, projet, projThemes, kws))
     .filter((x): x is ScoredAap => x !== null)
     .sort((a, b) => b.score - a.score);
 }
@@ -360,8 +413,9 @@ export interface ScoredForEntite {
 export function aapsForEntite(aaps: AAP[], entite: Entite, min = 60): ScoredForEntite[] {
   const projet = entiteToProjet(entite);
   const projThemes = secteursToThematiques(projet.secteurs);
+  const kws = keywordsFromProjet(projet);
   return aaps
-    .map((aap) => scoreProjet(aap, projet, projThemes))
+    .map((aap) => scoreProjet(aap, projet, projThemes, kws))
     .filter((x): x is ScoredAap => x !== null && x.score >= min)
     .map((x) => ({ aap: x.aap, score: x.score }))
     .sort((a, b) => b.score - a.score);
@@ -374,15 +428,31 @@ export interface AapForFiliale {
 }
 
 /** AAP pertinents pour une filiale, avec bonus si un projet de la filiale matche. */
-export function aapsForFiliale(aaps: AAP[], entite: Entite, filiale: Filiale, min = 60): AapForFiliale[] {
+export function aapsForFiliale(
+  aaps: AAP[],
+  entite: Entite,
+  filiale: Filiale,
+  min = 60,
+): AapForFiliale[] {
   const projet = filialeToProjet(entite, filiale);
   const projThemes = secteursToThematiques(projet.secteurs);
+  const kws = keywordsFromProjet(projet);
   return aaps
     .map((aap) => {
-      const s = scoreProjet(aap, projet, projThemes);
+      const s = scoreProjet(aap, projet, projThemes, kws);
       if (!s) return null;
       const matchedProjets = filiale.projets.filter((p) => {
-        const ps = scoreProjet(aap, { nom: p.nom, description: "", secteurs: [], trl: p.trl, motsClesLibres: p.mots_cles.join(" ") }, []);
+        const ps = scoreProjet(
+          aap,
+          {
+            nom: p.nom,
+            description: "",
+            secteurs: [],
+            trl: p.trl,
+            motsClesLibres: p.mots_cles.join(" "),
+          },
+          [],
+        );
         return ps != null && ps.score >= 55;
       });
       const score = matchedProjets.length > 0 ? Math.min(100, s.score + 10) : s.score;
@@ -395,7 +465,9 @@ export function aapsForFiliale(aaps: AAP[], entite: Entite, filiale: Filiale, mi
 /** AAP pertinents pour la BU mais rattachés à aucune filiale précise. */
 export function aapsGeneriquesBU(aaps: AAP[], entite: Entite, min = 60): ScoredForEntite[] {
   const filialeIds = new Set(
-    (entite.filiales ?? []).flatMap((f) => aapsForFiliale(aaps, entite, f, min).map((x) => x.aap.id)),
+    (entite.filiales ?? []).flatMap((f) =>
+      aapsForFiliale(aaps, entite, f, min).map((x) => x.aap.id),
+    ),
   );
   return aapsForEntite(aaps, entite, min).filter((x) => !filialeIds.has(x.aap.id));
 }

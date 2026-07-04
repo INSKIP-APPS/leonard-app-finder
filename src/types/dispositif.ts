@@ -193,10 +193,7 @@ export function isOuvert(d: Dispositif): boolean {
 }
 
 /** Vérifie si un dispositif cible un type d'acteur donné */
-export function cibleActeur(
-  d: Dispositif,
-  acteur: keyof ActeursCibles,
-): boolean {
+export function cibleActeur(d: Dispositif, acteur: keyof ActeursCibles): boolean {
   return d.acteurs_cibles[acteur];
 }
 
@@ -204,10 +201,7 @@ export function cibleActeur(
 export type ProfilLeonard = "BU" | "Startup" | "Prospective";
 
 /** Évalue la pertinence pour un profil Leonard donné */
-export function pertinencePourProfil(
-  d: Dispositif,
-  profil: ProfilLeonard,
-): boolean {
+export function pertinencePourProfil(d: Dispositif, profil: ProfilLeonard): boolean {
   switch (profil) {
     case "BU":
       return d.acteurs_cibles.grand_groupe || d.acteurs_cibles.eti || d.acteurs_cibles.pme;

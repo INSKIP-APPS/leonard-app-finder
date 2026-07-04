@@ -1,4 +1,15 @@
-import { X, ExternalLink, FileDown, Calendar, Coins, Users, Layers, Tag, Bookmark, BookmarkCheck } from "lucide-react";
+import {
+  X,
+  ExternalLink,
+  FileDown,
+  Calendar,
+  Coins,
+  Users,
+  Layers,
+  Tag,
+  Bookmark,
+  BookmarkCheck,
+} from "lucide-react";
 import type { AAP } from "@/types/aap";
 import { aapEchelle } from "@/utils/echelle";
 import { joursRestants } from "@/utils/scoring-engine";
@@ -25,7 +36,11 @@ function fmtDate(iso: string | null): string {
 
 function fmtEuros(n: number | null): string | null {
   if (n == null) return null;
-  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  }).format(n);
 }
 
 function budgetLabel(a: AAP): string {
@@ -90,12 +105,21 @@ function exporterPdf(a: AAP) {
   <script>window.onload = function(){ window.print(); }</script>
 </body></html>`;
   const w = window.open("", "_blank", "width=820,height=1000");
-  if (!w) { alert("Autorisez les fenêtres pop-up pour exporter en PDF."); return; }
+  if (!w) {
+    alert("Autorisez les fenêtres pop-up pour exporter en PDF.");
+    return;
+  }
   w.document.write(html);
   w.document.close();
 }
 
-function Badge({ children, tone = "muted" }: { children: React.ReactNode; tone?: "muted" | "sky" | "purple" | "emerald" | "pink" }) {
+function Badge({
+  children,
+  tone = "muted",
+}: {
+  children: React.ReactNode;
+  tone?: "muted" | "sky" | "purple" | "emerald" | "pink";
+}) {
   const cls = {
     muted: "bg-muted text-text",
     sky: "bg-[#E6F1FB] text-navy",
@@ -140,10 +164,15 @@ export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => voi
             <div className="label-caps text-[10px] mb-1">{aap.source}</div>
             <h2 className="text-lg font-bold text-navy leading-snug">{aap.titre}</h2>
             <div className="text-sm text-muted mt-1">
-              {aap.programme}{aap.cluster ? ` · ${aap.cluster}` : ""}
+              {aap.programme}
+              {aap.cluster ? ` · ${aap.cluster}` : ""}
             </div>
           </div>
-          <button onClick={onClose} className="shrink-0 text-muted hover:text-navy" aria-label="Fermer">
+          <button
+            onClick={onClose}
+            className="shrink-0 text-muted hover:text-navy"
+            aria-label="Fermer"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -151,32 +180,55 @@ export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => voi
         {/* Badges */}
         <div className="flex flex-wrap gap-1.5 px-5 pt-4">
           <Badge tone="sky">{echelle}</Badge>
-          <Badge tone={aap.statut === "closed" ? "pink" : "emerald"}>{STATUT_LABEL[aap.statut] ?? aap.statut}</Badge>
+          <Badge tone={aap.statut === "closed" ? "pink" : "emerald"}>
+            {STATUT_LABEL[aap.statut] ?? aap.statut}
+          </Badge>
           <Badge tone="purple">{aap.type_action}</Badge>
           {trl && <Badge tone="muted">{trl}</Badge>}
-          {(aap.thematiques ?? []).slice(0, 4).map((t) => <Badge key={t} tone="muted">{t}</Badge>)}
+          {(aap.thematiques ?? []).slice(0, 4).map((t) => (
+            <Badge key={t} tone="muted">
+              {t}
+            </Badge>
+          ))}
         </div>
 
         {/* Infos clés */}
         <div className="grid grid-cols-2 gap-4 px-5 py-4">
-          <InfoLine icon={<Calendar className="w-4 h-4" />} label="Clôture" value={`${fmtDate(aap.date_cloture)}${jr != null && jr >= 0 ? ` · J-${jr}` : ""}`} />
-          <InfoLine icon={<Calendar className="w-4 h-4" />} label="Ouverture" value={fmtDate(aap.date_ouverture)} />
+          <InfoLine
+            icon={<Calendar className="w-4 h-4" />}
+            label="Clôture"
+            value={`${fmtDate(aap.date_cloture)}${jr != null && jr >= 0 ? ` · J-${jr}` : ""}`}
+          />
+          <InfoLine
+            icon={<Calendar className="w-4 h-4" />}
+            label="Ouverture"
+            value={fmtDate(aap.date_ouverture)}
+          />
           <InfoLine icon={<Coins className="w-4 h-4" />} label="Budget" value={budgetLabel(aap)} />
-          <InfoLine icon={<Users className="w-4 h-4" />} label="Acteurs éligibles" value={(aap.acteurs_eligibles ?? []).join(", ") || "—"} />
+          <InfoLine
+            icon={<Users className="w-4 h-4" />}
+            label="Acteurs éligibles"
+            value={(aap.acteurs_eligibles ?? []).join(", ") || "—"}
+          />
         </div>
 
         {/* Aussi disponible via */}
         {aap.sources_multiples && aap.sources_multiples.length > 0 && (
           <div className="px-5 pb-2 flex items-center gap-2 text-xs text-emerald-700">
-            <Layers className="w-3.5 h-3.5" /> Aussi référencé sur : {aap.sources_multiples.join(", ")}
+            <Layers className="w-3.5 h-3.5" /> Aussi référencé sur :{" "}
+            {aap.sources_multiples.join(", ")}
           </div>
         )}
 
         {/* Description */}
         {aap.description && (
           <div className="px-5 pb-4">
-            <div className="label-caps text-[10px] mb-1 flex items-center gap-1"><Tag className="w-3 h-3" /> Description</div>
-            <p className="text-sm text-text whitespace-pre-wrap max-h-64 overflow-y-auto">{aap.description}</p>
+            <div className="label-caps text-[10px] mb-1 flex items-center gap-1">
+              <Tag className="w-3 h-3" /> Description
+            </div>
+            <p className="text-sm text-text whitespace-pre-wrap max-h-64 overflow-y-auto">
+              {aap.description}
+            </p>
           </div>
         )}
 
@@ -186,7 +238,15 @@ export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => voi
             onClick={() => toggleSaved(aap.id)}
             className={`inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm font-medium transition ${saved ? "border-pink/40 bg-pink/10 text-pink" : "border-border text-navy hover:border-navy"}`}
           >
-            {saved ? <><BookmarkCheck className="w-4 h-4" /> Sauvegardé</> : <><Bookmark className="w-4 h-4" /> Sauvegarder</>}
+            {saved ? (
+              <>
+                <BookmarkCheck className="w-4 h-4" /> Sauvegardé
+              </>
+            ) : (
+              <>
+                <Bookmark className="w-4 h-4" /> Sauvegarder
+              </>
+            )}
           </button>
           <div className="flex items-center gap-2">
             <button

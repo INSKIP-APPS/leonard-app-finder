@@ -1,6 +1,5 @@
 @import "tailwindcss" source(none);
 @source "../src";
-@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -8,17 +7,17 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 
   /* Palette Leonard / VINCI — institutionnelle, sobre */
-  --color-navy: #001D3D;
-  --color-navy-soft: #14365C;
-  --color-sky: #2D8FD5;
-  --color-pink: #E63972;
+  --color-navy: #001d3d;
+  --color-navy-soft: #14365c;
+  --color-sky: #2d8fd5;
+  --color-pink: #e63972;
   --color-purple: #3c006e;
-  --color-bg: #F4F6F9;
+  --color-bg: #f4f6f9;
   --color-surface: #ffffff;
-  --color-text: #0E1A2B;
-  --color-muted: #64748B;
-  --color-border: #E4E8EE;
-  --color-border-strong: #D2D8E1;
+  --color-text: #0e1a2b;
+  --color-muted: #64748b;
+  --color-border: #e4e8ee;
+  --color-border-strong: #d2d8e1;
 }
 
 @theme inline {
@@ -48,32 +47,33 @@
 
 :root {
   --radius: 0.75rem;
-  --background: #F4F6F9;
-  --foreground: #0E1A2B;
+  --background: #f4f6f9;
+  --foreground: #0e1a2b;
   --card: #ffffff;
-  --card-foreground: #0E1A2B;
+  --card-foreground: #0e1a2b;
   --popover: #ffffff;
-  --popover-foreground: #0E1A2B;
-  --primary: #001D3D;
+  --popover-foreground: #0e1a2b;
+  --primary: #001d3d;
   --primary-foreground: #ffffff;
-  --secondary: #EEF2F7;
-  --secondary-foreground: #001D3D;
-  --muted: #F1F4F8;
-  --muted-foreground: #64748B;
-  --accent: #E8F1FA;
-  --accent-foreground: #001D3D;
-  --destructive: #E63972;
+  --secondary: #eef2f7;
+  --secondary-foreground: #001d3d;
+  --muted: #f1f4f8;
+  --muted-foreground: #64748b;
+  --accent: #e8f1fa;
+  --accent-foreground: #001d3d;
+  --destructive: #e63972;
   --destructive-foreground: #ffffff;
-  --border: #E4E8EE;
-  --input: #E4E8EE;
-  --ring: #2D8FD5;
+  --border: #e4e8ee;
+  --input: #e4e8ee;
+  --ring: #2d8fd5;
 }
 
 @layer base {
   * {
     border-color: var(--color-border);
   }
-  html, body {
+  html,
+  body {
     background-color: var(--color-bg);
     color: var(--color-text);
     font-family: var(--font-sans);
@@ -81,12 +81,17 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     color: var(--color-navy);
     font-weight: 600;
     letter-spacing: -0.015em;
   }
-  h1 { letter-spacing: -0.025em; }
+  h1 {
+    letter-spacing: -0.025em;
+  }
 }
 
 @utility label-caps {
@@ -101,47 +106,75 @@
   background: #fff;
   border: 1px solid var(--color-border);
   border-radius: 18px;
-  box-shadow: 0 1px 2px rgba(14, 26, 43, 0.03), 0 4px 16px -8px rgba(14, 26, 43, 0.06);
-  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+  box-shadow:
+    0 1px 2px rgba(14, 26, 43, 0.03),
+    0 4px 16px -8px rgba(14, 26, 43, 0.06);
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.25s ease,
+    border-color 0.25s ease;
 }
 
 @utility card-hover {
   &:hover {
-    box-shadow: 0 1px 2px rgba(14, 26, 43, 0.04), 0 16px 40px -16px rgba(0, 29, 61, 0.18);
+    box-shadow:
+      0 1px 2px rgba(14, 26, 43, 0.04),
+      0 16px 40px -16px rgba(0, 29, 61, 0.18);
     transform: translateY(-2px);
     border-color: var(--color-border-strong);
   }
 }
 
-
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.85); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
 }
 .live-dot {
   animation: pulse-dot 1.6s ease-in-out infinite;
 }
 
 @keyframes bar-grow {
-  from { width: 0%; }
+  from {
+    width: 0%;
+  }
 }
 .bar-fill {
   animation: bar-grow 1s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes fade-up {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .fade-up {
   animation: fade-up 0.45s ease-out both;
 }
 
 @media print {
-  .no-print { display: none !important; }
+  .no-print {
+    display: none !important;
+  }
   /* Hide everything, then reveal only the fiche */
-  body * { visibility: hidden !important; }
-  .print-fiche, .print-fiche * { visibility: visible !important; }
+  body * {
+    visibility: hidden !important;
+  }
+  .print-fiche,
+  .print-fiche * {
+    visibility: visible !important;
+  }
   .print-fiche {
     position: absolute !important;
     inset: 0 !important;
@@ -150,8 +183,10 @@
     overflow: visible !important;
     background: white !important;
   }
-  .print-backdrop { display: none !important; }
-  @page { margin: 16mm; }
+  .print-backdrop {
+    display: none !important;
+  }
+  @page {
+    margin: 16mm;
+  }
 }
-
-

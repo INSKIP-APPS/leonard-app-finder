@@ -1,19 +1,33 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronRight, X, SlidersHorizontal, Check, AlertTriangle, Sparkles, HelpCircle, Loader2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  X,
+  SlidersHorizontal,
+  Check,
+  AlertTriangle,
+  Sparkles,
+  HelpCircle,
+  Loader2,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getAaps, saveMatchingRequest } from "@/services/data-store";
+import type { AAP } from "@/types/aap";
 import { matchProjet, type ProjetInput, type ScoredAap } from "@/utils/scoring-engine";
 import { affinerAvecClaude, type MatchMode } from "@/services/claude-matching";
 import { TIERS, TIER_ORDER, tierFor, TierBadge } from "@/utils/tier";
 import { FicheAap } from "@/components/FicheAap";
 
-
 export const Route = createFileRoute("/matching")({
   head: () => ({
     meta: [
       { title: "Matching à la demande — Leonard Veille AAP" },
-      { name: "description", content: "Trouvez les Appels à Projets compatibles avec votre projet d'innovation : profil porteur, TRL, secteur, géographie." },
+      {
+        name: "description",
+        content:
+          "Trouvez les Appels à Projets compatibles avec votre projet d'innovation : profil porteur, TRL, secteur, géographie.",
+      },
     ],
   }),
   component: Matching,
@@ -76,12 +90,29 @@ const TRLS = [
 const REGIONS_FR = [
   "Europe",
   "France (national)",
-  "Auvergne-Rhône-Alpes", "Bourgogne-Franche-Comté", "Bretagne", "Centre-Val de Loire",
-  "Corse", "Grand Est", "Hauts-de-France", "Île-de-France", "Normandie",
-  "Nouvelle-Aquitaine", "Occitanie", "Pays de la Loire", "Provence-Alpes-Côte d'Azur",
-  "Guadeloupe", "Martinique", "Guyane", "La Réunion", "Mayotte",
+  "Auvergne-Rhône-Alpes",
+  "Bourgogne-Franche-Comté",
+  "Bretagne",
+  "Centre-Val de Loire",
+  "Corse",
+  "Grand Est",
+  "Hauts-de-France",
+  "Île-de-France",
+  "Normandie",
+  "Nouvelle-Aquitaine",
+  "Occitanie",
+  "Pays de la Loire",
+  "Provence-Alpes-Côte d'Azur",
+  "Guadeloupe",
+  "Martinique",
+  "Guyane",
+  "La Réunion",
+  "Mayotte",
   "International",
 ];
+
+// Référence stable pour « aucun matching lancé » (évite les re-rendus inutiles).
+const EMPTY_SCORED: ScoredAap[] = [];
 
 const PARTENAIRES = [
   "Partenaire(s) interne(s) VINCI",
@@ -146,10 +177,29 @@ function Matching() {
       financementRecherche: financement || undefined,
       motsClesLibres: `${typesProjet.join(" ")} ${autresInfos}`,
     }),
-    [nomProjet, description, typeActeur, secteursSel, trl, region, budget, financement, typesProjet, autresInfos],
+    [
+      nomProjet,
+      description,
+      typeActeur,
+      secteursSel,
+      trl,
+      region,
+      budget,
+      financement,
+      typesProjet,
+      autresInfos,
+    ],
   );
 
-  const scored = useMemo(() => matchProjet(aaps, projet), [aaps, projet]);
+  // Projet SOUMIS (figé au clic « Lancer le matching »). Le scoring des ~2 500
+  // AAP ne tourne qu'à la soumission — pas à chaque frappe dans le formulaire.
+  // `aaps` reste en dépendance : si la base arrive après le clic (chargement
+  // initial), les résultats se calculent dès qu'elle est disponible.
+  const [submitted, setSubmitted] = useState<ProjetInput | null>(null);
+  const scored = useMemo(
+    () => (submitted ? matchProjet(aaps, submitted) : EMPTY_SCORED),
+    [aaps, submitted],
+  );
 
   // Couche 2 — affinage Claude (à la demande)
   const [enriched, setEnriched] = useState<ScoredAap[] | null>(null);
@@ -168,8 +218,9 @@ function Matching() {
   const effectiveScored = enriched ?? scored;
 
   const lancerAffinage = async () => {
+    if (!submitted) return; // résultats affichés ⇒ toujours défini
     setAffinement("loading");
-    const res = await affinerAvecClaude(projet, scored);
+    const res = await affinerAvecClaude(submitted, scored);
     setEnriched(res.scored);
     setAffinementMode(res.mode);
     setAffinementError(res.error ?? null);
@@ -180,7 +231,16 @@ function Matching() {
   // distincte) puis affiche les résultats. La sauvegarde ne bloque pas l'UI.
   const savedSigRef = useRef("");
   const lancerMatching = () => {
-    const sig = JSON.stringify([nomProjet, description, secteursSel, trl, region, typeActeur, budget, financement]);
+    const sig = JSON.stringify([
+      nomProjet,
+      description,
+      secteursSel,
+      trl,
+      region,
+      typeActeur,
+      budget,
+      financement,
+    ]);
     if (nomProjet.trim() && sig !== savedSigRef.current) {
       savedSigRef.current = sig;
       void saveMatchingRequest({
@@ -194,10 +254,11 @@ function Matching() {
         budget: budget || undefined,
         financement: financement || undefined,
         motsCles: [...typesProjet],
-        nb_resultats: scored.length,
+        nb_resultats: matchProjet(aaps, projet).length,
         extra: { pole, typesProjet, partenaires, dateDeploiement, autresInfos },
       });
     }
+    setSubmitted(projet);
     setStep("results");
   };
 
@@ -213,13 +274,19 @@ function Matching() {
   );
 
   const filtersDirty = minScore !== 40 || minAdequation !== 0 || minAccessibilite !== 0;
-  const resetFilters = () => { setMinScore(40); setMinAdequation(0); setMinAccessibilite(0); };
+  const resetFilters = () => {
+    setMinScore(40);
+    setMinAdequation(0);
+    setMinAccessibilite(0);
+  };
 
   return (
     <>
       <header className="mb-6">
         <h1 className="text-2xl">Matching à la demande</h1>
-        <div className="text-sm text-muted mt-1">Décrivez votre projet pour identifier les AAP compatibles.</div>
+        <div className="text-sm text-muted mt-1">
+          Décrivez votre projet pour identifier les AAP compatibles.
+        </div>
       </header>
 
       <Stepper step={step} />
@@ -229,7 +296,11 @@ function Matching() {
           <Block title="Le projet">
             <div className="grid grid-cols-1 gap-4">
               <Field label="Nom du projet">
-                <TextInput value={nomProjet} onChange={setNomProjet} placeholder="Ex : Jumeau numérique chantier urbain" />
+                <TextInput
+                  value={nomProjet}
+                  onChange={setNomProjet}
+                  placeholder="Ex : Jumeau numérique chantier urbain"
+                />
               </Field>
               <Field label="Description courte">
                 <textarea
@@ -248,17 +319,31 @@ function Matching() {
                 <Select value={typeActeur} onChange={setTypeActeur} options={TYPES_ACTEUR} />
               </Field>
               <Field label="Nom de l'entreprise ou entité porteuse">
-                <TextInput value={entitePorteuse} onChange={setEntitePorteuse} placeholder="Ex : Actemium Paris, MyStartup…" />
+                <TextInput
+                  value={entitePorteuse}
+                  onChange={setEntitePorteuse}
+                  placeholder="Ex : Actemium Paris, MyStartup…"
+                />
               </Field>
             </div>
             <div className="mt-4">
               <Field label="Type de projet">
-                <MultiSelect options={TYPES_PROJET} values={typesProjet} onChange={setTypesProjet} placeholder="Choisir un ou plusieurs types" />
+                <MultiSelect
+                  options={TYPES_PROJET}
+                  values={typesProjet}
+                  onChange={setTypesProjet}
+                  placeholder="Choisir un ou plusieurs types"
+                />
               </Field>
             </div>
             <div className="mt-4">
               <Field label="Secteur(s) et thématique(s)">
-                <MultiSelect options={SECTEURS} values={secteursSel} onChange={setSecteursSel} placeholder="Choisir un ou plusieurs secteurs" />
+                <MultiSelect
+                  options={SECTEURS}
+                  values={secteursSel}
+                  onChange={setSecteursSel}
+                  placeholder="Choisir un ou plusieurs secteurs"
+                />
               </Field>
             </div>
             <div className="grid grid-cols-2 gap-4 mt-4">
@@ -270,7 +355,9 @@ function Matching() {
                 >
                   <option value="">—</option>
                   {TRLS.map((t) => (
-                    <option key={t.v} value={t.v}>{t.l}</option>
+                    <option key={t.v} value={t.v}>
+                      {t.l}
+                    </option>
                   ))}
                 </select>
               </Field>
@@ -280,7 +367,10 @@ function Matching() {
             </div>
           </Block>
 
-          <Block title="Informations complémentaires" subtitle="Optionnel — affine les recommandations sans bloquer le parcours.">
+          <Block
+            title="Informations complémentaires"
+            subtitle="Optionnel — affine les recommandations sans bloquer le parcours."
+          >
             <div className="grid grid-cols-2 gap-4">
               <Field label="Budget total estimé du projet">
                 <TextInput value={budget} onChange={setBudget} placeholder="Ex : 2,5 M€" />
@@ -291,7 +381,12 @@ function Matching() {
             </div>
             <div className="mt-4">
               <Field label="Partenaires déjà identifiés">
-                <MultiSelect options={PARTENAIRES} values={partenaires} onChange={setPartenaires} placeholder="Choisir un ou plusieurs partenaires" />
+                <MultiSelect
+                  options={PARTENAIRES}
+                  values={partenaires}
+                  onChange={setPartenaires}
+                  placeholder="Choisir un ou plusieurs partenaires"
+                />
               </Field>
             </div>
             <div className="grid grid-cols-2 gap-4 mt-4">
@@ -357,7 +452,8 @@ function Matching() {
           {affinement === "done" && affinementMode === "claude" && (
             <div className="mb-4 flex items-center gap-2 text-xs bg-[#F3E8FF] text-purple px-3 py-2 rounded-md">
               <Sparkles className="w-4 h-4 shrink-0" />
-              Top {Math.min(18, results.length)} affiné par Claude (Sonnet 5) — score fusionné 60 % structurel / 40 % sémantique, raisons et points d'attention reformulés.
+              Top {Math.min(18, results.length)} affiné par Claude (Sonnet 5) — score fusionné 60 %
+              structurel / 40 % sémantique, raisons et points d'attention reformulés.
             </div>
           )}
           {affinement === "done" && affinementMode === "fallback" && (
@@ -365,7 +461,8 @@ function Matching() {
               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>
                 Affinage IA indisponible — repli sur le scoring structurel.
-                {affinementError ? ` (${affinementError})` : ""} La clé API Anthropic doit être configurée côté serveur.
+                {affinementError ? ` (${affinementError})` : ""} La clé API Anthropic doit être
+                configurée côté serveur.
               </span>
             </div>
           )}
@@ -378,19 +475,36 @@ function Matching() {
               >
                 <SlidersHorizontal className="w-4 h-4" />
                 Affiner les résultats
-                <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? "rotate-180" : ""}`} />
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform ${showFilters ? "rotate-180" : ""}`}
+                />
               </button>
               {filtersDirty && (
-                <button onClick={resetFilters} className="text-xs text-pink hover:underline font-medium">
+                <button
+                  onClick={resetFilters}
+                  className="text-xs text-pink hover:underline font-medium"
+                >
                   Réinitialiser
                 </button>
               )}
             </div>
             {showFilters && (
               <div className="card-flat p-4 mt-3 grid grid-cols-1 md:grid-cols-3 gap-5">
-                <SliderField label="Score d'opportunité min." value={minScore} onChange={setMinScore} />
-                <SliderField label="Adéquation min." value={minAdequation} onChange={setMinAdequation} />
-                <SliderField label="Accessibilité min." value={minAccessibilite} onChange={setMinAccessibilite} />
+                <SliderField
+                  label="Score d'opportunité min."
+                  value={minScore}
+                  onChange={setMinScore}
+                />
+                <SliderField
+                  label="Adéquation min."
+                  value={minAdequation}
+                  onChange={setMinAdequation}
+                />
+                <SliderField
+                  label="Accessibilité min."
+                  value={minAccessibilite}
+                  onChange={setMinAccessibilite}
+                />
               </div>
             )}
           </div>
@@ -402,7 +516,10 @@ function Matching() {
               const t = TIERS[k];
               const Icon = t.icon;
               return (
-                <span key={k} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-medium ${t.className}`}>
+                <span
+                  key={k}
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-medium ${t.className}`}
+                >
                   <Icon className="w-3 h-3" />
                   {t.label} <span className="opacity-70 font-normal ml-1">{t.range}</span>
                 </span>
@@ -411,7 +528,9 @@ function Matching() {
           </div>
 
           {isLoading && (
-            <div className="card-flat p-8 text-center text-muted">Chargement des appels à projets…</div>
+            <div className="card-flat p-8 text-center text-muted">
+              Chargement des appels à projets…
+            </div>
           )}
 
           {!isLoading && results.length === 0 && (
@@ -420,28 +539,32 @@ function Matching() {
             </div>
           )}
 
-          {!isLoading && TIER_ORDER.map((k) => {
-            const group = results.filter((r) => tierFor(r.score).key === k);
-            if (group.length === 0) return null;
-            const t = TIERS[k];
-            const Icon = t.icon;
-            return (
-              <div key={k} className="mb-6 last:mb-0">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${t.className}`}>
-                    <Icon className="w-3.5 h-3.5" />
-                  </span>
-                  <h3 className="text-sm font-semibold text-navy">{t.label}s <span className="text-muted font-normal">({group.length})</span></h3>
+          {!isLoading &&
+            TIER_ORDER.map((k) => {
+              const group = results.filter((r) => tierFor(r.score).key === k);
+              if (group.length === 0) return null;
+              const t = TIERS[k];
+              const Icon = t.icon;
+              return (
+                <div key={k} className="mb-6 last:mb-0">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span
+                      className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${t.className}`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                    </span>
+                    <h3 className="text-sm font-semibold text-navy">
+                      {t.label}s <span className="text-muted font-normal">({group.length})</span>
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    {group.map((r) => (
+                      <ResultCard key={r.aap.id} scored={r} onOpen={setSelectedAap} />
+                    ))}
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                  {group.map((r) => (
-                    <ResultCard key={r.aap.id} scored={r} onOpen={setSelectedAap} />
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-
+              );
+            })}
         </div>
       )}
 
@@ -463,7 +586,10 @@ function SubScore({ label, value }: { label: string; value: number }) {
     <div className="flex-1 min-w-0">
       <div className="flex items-baseline justify-between mb-1">
         <span className="text-[11px] font-medium text-muted uppercase tracking-wide">{label}</span>
-        <span className="text-xs font-semibold text-navy tabular-nums">{value}<span className="text-muted font-normal">/100</span></span>
+        <span className="text-xs font-semibold text-navy tabular-nums">
+          {value}
+          <span className="text-muted font-normal">/100</span>
+        </span>
       </div>
       <div className="h-1.5 rounded-full bg-[#eef2ff] overflow-hidden">
         <div className={`h-full rounded-full ${barColor(value)}`} style={{ width: `${value}%` }} />
@@ -485,7 +611,17 @@ function fmtDate(iso: string | null): string {
 }
 
 function ResultCard({ scored, onOpen }: { scored: ScoredAap; onOpen: (a: AAP) => void }) {
-  const { aap, score, sous_scores, raisons, points_attention, enrichi, score_structurel, score_semantique, elements_manquants } = scored;
+  const {
+    aap,
+    score,
+    sous_scores,
+    raisons,
+    points_attention,
+    enrichi,
+    score_structurel,
+    score_semantique,
+    elements_manquants,
+  } = scored;
   return (
     <button
       type="button"
@@ -504,14 +640,21 @@ function ResultCard({ scored, onOpen }: { scored: ScoredAap; onOpen: (a: AAP) =>
           </div>
           <div className="text-xs text-muted mt-0.5">
             {aap.programme}
-            {aap.cluster && <> · <span className="font-medium">{aap.cluster}</span></>}
+            {aap.cluster && (
+              <>
+                {" "}
+                · <span className="font-medium">{aap.cluster}</span>
+              </>
+            )}
             {" · "}
             {aap.type_action}
           </div>
         </div>
         <div className="shrink-0 text-right">
           <div className="text-lg font-bold text-navy tabular-nums leading-none">{score}</div>
-          <div className="mt-1"><TierBadge score={score} /></div>
+          <div className="mt-1">
+            <TierBadge score={score} />
+          </div>
           {enrichi && score_structurel != null && score_semantique != null && (
             <div className="text-[10px] text-muted mt-1 whitespace-nowrap">
               struct. {score_structurel} · IA {score_semantique}
@@ -562,19 +705,31 @@ function ResultCard({ scored, onOpen }: { scored: ScoredAap; onOpen: (a: AAP) =>
       <div className="flex items-center justify-between text-xs text-muted border-t border-border pt-2 mt-auto">
         <span>Clôture {fmtDate(aap.date_cloture)}</span>
         <span className="inline-flex items-center gap-1 text-navy font-medium">
-          {fmtMillions(aap.budget_par_projet ?? aap.budget_total)} <ChevronRight className="w-3 h-3" />
+          {fmtMillions(aap.budget_par_projet ?? aap.budget_total)}{" "}
+          <ChevronRight className="w-3 h-3" />
         </span>
       </div>
     </button>
   );
 }
 
-function SliderField({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+function SliderField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
   return (
     <div>
       <div className="flex items-baseline justify-between mb-1.5">
         <span className="text-xs font-medium text-text">{label}</span>
-        <span className="text-sm font-semibold text-navy tabular-nums">{value}<span className="text-muted font-normal text-xs">/100</span></span>
+        <span className="text-sm font-semibold text-navy tabular-nums">
+          {value}
+          <span className="text-muted font-normal text-xs">/100</span>
+        </span>
       </div>
       <input
         type="range"
@@ -597,7 +752,9 @@ function Stepper({ step }: { step: string }) {
         const active = i <= activeIdx;
         return (
           <div key={s} className="flex items-center gap-3">
-            <div className={`px-3 py-1.5 rounded-full text-xs font-medium ${active ? "bg-navy text-white" : "bg-white border border-border text-muted"}`}>
+            <div
+              className={`px-3 py-1.5 rounded-full text-xs font-medium ${active ? "bg-navy text-white" : "bg-white border border-border text-muted"}`}
+            >
               {s}
             </div>
             {i < steps.length - 1 && <div className="w-8 h-px bg-border" />}
@@ -608,7 +765,15 @@ function Stepper({ step }: { step: string }) {
   );
 }
 
-function Block({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
+function Block({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="mb-6 last:mb-0">
       <div className="label-caps mb-1">{title}</div>
@@ -619,7 +784,15 @@ function Block({ title, subtitle, children }: { title: string; subtitle?: string
   );
 }
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+function Field({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
   return (
     <label className="block">
       <div className="text-xs font-medium text-text mb-1.5">{label}</div>
@@ -629,7 +802,15 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
   );
 }
 
-function TextInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+function TextInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
   return (
     <input
       type="text"
@@ -641,7 +822,15 @@ function TextInput({ value, onChange, placeholder }: { value: string; onChange: 
   );
 }
 
-function Select({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
+function Select({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+}) {
   return (
     <select
       value={value}
@@ -650,13 +839,25 @@ function Select({ value, onChange, options }: { value: string; onChange: (v: str
     >
       <option value="">—</option>
       {options.map((o) => (
-        <option key={o} value={o}>{o}</option>
+        <option key={o} value={o}>
+          {o}
+        </option>
       ))}
     </select>
   );
 }
 
-function MultiSelect({ options, values, onChange, placeholder }: { options: string[]; values: string[]; onChange: (v: string[]) => void; placeholder?: string }) {
+function MultiSelect({
+  options,
+  values,
+  onChange,
+  placeholder,
+}: {
+  options: string[];
+  values: string[];
+  onChange: (v: string[]) => void;
+  placeholder?: string;
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -688,7 +889,10 @@ function MultiSelect({ options, values, onChange, placeholder }: { options: stri
             <span className="text-muted">{placeholder ?? "—"}</span>
           ) : (
             values.map((v) => (
-              <span key={v} className="inline-flex items-center gap-1 bg-navy text-white text-xs px-2 py-0.5 rounded-full">
+              <span
+                key={v}
+                className="inline-flex items-center gap-1 bg-navy text-white text-xs px-2 py-0.5 rounded-full"
+              >
                 {v}
                 <span onClick={(e) => remove(v, e)} className="hover:opacity-80 cursor-pointer">
                   <X className="w-3 h-3" />
@@ -697,7 +901,9 @@ function MultiSelect({ options, values, onChange, placeholder }: { options: stri
             ))
           )}
         </div>
-        <ChevronDown className={`w-4 h-4 text-muted transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown
+          className={`w-4 h-4 text-muted transition-transform ${open ? "rotate-180" : ""}`}
+        />
       </button>
       {open && (
         <div className="absolute z-20 mt-1 w-full max-h-64 overflow-y-auto bg-white border border-border rounded-md shadow-lg">
@@ -710,7 +916,9 @@ function MultiSelect({ options, values, onChange, placeholder }: { options: stri
                 onClick={() => toggle(o)}
                 className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-[var(--color-accent)] ${active ? "bg-[var(--color-accent)]" : ""}`}
               >
-                <span className={`w-4 h-4 rounded border flex items-center justify-center ${active ? "bg-navy border-navy" : "border-border"}`}>
+                <span
+                  className={`w-4 h-4 rounded border flex items-center justify-center ${active ? "bg-navy border-navy" : "border-border"}`}
+                >
                   {active && <span className="text-white text-xs leading-none">✓</span>}
                 </span>
                 <span>{o}</span>

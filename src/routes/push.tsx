@@ -21,7 +21,10 @@ export const Route = createFileRoute("/push")({
   head: () => ({
     meta: [
       { title: "Veille push — Leonard Veille AAP" },
-      { name: "description", content: "Veille automatique des AAP par entité VINCI : BU, filiales, projets." },
+      {
+        name: "description",
+        content: "Veille automatique des AAP par entité VINCI : BU, filiales, projets.",
+      },
     ],
   }),
   component: Push,
@@ -105,8 +108,12 @@ function Push() {
       </header>
 
       <div className="grid grid-cols-4 gap-4 mb-6 max-w-2xl">
-        <div className="col-span-2"><KpiCard label="AAP dispatchés (toutes entités)" value={totalDispatch} /></div>
-        <div className="col-span-2"><KpiCard label="Score moyen de pertinence" value={`${scoreMoyen}%`} /></div>
+        <div className="col-span-2">
+          <KpiCard label="AAP dispatchés (toutes entités)" value={totalDispatch} />
+        </div>
+        <div className="col-span-2">
+          <KpiCard label="Score moyen de pertinence" value={`${scoreMoyen}%`} />
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-6">
@@ -115,9 +122,14 @@ function Push() {
           return (
             <button
               key={e.id}
-              onClick={() => { setActiveId(e.id); setEditing(false); }}
+              onClick={() => {
+                setActiveId(e.id);
+                setEditing(false);
+              }}
               className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-                active ? "bg-navy text-white" : "border border-navy text-navy bg-white hover:bg-[var(--color-accent)]"
+                active
+                  ? "bg-navy text-white"
+                  : "border border-navy text-navy bg-white hover:bg-[var(--color-accent)]"
               }`}
             >
               {e.nom}
@@ -126,7 +138,13 @@ function Push() {
         })}
       </div>
 
-      <ProfilCard entite={entite} editing={editing} onEdit={() => setEditing(true)} onCancel={() => setEditing(false)} onSave={saveEntite} />
+      <ProfilCard
+        entite={entite}
+        editing={editing}
+        onEdit={() => setEditing(true)}
+        onCancel={() => setEditing(false)}
+        onSave={saveEntite}
+      />
 
       {isLoading ? (
         <div className="card-flat p-8 text-center text-muted">Chargement des appels à projets…</div>
@@ -139,14 +157,22 @@ function Push() {
         </div>
       ) : (
         <div className="card-flat p-5">
-          <h3 className="text-base mb-4">{list.length} AAP sélectionnés pour {entite.nom}</h3>
+          <h3 className="text-base mb-4">
+            {list.length} AAP sélectionnés pour {entite.nom}
+          </h3>
           <div className="divide-y divide-border">
             {list.slice(0, TOP_N).map(({ aap, score }) => (
               <AapRow key={aap.id} aap={aap} score={score} />
             ))}
-            {list.length === 0 && <div className="text-sm text-muted py-6 text-center">Aucun AAP pertinent pour cette entité.</div>}
+            {list.length === 0 && (
+              <div className="text-sm text-muted py-6 text-center">
+                Aucun AAP pertinent pour cette entité.
+              </div>
+            )}
             {list.length > TOP_N && (
-              <div className="text-xs text-muted pt-3 text-center">+ {list.length - TOP_N} autres AAP pertinents</div>
+              <div className="text-xs text-muted pt-3 text-center">
+                + {list.length - TOP_N} autres AAP pertinents
+              </div>
             )}
           </div>
         </div>
@@ -155,7 +181,15 @@ function Push() {
   );
 }
 
-function FilialeSection({ aaps, entite, filiale }: { aaps: AAP[]; entite: Entite; filiale: Filiale }) {
+function FilialeSection({
+  aaps,
+  entite,
+  filiale,
+}: {
+  aaps: AAP[];
+  entite: Entite;
+  filiale: Filiale;
+}) {
   const items = useMemo(() => aapsForFiliale(aaps, entite, filiale), [aaps, entite, filiale]);
   return (
     <div className="card-flat p-5">
@@ -172,10 +206,14 @@ function FilialeSection({ aaps, entite, filiale }: { aaps: AAP[]; entite: Entite
           <AapRow key={aap.id} aap={aap} score={score} projets={matchedProjets} />
         ))}
         {items.length === 0 && (
-          <div className="text-sm text-muted py-4 text-center">Aucun AAP pertinent pour {filiale.nom}.</div>
+          <div className="text-sm text-muted py-4 text-center">
+            Aucun AAP pertinent pour {filiale.nom}.
+          </div>
         )}
         {items.length > TOP_N && (
-          <div className="text-xs text-muted pt-3 text-center">+ {items.length - TOP_N} autres AAP pertinents</div>
+          <div className="text-xs text-muted pt-3 text-center">
+            + {items.length - TOP_N} autres AAP pertinents
+          </div>
         )}
       </div>
     </div>
@@ -190,7 +228,9 @@ function GeneriqueSection({ aaps, entite }: { aaps: AAP[]; entite: Entite }) {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-base font-semibold text-navy">Générique {entite.nom}</h3>
-          <div className="text-xs text-muted mt-0.5">AAP pertinents pour toute la BU, sans filiale cible précise.</div>
+          <div className="text-xs text-muted mt-0.5">
+            AAP pertinents pour toute la BU, sans filiale cible précise.
+          </div>
         </div>
         <span className="text-xs text-muted">{items.length} AAP</span>
       </div>
@@ -199,7 +239,9 @@ function GeneriqueSection({ aaps, entite }: { aaps: AAP[]; entite: Entite }) {
           <AapRow key={aap.id} aap={aap} score={score} />
         ))}
         {items.length > TOP_N && (
-          <div className="text-xs text-muted pt-3 text-center">+ {items.length - TOP_N} autres AAP pertinents</div>
+          <div className="text-xs text-muted pt-3 text-center">
+            + {items.length - TOP_N} autres AAP pertinents
+          </div>
         )}
       </div>
     </div>
@@ -227,18 +269,26 @@ function AapRow({ aap, score, projets }: { aap: AAP; score: number; projets?: En
         </div>
         <div className="flex flex-wrap gap-1 mt-1.5">
           {aap.thematiques.slice(0, 2).map((t) => (
-            <span key={t} className="px-2 py-0.5 rounded bg-muted text-text text-[11px]">{t}</span>
-          ))}
-          {projets && projets.map((p) => (
-            <span key={p.id} className="px-2 py-0.5 rounded bg-[#E6F1FB] text-navy text-[11px] font-medium">
-              Projet : {p.nom}
+            <span key={t} className="px-2 py-0.5 rounded bg-muted text-text text-[11px]">
+              {t}
             </span>
           ))}
+          {projets &&
+            projets.map((p) => (
+              <span
+                key={p.id}
+                className="px-2 py-0.5 rounded bg-[#E6F1FB] text-navy text-[11px] font-medium"
+              >
+                Projet : {p.nom}
+              </span>
+            ))}
         </div>
       </div>
       <div className="hidden md:flex items-center gap-1.5 shrink-0">
         <TierBadge score={score} />
-        <span className="px-2 py-0.5 rounded text-xs font-medium bg-[#F3E8FF] text-purple">{aap.type_action}</span>
+        <span className="px-2 py-0.5 rounded text-xs font-medium bg-[#F3E8FF] text-purple">
+          {aap.type_action}
+        </span>
       </div>
       <div className="shrink-0 text-right w-28">
         <div className="text-xs font-semibold text-navy">{budgetLabel(aap)}</div>
@@ -250,10 +300,16 @@ function AapRow({ aap, score, projets }: { aap: AAP; score: number; projets?: En
 }
 
 function ProfilCard({
-  entite, editing, onEdit, onCancel, onSave,
+  entite,
+  editing,
+  onEdit,
+  onCancel,
+  onSave,
 }: {
-  entite: Entite; editing: boolean;
-  onEdit: () => void; onCancel: () => void;
+  entite: Entite;
+  editing: boolean;
+  onEdit: () => void;
+  onCancel: () => void;
   onSave: (next: Partial<Entite>) => void;
 }) {
   const [desc, setDesc] = useState(entite.description_profil);
@@ -266,7 +322,16 @@ function ProfilCard({
     setMotsCles(entite.mots_cles_metier.join(", "));
   }, [entite]);
 
-  const ALL_SECTEURS = ["Construction", "Numérique", "Énergie", "Mobilité", "Eau", "Environnement", "Matériaux", "Industrie"];
+  const ALL_SECTEURS = [
+    "Construction",
+    "Numérique",
+    "Énergie",
+    "Mobilité",
+    "Eau",
+    "Environnement",
+    "Matériaux",
+    "Industrie",
+  ];
 
   return (
     <div className="card-flat p-5 mb-6">
@@ -276,7 +341,10 @@ function ProfilCard({
           <div className="text-lg font-semibold text-navy mt-1">{entite.nom}</div>
         </div>
         {!editing && (
-          <button onClick={onEdit} className="text-sm border border-navy text-navy px-3 py-1.5 rounded-md flex items-center gap-1.5 hover:bg-[var(--color-accent)]">
+          <button
+            onClick={onEdit}
+            className="text-sm border border-navy text-navy px-3 py-1.5 rounded-md flex items-center gap-1.5 hover:bg-[var(--color-accent)]"
+          >
             <Pencil className="w-3.5 h-3.5" /> Modifier le profil
           </button>
         )}
@@ -287,11 +355,20 @@ function ProfilCard({
           <p className="text-sm text-text leading-relaxed">{entite.description_profil}</p>
           <div className="flex flex-wrap gap-1.5 mt-3">
             {entite.secteurs_prioritaires.map((s) => (
-              <span key={s} className="px-2 py-1 rounded bg-[#E6F1FB] text-navy text-xs font-medium">{s}</span>
+              <span
+                key={s}
+                className="px-2 py-1 rounded bg-[#E6F1FB] text-navy text-xs font-medium"
+              >
+                {s}
+              </span>
             ))}
-            <span className="px-2 py-1 rounded bg-[#EEF2FF] text-navy text-xs font-medium">{entite.trl_habituel}</span>
+            <span className="px-2 py-1 rounded bg-[#EEF2FF] text-navy text-xs font-medium">
+              {entite.trl_habituel}
+            </span>
             {entite.mots_cles_metier.map((m) => (
-              <span key={m} className="px-2 py-1 rounded bg-gray-100 text-text text-xs">{m}</span>
+              <span key={m} className="px-2 py-1 rounded bg-gray-100 text-text text-xs">
+                {m}
+              </span>
             ))}
           </div>
         </>
@@ -312,7 +389,9 @@ function ProfilCard({
                 return (
                   <button
                     key={s}
-                    onClick={() => setSecteurs(on ? secteurs.filter((x) => x !== s) : [...secteurs, s])}
+                    onClick={() =>
+                      setSecteurs(on ? secteurs.filter((x) => x !== s) : [...secteurs, s])
+                    }
                     className={`px-3 py-1 rounded-full text-xs font-medium ${on ? "bg-navy text-white" : "border border-border bg-white text-text"}`}
                   >
                     {s}
@@ -330,13 +409,23 @@ function ProfilCard({
             />
           </div>
           <div className="flex gap-2 justify-end">
-            <button onClick={onCancel} className="px-4 py-2 text-sm border border-border rounded-md hover:bg-bg">Annuler</button>
             <button
-              onClick={() => onSave({
-                description_profil: desc,
-                secteurs_prioritaires: secteurs,
-                mots_cles_metier: motsCles.split(",").map((m) => m.trim()).filter(Boolean),
-              })}
+              onClick={onCancel}
+              className="px-4 py-2 text-sm border border-border rounded-md hover:bg-bg"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={() =>
+                onSave({
+                  description_profil: desc,
+                  secteurs_prioritaires: secteurs,
+                  mots_cles_metier: motsCles
+                    .split(",")
+                    .map((m) => m.trim())
+                    .filter(Boolean),
+                })
+              }
               className="px-4 py-2 text-sm bg-navy text-white rounded-md hover:opacity-90"
             >
               Enregistrer

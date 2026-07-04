@@ -30,7 +30,14 @@ export function aapEchelle(a: Pick<AAP, "echelle">): Echelle {
   const e = (a.echelle ?? "").toLowerCase();
   if (!e) return "EU";
   if (e.includes("europe")) return "EU";
-  if (e.includes("national") || e.includes("pays") || e.includes("ad-hoc") || e.includes("ad hoc")) return "National";
-  if (e.includes("département") || e.includes("departement") || e.includes("epci") || e.includes("commune")) return "Local";
+  if (e.includes("national") || e.includes("pays") || e.includes("ad-hoc") || e.includes("ad hoc"))
+    return "National";
+  if (
+    e.includes("département") ||
+    e.includes("departement") ||
+    e.includes("epci") ||
+    e.includes("commune")
+  )
+    return "Local";
   return "Régional";
 }

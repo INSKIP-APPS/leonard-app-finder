@@ -10,4 +10,3 @@ export function Logo({ size = "md" }: { size?: "sm" | "md" }) {
     />
   );
 }
-

@@ -12,7 +12,15 @@ const COLORS = [
   "linear-gradient(90deg, #6b7280 0%, #cbd5e1 100%)",
 ];
 
-export function BarChart({ title, data, bare = false }: { title: string; data: BarItem[]; bare?: boolean }) {
+export function BarChart({
+  title,
+  data,
+  bare = false,
+}: {
+  title: string;
+  data: BarItem[];
+  bare?: boolean;
+}) {
   const max = Math.max(...data.map((d) => d.value), 1);
   const total = data.reduce((s, d) => s + d.value, 0);
   return (
@@ -29,7 +37,9 @@ export function BarChart({ title, data, bare = false }: { title: string; data: B
           return (
             <div key={d.label} className="group">
               <div className="flex justify-between text-xs mb-1.5">
-                <span className="font-medium text-text group-hover:text-navy transition-colors">{d.label}</span>
+                <span className="font-medium text-text group-hover:text-navy transition-colors">
+                  {d.label}
+                </span>
                 <span className="text-muted font-semibold tabular-nums">{d.value}</span>
               </div>
               <div className="h-2.5 rounded-full bg-[#eef2ff] overflow-hidden">
