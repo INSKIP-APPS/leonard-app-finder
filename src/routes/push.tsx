@@ -13,6 +13,7 @@ import {
   type EntiteProjet,
 } from "@/utils/scoring-engine";
 import type { AAP } from "@/types/aap";
+import { fmtDate, budgetCompact } from "@/utils/format";
 import { TierBadge } from "@/utils/tier";
 import { KpiCard } from "@/components/KpiCard";
 import entitesData from "@/data/entites.json";
@@ -46,21 +47,6 @@ function loadEdits(): ProfilEdits {
 }
 
 // ── Helpers d'affichage ──────────────────────────────────────────────
-function fmtMillions(n: number | null): string {
-  if (n == null) return "—";
-  const m = n / 1_000_000;
-  return `${m >= 10 ? Math.round(m) : m.toFixed(1).replace(".", ",")} M€`;
-}
-function budgetLabel(a: AAP): string {
-  if (a.budget_par_projet) return `${fmtMillions(a.budget_par_projet)}/projet`;
-  if (a.budget_total) return fmtMillions(a.budget_total);
-  return "—";
-}
-function fmtDate(iso: string | null): string {
-  if (!iso) return "—";
-  const [y, m, d] = iso.slice(0, 10).split("-");
-  return d && m && y ? `${d}/${m}/${y}` : iso.slice(0, 10);
-}
 function echeanceLabel(iso: string | null): { text: string; cls: string } {
   const j = joursRestants(iso);
   if (j == null) return { text: `Clôture ${fmtDate(iso)}`, cls: "text-muted" };
@@ -291,7 +277,7 @@ function AapRow({ aap, score, projets }: { aap: AAP; score: number; projets?: En
         </span>
       </div>
       <div className="shrink-0 text-right w-28">
-        <div className="text-xs font-semibold text-navy">{budgetLabel(aap)}</div>
+        <div className="text-xs font-semibold text-navy">{budgetCompact(aap)}</div>
         <div className={`text-[11px] font-medium ${ech.cls}`}>{ech.text}</div>
       </div>
       <ExternalLink className="w-4 h-4 text-muted shrink-0" />

@@ -11,6 +11,7 @@ import {
   FREQUENCY_LABELS,
   type ScrapeFrequency,
 } from "@/services/data-store";
+import { fmtDateHeure } from "@/utils/format";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -24,18 +25,6 @@ export const Route = createFileRoute("/admin")({
   }),
   component: Admin,
 });
-
-function fmtDateTime(iso: string): string {
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return iso;
-  return d.toLocaleString("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 function Admin() {
   const qc = useQueryClient();
@@ -232,7 +221,7 @@ function Admin() {
               <tbody className="divide-y divide-border">
                 {logs.map((l) => (
                   <tr key={l.id} className="text-text">
-                    <td className="py-2 pr-3 whitespace-nowrap">{fmtDateTime(l.run_at)}</td>
+                    <td className="py-2 pr-3 whitespace-nowrap">{fmtDateHeure(l.run_at)}</td>
                     <td className="py-2 px-3">
                       {l.ok ? (
                         <span className="inline-flex items-center gap-1 text-emerald-700">

@@ -12,7 +12,9 @@ import {
 } from "lucide-react";
 import type { Dispositif } from "@/types/dispositif";
 import { perimetreVinci, type PerimetreVinci } from "@/utils/vinciBU";
-import { useSavedIds, toggleSaved } from "@/utils/savedAaps";
+import { useSavedDispositifIds, toggleSavedDispositif } from "@/utils/savedAaps";
+import { trlLabel, escapeHtml as esc } from "@/utils/format";
+import { Badge } from "@/components/Badge";
 
 // ──────────────────────────────────────────────────────────────────────
 // Fiche détaillée d'un DISPOSITIF (modale), mise en forme inspirée de la
@@ -42,16 +44,6 @@ function modalitesEnPuces(txt: string | null): string[] {
     .split("|")
     .map((s) => s.trim())
     .filter(Boolean);
-}
-
-function trlLabel(min: number | null, max: number | null): string | null {
-  if (min == null && max == null) return null;
-  if (min != null && max != null) return `TRL ${min}–${max}`;
-  return `TRL ${min ?? max}`;
-}
-
-function esc(s: string): string {
-  return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 /** Échelle à 3 points, façon « Effort VINCI » de la slide. */
@@ -175,14 +167,6 @@ function exporterPdf(d: Dispositif) {
   w.document.close();
 }
 
-function Badge({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="px-2 py-0.5 rounded text-xs font-medium bg-[#E6F1FB] text-navy">
-      {children}
-    </span>
-  );
-}
-
 function SectionTitle({ icon, children }: { icon?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-1.5 text-navy font-semibold text-sm border-b border-border pb-1.5 mb-2.5">
@@ -221,7 +205,7 @@ export function FicheDispositif({
   dispositif: Dispositif | null;
   onClose: () => void;
 }) {
-  const saved = useSavedIds().includes(dispositif?.id ?? "");
+  const saved = useSavedDispositifIds().includes(dispositif?.id ?? "");
   if (!dispositif) return null;
   const d = dispositif;
   const trl = trlLabel(d.trl_min, d.trl_max);
@@ -244,10 +228,10 @@ export function FicheDispositif({
             <h2 className="text-lg font-bold text-navy leading-snug">{d.nom}</h2>
             {d.programme && <div className="text-sm text-muted mt-1">{d.programme}</div>}
             <div className="flex flex-wrap gap-1.5 mt-2">
-              <Badge>{d.echelle}</Badge>
-              {d.statut_ouverture && <Badge>{d.statut_ouverture}</Badge>}
-              {trl && <Badge>{trl}</Badge>}
-              {d.type_financement && <Badge>{d.type_financement}</Badge>}
+              <Badge tone="sky">{d.echelle}</Badge>
+              {d.statut_ouverture && <Badge tone="sky">{d.statut_ouverture}</Badge>}
+              {trl && <Badge tone="sky">{trl}</Badge>}
+              {d.type_financement && <Badge tone="sky">{d.type_financement}</Badge>}
             </div>
           </div>
           <button
@@ -329,7 +313,7 @@ export function FicheDispositif({
         {/* Actions */}
         <div className="flex items-center justify-between gap-2 p-5 border-t border-border bg-bg rounded-b-xl">
           <button
-            onClick={() => toggleSaved(d.id)}
+            onClick={() => toggleSavedDispositif(d.id)}
             className={`inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm font-medium transition ${saved ? "border-pink/40 bg-pink/10 text-pink" : "border-border text-navy hover:border-navy"}`}
           >
             {saved ? (

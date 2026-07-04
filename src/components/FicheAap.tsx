@@ -14,54 +14,20 @@ import type { AAP } from "@/types/aap";
 import { aapEchelle } from "@/utils/echelle";
 import { joursRestants } from "@/utils/scoring-engine";
 import { useSavedIds, toggleSaved } from "@/utils/savedAaps";
+import {
+  fmtDateLongue,
+  budgetDetaille,
+  trlLabel,
+  STATUT_AAP_LABEL,
+  escapeHtml as esc,
+} from "@/utils/format";
+import { Badge } from "@/components/Badge";
 
 // ──────────────────────────────────────────────────────────────────────
 // Fiche détaillée d'un AAP (modale). Un clic sur un AAP l'ouvre au lieu de
 // partir directement sur le lien externe : on voit la carte, on peut
 // l'exporter en PDF, et on garde le lien cliquable vers l'appel officiel.
 // ──────────────────────────────────────────────────────────────────────
-
-const STATUT_LABEL: Record<string, string> = {
-  open: "Ouvert",
-  forthcoming: "À venir",
-  closed: "Clôturé",
-};
-
-function fmtDate(iso: string | null): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-}
-
-function fmtEuros(n: number | null): string | null {
-  if (n == null) return null;
-  return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
-
-function budgetLabel(a: AAP): string {
-  const parProjet = fmtEuros(a.budget_par_projet);
-  if (parProjet) return `${parProjet} / projet`;
-  const total = fmtEuros(a.budget_total);
-  if (total) return `${total} (enveloppe)`;
-  const montants = (a as unknown as { montants?: string }).montants;
-  if (montants) return montants.slice(0, 120);
-  return "Montant non précisé";
-}
-
-function trlLabel(min: number | null, max: number | null): string | null {
-  if (min == null && max == null) return null;
-  if (min != null && max != null) return `TRL ${min}–${max}`;
-  return `TRL ${min ?? max}`;
-}
-
-function esc(s: string): string {
-  return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
 
 /** Génère une fenêtre imprimable propre (l'utilisateur choisit « Enregistrer en PDF »). */
 function exporterPdf(a: AAP) {
@@ -70,10 +36,13 @@ function exporterPdf(a: AAP) {
     ["Programme / financeur", a.programme],
     ["Source", a.source],
     ["Échelle", aapEchelle(a)],
-    ["Statut", STATUT_LABEL[a.statut] ?? a.statut],
-    ["Date d'ouverture", fmtDate(a.date_ouverture)],
-    ["Date de clôture", fmtDate(a.date_cloture) + (jr != null && jr >= 0 ? ` (J-${jr})` : "")],
-    ["Budget", budgetLabel(a)],
+    ["Statut", STATUT_AAP_LABEL[a.statut] ?? a.statut],
+    ["Date d'ouverture", fmtDateLongue(a.date_ouverture)],
+    [
+      "Date de clôture",
+      fmtDateLongue(a.date_cloture) + (jr != null && jr >= 0 ? ` (J-${jr})` : ""),
+    ],
+    ["Budget", budgetDetaille(a)],
     ["Maturité (TRL)", trlLabel(a.trl_min, a.trl_max) ?? "—"],
     ["Acteurs éligibles", (a.acteurs_eligibles ?? []).join(", ") || "—"],
     ["Type d'action", a.type_action_detail || a.type_action],
@@ -111,23 +80,6 @@ function exporterPdf(a: AAP) {
   }
   w.document.write(html);
   w.document.close();
-}
-
-function Badge({
-  children,
-  tone = "muted",
-}: {
-  children: React.ReactNode;
-  tone?: "muted" | "sky" | "purple" | "emerald" | "pink";
-}) {
-  const cls = {
-    muted: "bg-muted text-text",
-    sky: "bg-[#E6F1FB] text-navy",
-    purple: "bg-[#F3E8FF] text-purple",
-    emerald: "bg-[#ECFDF5] text-emerald-700 border border-emerald-200",
-    pink: "bg-pink/10 text-pink",
-  }[tone];
-  return <span className={`px-2 py-0.5 rounded text-xs font-medium ${cls}`}>{children}</span>;
 }
 
 function InfoLine({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
@@ -181,7 +133,7 @@ export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => voi
         <div className="flex flex-wrap gap-1.5 px-5 pt-4">
           <Badge tone="sky">{echelle}</Badge>
           <Badge tone={aap.statut === "closed" ? "pink" : "emerald"}>
-            {STATUT_LABEL[aap.statut] ?? aap.statut}
+            {STATUT_AAP_LABEL[aap.statut] ?? aap.statut}
           </Badge>
           <Badge tone="purple">{aap.type_action}</Badge>
           {trl && <Badge tone="muted">{trl}</Badge>}
@@ -197,14 +149,18 @@ export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => voi
           <InfoLine
             icon={<Calendar className="w-4 h-4" />}
             label="Clôture"
-            value={`${fmtDate(aap.date_cloture)}${jr != null && jr >= 0 ? ` · J-${jr}` : ""}`}
+            value={`${fmtDateLongue(aap.date_cloture)}${jr != null && jr >= 0 ? ` · J-${jr}` : ""}`}
           />
           <InfoLine
             icon={<Calendar className="w-4 h-4" />}
             label="Ouverture"
-            value={fmtDate(aap.date_ouverture)}
+            value={fmtDateLongue(aap.date_ouverture)}
           />
-          <InfoLine icon={<Coins className="w-4 h-4" />} label="Budget" value={budgetLabel(aap)} />
+          <InfoLine
+            icon={<Coins className="w-4 h-4" />}
+            label="Budget"
+            value={budgetDetaille(aap)}
+          />
           <InfoLine
             icon={<Users className="w-4 h-4" />}
             label="Acteurs éligibles"

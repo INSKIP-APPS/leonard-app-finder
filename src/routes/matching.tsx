@@ -3,12 +3,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronDown,
   ChevronRight,
-  X,
   SlidersHorizontal,
-  Check,
   AlertTriangle,
   Sparkles,
-  HelpCircle,
   Loader2,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -16,8 +13,27 @@ import { getAaps, saveMatchingRequest } from "@/services/data-store";
 import type { AAP } from "@/types/aap";
 import { matchProjet, type ProjetInput, type ScoredAap } from "@/utils/scoring-engine";
 import { affinerAvecClaude, type MatchMode } from "@/services/claude-matching";
-import { TIERS, TIER_ORDER, tierFor, TierBadge } from "@/utils/tier";
+import { TIERS, TIER_ORDER, tierFor } from "@/utils/tier";
 import { FicheAap } from "@/components/FicheAap";
+import { ResultCard } from "@/components/matching/ResultCard";
+import {
+  Stepper,
+  Block,
+  Field,
+  TextInput,
+  Select,
+  MultiSelect,
+  SliderField,
+} from "@/components/matching/FormFields";
+import {
+  POLES,
+  TYPES_ACTEUR,
+  TYPES_PROJET,
+  SECTEURS,
+  TRLS,
+  REGIONS_FR,
+  PARTENAIRES,
+} from "@/components/matching/constants";
 
 export const Route = createFileRoute("/matching")({
   head: () => ({
@@ -33,97 +49,8 @@ export const Route = createFileRoute("/matching")({
   component: Matching,
 });
 
-const POLES = [
-  "VINCI Construction",
-  "VINCI Energies",
-  "VINCI Concessions",
-  "VINCI Autoroutes",
-  "VINCI Airports",
-  "Cobra IS",
-  "Leonard",
-  "Holding / Autre",
-];
-
-const TYPES_ACTEUR = [
-  "BU ou direction VINCI",
-  "Projet interne VINCI",
-  "Startup accompagnée",
-  "Startup partenaire",
-  "Partenaire externe",
-  "Autre acteur de l'écosystème",
-];
-
-const TYPES_PROJET = [
-  "Nouvelle offre ou nouveau produit",
-  "Amélioration d'une offre, solution ou process existant",
-  "Adaptation à un nouveau marché ou cas d'usage",
-  "Innovation interne ou transformation opérationnelle",
-  "Transition environnementale / décarbonation",
-  "Nouveau modèle économique",
-  "Projet partenarial ou consortium",
-  "Infrastructure ou actif",
-];
-
-const SECTEURS = [
-  "Construction",
-  "Numérique",
-  "Énergie",
-  "Mobilité",
-  "Eau",
-  "Environnement",
-  "Matériaux",
-  "Industrie",
-];
-
-const TRLS = [
-  { v: "1", l: "TRL 1 — Principes de base observés" },
-  { v: "2", l: "TRL 2 — Concept technologique formulé" },
-  { v: "3", l: "TRL 3 — Preuve de concept expérimentale" },
-  { v: "4", l: "TRL 4 — Validation en laboratoire" },
-  { v: "5", l: "TRL 5 — Validation en environnement pertinent" },
-  { v: "6", l: "TRL 6 — Démonstration en environnement pertinent" },
-  { v: "7", l: "TRL 7 — Démonstration en environnement opérationnel" },
-  { v: "8", l: "TRL 8 — Système complet qualifié" },
-  { v: "9", l: "TRL 9 — Système éprouvé en opérationnel" },
-];
-
-const REGIONS_FR = [
-  "Europe",
-  "France (national)",
-  "Auvergne-Rhône-Alpes",
-  "Bourgogne-Franche-Comté",
-  "Bretagne",
-  "Centre-Val de Loire",
-  "Corse",
-  "Grand Est",
-  "Hauts-de-France",
-  "Île-de-France",
-  "Normandie",
-  "Nouvelle-Aquitaine",
-  "Occitanie",
-  "Pays de la Loire",
-  "Provence-Alpes-Côte d'Azur",
-  "Guadeloupe",
-  "Martinique",
-  "Guyane",
-  "La Réunion",
-  "Mayotte",
-  "International",
-];
-
 // Référence stable pour « aucun matching lancé » (évite les re-rendus inutiles).
 const EMPTY_SCORED: ScoredAap[] = [];
-
-const PARTENAIRES = [
-  "Partenaire(s) interne(s) VINCI",
-  "Startup",
-  "Entreprise / partenaire corporate",
-  "Université, laboratoire ou centre de recherche",
-  "Institution publique",
-  "Collectivité territoriale",
-  "Association, ONG ou acteur de terrain",
-  "Autres",
-];
 
 function Matching() {
   const [step, setStep] = useState<"form" | "results">("form");
@@ -570,363 +497,5 @@ function Matching() {
 
       <FicheAap aap={selectedAap} onClose={() => setSelectedAap(null)} />
     </>
-  );
-}
-
-// ── Carte de résultat (sous-scores réels + raisons Couche 1) ─────────
-
-function barColor(v: number) {
-  if (v >= 70) return "bg-emerald-500";
-  if (v >= 40) return "bg-amber-500";
-  return "bg-rose-500";
-}
-
-function SubScore({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="flex-1 min-w-0">
-      <div className="flex items-baseline justify-between mb-1">
-        <span className="text-[11px] font-medium text-muted uppercase tracking-wide">{label}</span>
-        <span className="text-xs font-semibold text-navy tabular-nums">
-          {value}
-          <span className="text-muted font-normal">/100</span>
-        </span>
-      </div>
-      <div className="h-1.5 rounded-full bg-[#eef2ff] overflow-hidden">
-        <div className={`h-full rounded-full ${barColor(value)}`} style={{ width: `${value}%` }} />
-      </div>
-    </div>
-  );
-}
-
-function fmtMillions(n: number | null): string {
-  if (n == null) return "—";
-  const m = n / 1_000_000;
-  return `${m >= 10 ? Math.round(m) : m.toFixed(1).replace(".", ",")} M€`;
-}
-
-function fmtDate(iso: string | null): string {
-  if (!iso) return "—";
-  const [y, m, d] = iso.slice(0, 10).split("-");
-  return d && m && y ? `${d}/${m}/${y}` : iso.slice(0, 10);
-}
-
-function ResultCard({ scored, onOpen }: { scored: ScoredAap; onOpen: (a: AAP) => void }) {
-  const {
-    aap,
-    score,
-    sous_scores,
-    raisons,
-    points_attention,
-    enrichi,
-    score_structurel,
-    score_semantique,
-    elements_manquants,
-  } = scored;
-  return (
-    <button
-      type="button"
-      onClick={() => onOpen(aap)}
-      className={`card-flat p-4 hover:border-navy transition flex flex-col gap-3 text-left w-full ${enrichi ? "border-purple/40" : ""}`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
-            {enrichi && (
-              <span className="inline-flex items-center gap-1 shrink-0 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#F3E8FF] text-purple">
-                <Sparkles className="w-3 h-3" /> IA
-              </span>
-            )}
-            <div className="font-semibold text-navy text-sm leading-snug">{aap.titre}</div>
-          </div>
-          <div className="text-xs text-muted mt-0.5">
-            {aap.programme}
-            {aap.cluster && (
-              <>
-                {" "}
-                · <span className="font-medium">{aap.cluster}</span>
-              </>
-            )}
-            {" · "}
-            {aap.type_action}
-          </div>
-        </div>
-        <div className="shrink-0 text-right">
-          <div className="text-lg font-bold text-navy tabular-nums leading-none">{score}</div>
-          <div className="mt-1">
-            <TierBadge score={score} />
-          </div>
-          {enrichi && score_structurel != null && score_semantique != null && (
-            <div className="text-[10px] text-muted mt-1 whitespace-nowrap">
-              struct. {score_structurel} · IA {score_semantique}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="flex gap-3">
-        <SubScore label="Adéquation" value={sous_scores.adequation} />
-        <SubScore label="Accessibilité" value={sous_scores.accessibilite} />
-        <SubScore label="Financier" value={sous_scores.financier} />
-      </div>
-
-      {raisons.length > 0 && (
-        <ul className="space-y-1">
-          {raisons.map((r, i) => (
-            <li key={i} className="flex items-start gap-1.5 text-xs text-text">
-              <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-              <span>{r}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {points_attention.length > 0 && (
-        <ul className="space-y-1">
-          {points_attention.map((p, i) => (
-            <li key={i} className="flex items-start gap-1.5 text-xs text-muted">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-              <span>{p}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {elements_manquants && elements_manquants.length > 0 && (
-        <ul className="space-y-1">
-          {elements_manquants.map((e, i) => (
-            <li key={i} className="flex items-start gap-1.5 text-xs text-purple">
-              <HelpCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-              <span>À renforcer : {e}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div className="flex items-center justify-between text-xs text-muted border-t border-border pt-2 mt-auto">
-        <span>Clôture {fmtDate(aap.date_cloture)}</span>
-        <span className="inline-flex items-center gap-1 text-navy font-medium">
-          {fmtMillions(aap.budget_par_projet ?? aap.budget_total)}{" "}
-          <ChevronRight className="w-3 h-3" />
-        </span>
-      </div>
-    </button>
-  );
-}
-
-function SliderField({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
-}) {
-  return (
-    <div>
-      <div className="flex items-baseline justify-between mb-1.5">
-        <span className="text-xs font-medium text-text">{label}</span>
-        <span className="text-sm font-semibold text-navy tabular-nums">
-          {value}
-          <span className="text-muted font-normal text-xs">/100</span>
-        </span>
-      </div>
-      <input
-        type="range"
-        min={0}
-        max={100}
-        value={value}
-        onChange={(e) => onChange(parseInt(e.target.value))}
-        className="w-full accent-[var(--color-navy,#001D3D)] cursor-pointer"
-      />
-    </div>
-  );
-}
-
-function Stepper({ step }: { step: string }) {
-  const steps = ["1 · Le projet", "2 · Résultats"];
-  const activeIdx = step === "form" ? 0 : 1;
-  return (
-    <div className="flex items-center gap-3">
-      {steps.map((s, i) => {
-        const active = i <= activeIdx;
-        return (
-          <div key={s} className="flex items-center gap-3">
-            <div
-              className={`px-3 py-1.5 rounded-full text-xs font-medium ${active ? "bg-navy text-white" : "bg-white border border-border text-muted"}`}
-            >
-              {s}
-            </div>
-            {i < steps.length - 1 && <div className="w-8 h-px bg-border" />}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function Block({
-  title,
-  subtitle,
-  children,
-}: {
-  title: string;
-  subtitle?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="mb-6 last:mb-0">
-      <div className="label-caps mb-1">{title}</div>
-      {subtitle && <div className="text-xs text-muted mb-3">{subtitle}</div>}
-      {!subtitle && <div className="mb-3" />}
-      {children}
-    </div>
-  );
-}
-
-function Field({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="block">
-      <div className="text-xs font-medium text-text mb-1.5">{label}</div>
-      {children}
-      {hint && <div className="text-[11px] text-muted mt-1">{hint}</div>}
-    </label>
-  );
-}
-
-function TextInput({
-  value,
-  onChange,
-  placeholder,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-}) {
-  return (
-    <input
-      type="text"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      className="w-full px-3 py-2 border border-border rounded-md text-sm bg-white focus:outline-none focus:border-navy"
-    />
-  );
-}
-
-function Select({
-  value,
-  onChange,
-  options,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  options: string[];
-}) {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full px-3 py-2 border border-border rounded-md text-sm bg-white focus:outline-none focus:border-navy"
-    >
-      <option value="">—</option>
-      {options.map((o) => (
-        <option key={o} value={o}>
-          {o}
-        </option>
-      ))}
-    </select>
-  );
-}
-
-function MultiSelect({
-  options,
-  values,
-  onChange,
-  placeholder,
-}: {
-  options: string[];
-  values: string[];
-  onChange: (v: string[]) => void;
-  placeholder?: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const onClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, []);
-
-  const toggle = (o: string) => {
-    onChange(values.includes(o) ? values.filter((v) => v !== o) : [...values, o]);
-  };
-  const remove = (o: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    onChange(values.filter((v) => v !== o));
-  };
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="w-full min-h-[38px] px-3 py-1.5 border border-border rounded-md text-sm bg-white text-left flex items-center justify-between gap-2 focus:outline-none focus:border-navy"
-      >
-        <div className="flex flex-wrap gap-1.5 flex-1">
-          {values.length === 0 ? (
-            <span className="text-muted">{placeholder ?? "—"}</span>
-          ) : (
-            values.map((v) => (
-              <span
-                key={v}
-                className="inline-flex items-center gap-1 bg-navy text-white text-xs px-2 py-0.5 rounded-full"
-              >
-                {v}
-                <span onClick={(e) => remove(v, e)} className="hover:opacity-80 cursor-pointer">
-                  <X className="w-3 h-3" />
-                </span>
-              </span>
-            ))
-          )}
-        </div>
-        <ChevronDown
-          className={`w-4 h-4 text-muted transition-transform ${open ? "rotate-180" : ""}`}
-        />
-      </button>
-      {open && (
-        <div className="absolute z-20 mt-1 w-full max-h-64 overflow-y-auto bg-white border border-border rounded-md shadow-lg">
-          {options.map((o) => {
-            const active = values.includes(o);
-            return (
-              <button
-                key={o}
-                type="button"
-                onClick={() => toggle(o)}
-                className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-[var(--color-accent)] ${active ? "bg-[var(--color-accent)]" : ""}`}
-              >
-                <span
-                  className={`w-4 h-4 rounded border flex items-center justify-center ${active ? "bg-navy border-navy" : "border-border"}`}
-                >
-                  {active && <span className="text-white text-xs leading-none">✓</span>}
-                </span>
-                <span>{o}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
   );
 }

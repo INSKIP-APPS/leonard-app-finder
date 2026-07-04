@@ -79,6 +79,9 @@ export interface AAP {
   /** Échelle géographique (AAP France : National/Régional… ; EU par défaut) */
   echelle?: string | null;
 
+  /** Montants en texte libre (sources françaises : les-aides.fr, ADEME…) */
+  montants?: string | null;
+
   /**
    * Autres sources où le MÊME AAP est référencé (dédup inter-sources).
    * Rempli à la lecture par getAaps() : une aide relayée par plusieurs portails

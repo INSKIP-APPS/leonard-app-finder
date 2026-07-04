@@ -1,12 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getAaps, getProjets, dataSource } from "@/services/data-store";
+import { getAaps, getDispositifs, getProjets, dataSource } from "@/services/data-store";
 import { aapEchelle } from "@/utils/echelle";
 import { joursRestants } from "@/utils/scoring-engine";
 import type { AAP } from "@/types/aap";
+import type { Dispositif } from "@/types/dispositif";
 import { FicheAap } from "@/components/FicheAap";
-import { useSavedIds } from "@/utils/savedAaps";
+import { FicheDispositif } from "@/components/FicheDispositif";
+import { useSavedIds, useSavedDispositifIds } from "@/utils/savedAaps";
 
 // Pertinence VINCI = nombre de thématiques « métier » concrètes (on écarte la
 // R&D générique, trop peu discriminante pour prioriser un secteur d'activité).
@@ -46,8 +48,13 @@ const SOURCE_SHORT: Record<string, string> = {
 
 function Dashboard() {
   const { data: aaps = [], isLoading } = useQuery({ queryKey: ["aaps"], queryFn: () => getAaps() });
+  const { data: dispositifs = [] } = useQuery({
+    queryKey: ["dispositifs"],
+    queryFn: getDispositifs,
+  });
   const { data: projets = [] } = useQuery({ queryKey: ["projets"], queryFn: () => getProjets() });
   const [selectedAap, setSelectedAap] = useState<AAP | null>(null);
+  const [selectedDispositif, setSelectedDispositif] = useState<Dispositif | null>(null);
 
   const ouverts = useMemo(() => aaps.filter((a) => a.statut === "open"), [aaps]);
 
@@ -71,6 +78,11 @@ function Dashboard() {
   const nbSources = useMemo(() => new Set(aaps.map((a) => a.source)).size, [aaps]);
   const savedIds = useSavedIds();
   const savedAaps = useMemo(() => aaps.filter((a) => savedIds.includes(a.id)), [aaps, savedIds]);
+  const savedDispIds = useSavedDispositifIds();
+  const savedDispositifs = useMemo(
+    () => dispositifs.filter((d) => savedDispIds.includes(d.id)),
+    [dispositifs, savedDispIds],
+  );
 
   const parTheme = useMemo(() => {
     const c: Record<string, number> = {};
@@ -236,15 +248,31 @@ function Dashboard() {
 
           <Panel
             icon={<Bookmark className="w-4 h-4 text-pink" />}
-            title="AAP sauvegardés"
-            count={savedAaps.length}
+            title="Sauvegardés"
+            count={savedAaps.length + savedDispositifs.length}
             accent="pink"
-            subtitle="Vos AAP mis de côté"
+            subtitle="Vos AAP et dispositifs mis de côté"
           >
-            {savedAaps.length === 0 && (
-              <EmptyState text="Aucun AAP sauvegardé. Ouvrez une fiche et cliquez « Sauvegarder » pour le retrouver ici." />
+            {savedAaps.length === 0 && savedDispositifs.length === 0 && (
+              <EmptyState text="Rien de sauvegardé. Ouvrez une fiche (AAP ou dispositif) et cliquez « Sauvegarder » pour la retrouver ici." />
             )}
             <div className="space-y-2">
+              {savedDispositifs.slice(0, 4).map((d) => (
+                <button
+                  type="button"
+                  key={d.id}
+                  onClick={() => setSelectedDispositif(d)}
+                  className="w-full text-left p-3 rounded-lg border border-border hover:border-pink/40 hover:bg-pink/[0.02] transition"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide bg-navy/10 text-navy">
+                      Dispositif
+                    </span>
+                    <div className="text-xs font-semibold text-navy line-clamp-1">{d.nom}</div>
+                  </div>
+                  <div className="text-[10px] text-muted mt-1 truncate">{d.organisme}</div>
+                </button>
+              ))}
               {savedAaps.slice(0, 8).map((a) => (
                 <button
                   type="button"
@@ -298,6 +326,10 @@ function Dashboard() {
       </div>
 
       <FicheAap aap={selectedAap} onClose={() => setSelectedAap(null)} />
+      <FicheDispositif
+        dispositif={selectedDispositif}
+        onClose={() => setSelectedDispositif(null)}
+      />
     </>
   );
 }
