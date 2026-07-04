@@ -17,6 +17,7 @@ import { THEMATIQUE_LABELS, ACTEUR_LABELS } from "@/types/dispositif";
 import type { AAP } from "@/types/aap";
 import { aapEchelle } from "@/utils/echelle";
 import { FicheAap } from "@/components/FicheAap";
+import { FicheDispositif } from "@/components/FicheDispositif";
 
 export const Route = createFileRoute("/explorer")({
   head: () => ({
@@ -56,7 +57,10 @@ const SECTEUR_THEMATIQUES: Record<string, (keyof Thematiques)[]> = {
 // Secteur d'affichage → labels de thématiques (pour filtrer les AAP, qui portent
 // des labels et non des booléens).
 const SECTEUR_LABELS: Record<string, string[]> = Object.fromEntries(
-  Object.entries(SECTEUR_THEMATIQUES).map(([s, keys]) => [s, keys.map((k) => THEMATIQUE_LABELS[k])]),
+  Object.entries(SECTEUR_THEMATIQUES).map(([s, keys]) => [
+    s,
+    keys.map((k) => THEMATIQUE_LABELS[k]),
+  ]),
 );
 
 function geoBadge(g: string) {
@@ -66,7 +70,11 @@ function geoBadge(g: string) {
     Régional: "bg-[#FFF4E6] text-orange-700",
     Local: "bg-[#F3E8FF] text-purple",
   };
-  return <span className={`px-2 py-0.5 rounded text-xs font-medium ${map[g] ?? "bg-muted text-text"}`}>{g}</span>;
+  return (
+    <span className={`px-2 py-0.5 rounded text-xs font-medium ${map[g] ?? "bg-muted text-text"}`}>
+      {g}
+    </span>
+  );
 }
 
 // Libellé TRL à partir des bornes min/max (null si non renseigné).
@@ -75,7 +83,6 @@ function trlLabel(min: number | null, max: number | null): string | null {
   if (min != null && max != null) return `TRL ${min}–${max}`;
   return `TRL ${min ?? max}`;
 }
-
 
 function statutDispositifBadge(d: Dispositif) {
   const s = d.statut_ouverture;
@@ -125,11 +132,19 @@ function aapMatchesSecteur(a: AAP, secteur: string): boolean {
 
 // ── Filtres avancés (Phase 5.3) — s'appliquent aux dispositifs ───────
 
-const FINANCEURS = ["Commission européenne", "ADEME", "Bpifrance", "Région", "ANR", "Banque des Territoires"];
+const FINANCEURS = [
+  "Commission européenne",
+  "ADEME",
+  "Bpifrance",
+  "Région",
+  "ANR",
+  "Banque des Territoires",
+];
 
 function financeurOf(org: string): string {
   const o = (org || "").toLowerCase();
-  if (/(commission|europ|hadea|cinea|eismea|\berc\b|\brea\b)/.test(o)) return "Commission européenne";
+  if (/(commission|europ|hadea|cinea|eismea|\berc\b|\brea\b)/.test(o))
+    return "Commission européenne";
   if (o.includes("ademe")) return "ADEME";
   if (o.includes("bpi")) return "Bpifrance";
   if (o.includes("anr")) return "ANR";
@@ -152,8 +167,15 @@ const MONTANTS = ["<100k€", "100k€–1M€", "1M€–5M€", ">5M€", "Var
 const STATUTS = ["Ouvert", "À surveiller", "Fermé"];
 const PERTINENCES = ["Forte", "Moyenne", "Faible"];
 const ACTEUR_KEYS: (keyof ActeursCibles)[] = [
-  "pme", "eti", "grand_groupe", "startup", "collectivite",
-  "laboratoire_universite", "consortium", "bailleur_social", "agriculteur",
+  "pme",
+  "eti",
+  "grand_groupe",
+  "startup",
+  "collectivite",
+  "laboratoire_universite",
+  "consortium",
+  "bailleur_social",
+  "agriculteur",
 ];
 
 interface AdvFilters {
@@ -168,13 +190,25 @@ interface AdvFilters {
 }
 
 const EMPTY_ADV: AdvFilters = {
-  financeurs: [], typesFin: [], montants: [], statuts: [], pertinences: [], acteurs: [], trlMin: null, trlMax: null,
+  financeurs: [],
+  typesFin: [],
+  montants: [],
+  statuts: [],
+  pertinences: [],
+  acteurs: [],
+  trlMin: null,
+  trlMax: null,
 };
 
 function advCount(f: AdvFilters): number {
   return (
-    f.financeurs.length + f.typesFin.length + f.montants.length + f.statuts.length +
-    f.pertinences.length + f.acteurs.length + (f.trlMin != null || f.trlMax != null ? 1 : 0)
+    f.financeurs.length +
+    f.typesFin.length +
+    f.montants.length +
+    f.statuts.length +
+    f.pertinences.length +
+    f.acteurs.length +
+    (f.trlMin != null || f.trlMax != null ? 1 : 0)
   );
 }
 
@@ -188,8 +222,10 @@ function matchesAdvanced(d: Dispositif, f: AdvFilters): boolean {
     const m = d.montant ?? "";
     if (!f.montants.some((b) => m.includes(b))) return false;
   }
-  if (f.statuts.length && !(d.statut_ouverture && f.statuts.includes(d.statut_ouverture))) return false;
-  if (f.pertinences.length && !(d.pertinence_vinci && f.pertinences.includes(d.pertinence_vinci))) return false;
+  if (f.statuts.length && !(d.statut_ouverture && f.statuts.includes(d.statut_ouverture)))
+    return false;
+  if (f.pertinences.length && !(d.pertinence_vinci && f.pertinences.includes(d.pertinence_vinci)))
+    return false;
   if (f.acteurs.length && !f.acteurs.some((k) => d.acteurs_cibles?.[k])) return false;
   if (f.trlMin != null || f.trlMax != null) {
     if (d.trl_min != null || d.trl_max != null) {
@@ -205,7 +241,11 @@ function matchesAdvanced(d: Dispositif, f: AdvFilters): boolean {
 
 // Groupe de chips multi-sélection réutilisable pour le panneau avancé.
 function ChipGroup<T extends string>({
-  label, options, values, onToggle, render,
+  label,
+  options,
+  values,
+  onToggle,
+  render,
 }: {
   label: string;
   options: T[];
@@ -223,7 +263,9 @@ function ChipGroup<T extends string>({
             key={o}
             onClick={() => onToggle(o)}
             className={`px-3 py-1 rounded-full text-xs font-medium border transition ${
-              active ? "bg-navy text-white border-navy" : "bg-white text-text border-border hover:border-navy"
+              active
+                ? "bg-navy text-white border-navy"
+                : "bg-white text-text border-border hover:border-navy"
             }`}
           >
             {render ? render(o) : o}
@@ -251,6 +293,7 @@ function Explorer() {
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [selectedAap, setSelectedAap] = useState<AAP | null>(null);
+  const [selectedDispositif, setSelectedDispositif] = useState<Dispositif | null>(null);
 
   // Filtres avancés (Phase 5.3)
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -263,13 +306,18 @@ function Explorer() {
   ) =>
     setAdv((prev) => {
       const arr = prev[field] as string[];
-      return { ...prev, [field]: arr.includes(value) ? arr.filter((x) => x !== value) : [...arr, value] };
+      return {
+        ...prev,
+        [field]: arr.includes(value) ? arr.filter((x) => x !== value) : [...arr, value],
+      };
     });
 
   const toggleActeur = (k: keyof ActeursCibles) =>
     setAdv((prev) => ({
       ...prev,
-      acteurs: prev.acteurs.includes(k) ? prev.acteurs.filter((x) => x !== k) : [...prev.acteurs, k],
+      acteurs: prev.acteurs.includes(k)
+        ? prev.acteurs.filter((x) => x !== k)
+        : [...prev.acteurs, k],
     }));
 
   const q = query.trim().toLowerCase();
@@ -451,7 +499,9 @@ function Explorer() {
                 {nbAdv}
               </span>
             )}
-            <ChevronDown className={`w-4 h-4 transition-transform ${showAdvanced ? "rotate-180" : ""}`} />
+            <ChevronDown
+              className={`w-4 h-4 transition-transform ${showAdvanced ? "rotate-180" : ""}`}
+            />
           </button>
         </div>
 
@@ -460,17 +510,36 @@ function Explorer() {
           <div className="border-t border-border pt-3 mt-1 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted">
-                Ces filtres s'appliquent aux <span className="font-medium text-text">dispositifs</span>.
+                Ces filtres s'appliquent aux{" "}
+                <span className="font-medium text-text">dispositifs</span>.
               </span>
               {nbAdv > 0 && (
-                <button onClick={() => setAdv(EMPTY_ADV)} className="text-xs text-pink hover:underline font-medium">
+                <button
+                  onClick={() => setAdv(EMPTY_ADV)}
+                  className="text-xs text-pink hover:underline font-medium"
+                >
                   Tout réinitialiser
                 </button>
               )}
             </div>
-            <ChipGroup label="Financeur" options={FINANCEURS} values={adv.financeurs} onToggle={(v) => toggleAdv("financeurs", v)} />
-            <ChipGroup label="Type de financement" options={Object.keys(TYPES_FIN)} values={adv.typesFin} onToggle={(v) => toggleAdv("typesFin", v)} />
-            <ChipGroup label="Montant" options={MONTANTS} values={adv.montants} onToggle={(v) => toggleAdv("montants", v)} />
+            <ChipGroup
+              label="Financeur"
+              options={FINANCEURS}
+              values={adv.financeurs}
+              onToggle={(v) => toggleAdv("financeurs", v)}
+            />
+            <ChipGroup
+              label="Type de financement"
+              options={Object.keys(TYPES_FIN)}
+              values={adv.typesFin}
+              onToggle={(v) => toggleAdv("typesFin", v)}
+            />
+            <ChipGroup
+              label="Montant"
+              options={MONTANTS}
+              values={adv.montants}
+              onToggle={(v) => toggleAdv("montants", v)}
+            />
             <ChipGroup
               label="Acteur éligible"
               options={ACTEUR_KEYS}
@@ -478,26 +547,48 @@ function Explorer() {
               onToggle={(k) => toggleActeur(k)}
               render={(k) => ACTEUR_LABELS[k]}
             />
-            <ChipGroup label="Statut" options={STATUTS} values={adv.statuts} onToggle={(v) => toggleAdv("statuts", v)} />
-            <ChipGroup label="Pertinence VINCI" options={PERTINENCES} values={adv.pertinences} onToggle={(v) => toggleAdv("pertinences", v)} />
+            <ChipGroup
+              label="Statut"
+              options={STATUTS}
+              values={adv.statuts}
+              onToggle={(v) => toggleAdv("statuts", v)}
+            />
+            <ChipGroup
+              label="Pertinence VINCI"
+              options={PERTINENCES}
+              values={adv.pertinences}
+              onToggle={(v) => toggleAdv("pertinences", v)}
+            />
             <div className="flex flex-wrap items-center gap-2">
               <span className="label-caps shrink-0 mr-1 w-28">TRL</span>
               <select
                 value={adv.trlMin ?? ""}
-                onChange={(e) => setAdv((p) => ({ ...p, trlMin: e.target.value ? Number(e.target.value) : null }))}
+                onChange={(e) =>
+                  setAdv((p) => ({ ...p, trlMin: e.target.value ? Number(e.target.value) : null }))
+                }
                 className="px-2 py-1 rounded-md border border-border bg-white text-xs focus:outline-none focus:border-navy"
               >
                 <option value="">min</option>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => <option key={n} value={n}>TRL {n}</option>)}
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
+                  <option key={n} value={n}>
+                    TRL {n}
+                  </option>
+                ))}
               </select>
               <span className="text-xs text-muted">→</span>
               <select
                 value={adv.trlMax ?? ""}
-                onChange={(e) => setAdv((p) => ({ ...p, trlMax: e.target.value ? Number(e.target.value) : null }))}
+                onChange={(e) =>
+                  setAdv((p) => ({ ...p, trlMax: e.target.value ? Number(e.target.value) : null }))
+                }
                 className="px-2 py-1 rounded-md border border-border bg-white text-xs focus:outline-none focus:border-navy"
               >
                 <option value="">max</option>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => <option key={n} value={n}>TRL {n}</option>)}
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
+                  <option key={n} value={n}>
+                    TRL {n}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -592,6 +683,20 @@ function Explorer() {
                   </div>
                 </button>
 
+                {/* Action : ouvrir la fiche détaillée (le dépliant reste au clic sur la carte) */}
+                <div className="flex justify-end px-4 pb-3 -mt-1">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedDispositif(d);
+                    }}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-navy hover:underline"
+                  >
+                    <FileText className="w-3.5 h-3.5" /> Voir la fiche
+                  </button>
+                </div>
+
                 {isOpen && (
                   <div className="border-t border-border bg-[#F9FAFC] px-4 py-3 space-y-2">
                     <div className="label-caps">AAP rattachés ({rattaches.length})</div>
@@ -604,7 +709,10 @@ function Explorer() {
                       <button
                         type="button"
                         key={a.id}
-                        onClick={(e) => { e.stopPropagation(); setSelectedAap(a); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedAap(a);
+                        }}
                         className="w-full text-left rounded-md border border-border bg-white p-3 flex items-start justify-between gap-3 hover:border-navy transition"
                       >
                         <div className="min-w-0">
@@ -615,7 +723,9 @@ function Explorer() {
                         </div>
                         <div className="shrink-0 text-right">
                           <div className="text-xs font-semibold text-navy">{budgetLabel(a)}</div>
-                          <div className="text-[11px] text-muted">{trlLabel(a.trl_min, a.trl_max) ?? "—"}</div>
+                          <div className="text-[11px] text-muted">
+                            {trlLabel(a.trl_min, a.trl_max) ?? "—"}
+                          </div>
                         </div>
                       </button>
                     ))}
@@ -701,6 +811,10 @@ function Explorer() {
       )}
 
       <FicheAap aap={selectedAap} onClose={() => setSelectedAap(null)} />
+      <FicheDispositif
+        dispositif={selectedDispositif}
+        onClose={() => setSelectedDispositif(null)}
+      />
     </div>
   );
 }
