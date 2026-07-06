@@ -47,25 +47,18 @@ function modalitesEnPuces(txt: string | null): string[] {
 }
 
 /**
- * Marque « Leonard » de la légende (cercle marine + carte à panneau) —
- * reconstruction vectorielle nette (la source fournie était trop petite pour un
- * extrait propre). `faded` = créneau non atteint dans l'échelle.
+ * Marque « Leonard » de la légende (icône réelle fournie). `faded` = créneau
+ * non atteint dans l'échelle. La source est en 24 px : nette à la taille
+ * d'affichage, remplacer par un SVG / PNG ≥256 px pour un piqué parfait en Retina.
  */
 function LeonardMark({ faded = false }: { faded?: boolean }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      width="18"
-      height="18"
+    <img
+      src="/logos/leonard-mark.png"
+      alt=""
       aria-hidden
-      className={faded ? "opacity-20" : ""}
-    >
-      <circle cx="12" cy="12" r="12" fill="#003D82" />
-      <rect x="6" y="6.5" width="12" height="11" rx="2.3" fill="#fff" />
-      <rect x="6" y="6.5" width="4.3" height="11" rx="2.3" fill="#003D82" />
-      <rect x="11.2" y="9.4" width="5.4" height="1.5" rx="0.75" fill="#003D82" />
-      <rect x="11.2" y="12.6" width="5.4" height="1.5" rx="0.75" fill="#003D82" />
-    </svg>
+      className={`w-[18px] h-[18px] shrink-0 ${faded ? "opacity-20" : ""}`}
+    />
   );
 }
 
