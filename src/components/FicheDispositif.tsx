@@ -46,15 +46,18 @@ function modalitesEnPuces(txt: string | null): string[] {
     .filter(Boolean);
 }
 
-/**
- * Marque « Leonard » de la légende (icône réelle fournie). `faded` = créneau
- * non atteint dans l'échelle. La source est en 24 px : nette à la taille
- * d'affichage, remplacer par un SVG / PNG ≥256 px pour un piqué parfait en Retina.
- */
-function LeonardMark({ faded = false }: { faded?: boolean }) {
+// Icône de l'échelle selon le critère (icônes réelles fournies, ~55 px : nettes
+// à la taille d'affichage, Retina compris).
+const RATING_MARK: Record<"difficulte" | "pertinence", string> = {
+  difficulte: "/logos/vinci-mark.png", // symbole VINCI rouge (façon « Effort VINCI »)
+  pertinence: "/logos/leonard-mark.png", // icône Leonard (façon « Effort Leonard »)
+};
+
+/** Une marque de l'échelle. `faded` = créneau non atteint. */
+function RatingMark({ src, faded = false }: { src: string; faded?: boolean }) {
   return (
     <img
-      src="/logos/leonard-mark.png"
+      src={src}
       alt=""
       aria-hidden
       className={`w-[18px] h-[18px] shrink-0 ${faded ? "opacity-20" : ""}`}
@@ -63,8 +66,9 @@ function LeonardMark({ faded = false }: { faded?: boolean }) {
 }
 
 /**
- * Échelle à 3 points. « pertinence » → icônes Leonard (façon légende « Effort
- * Leonard ») ; « difficulte » → pastilles colorées vert/orange/rouge.
+ * Échelle à 3 points via icônes : « difficulte » → symbole VINCI rouge,
+ * « pertinence » → icône Leonard. 1/2/3 selon Faible/Moyenne/Forte, les
+ * créneaux non atteints estompés.
  */
 function Rating3({
   label,
@@ -77,21 +81,16 @@ function Rating3({
 }) {
   const lvl = niveau3(valeur);
   if (!lvl) return null;
-  const dotFilled = ["", "bg-emerald-500", "bg-orange-500", "bg-red-500"][lvl];
+  const src = RATING_MARK[palette];
   return (
     <div className="flex items-center gap-3">
       <span className="inline-flex items-center justify-center rounded-full bg-navy text-white text-[11px] font-semibold px-3 py-1.5 min-w-[160px]">
         {label}
       </span>
       <div className="flex items-center gap-1.5">
-        {palette === "pertinence"
-          ? [1, 2, 3].map((i) => <LeonardMark key={i} faded={i > lvl} />)
-          : [1, 2, 3].map((i) => (
-              <span
-                key={i}
-                className={`w-2.5 h-2.5 rounded-full ${i <= lvl ? dotFilled : "bg-transparent border border-border"}`}
-              />
-            ))}
+        {[1, 2, 3].map((i) => (
+          <RatingMark key={i} src={src} faded={i > lvl} />
+        ))}
       </div>
       <span className="text-sm font-medium text-text">{valeur}</span>
     </div>
