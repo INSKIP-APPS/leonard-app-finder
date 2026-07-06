@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import type { AAP } from "@/types/aap";
 import { aapEchelle } from "@/utils/echelle";
-import { joursRestants } from "@/utils/scoring-engine";
+import { joursRestants, statutEffectif } from "@/utils/scoring-engine";
 import { useSavedIds, toggleSaved } from "@/utils/savedAaps";
 import {
   fmtDateLongue,
@@ -36,7 +36,7 @@ function exporterPdf(a: AAP) {
     ["Programme / financeur", a.programme],
     ["Source", a.source],
     ["Échelle", aapEchelle(a)],
-    ["Statut", STATUT_AAP_LABEL[a.statut] ?? a.statut],
+    ["Statut", STATUT_AAP_LABEL[statutEffectif(a)] ?? a.statut],
     ["Date d'ouverture", fmtDateLongue(a.date_ouverture)],
     [
       "Date de clôture",
@@ -100,6 +100,7 @@ export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => voi
   const jr = joursRestants(aap.date_cloture);
   const echelle = aapEchelle(aap);
   const trl = trlLabel(aap.trl_min, aap.trl_max);
+  const statut = statutEffectif(aap);
 
   return (
     <div
@@ -132,8 +133,8 @@ export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => voi
         {/* Badges */}
         <div className="flex flex-wrap gap-1.5 px-5 pt-4">
           <Badge tone="sky">{echelle}</Badge>
-          <Badge tone={aap.statut === "closed" ? "pink" : "emerald"}>
-            {STATUT_AAP_LABEL[aap.statut] ?? aap.statut}
+          <Badge tone={statut === "closed" ? "pink" : "emerald"}>
+            {STATUT_AAP_LABEL[statut] ?? statut}
           </Badge>
           <Badge tone="purple">{aap.type_action}</Badge>
           {trl && <Badge tone="muted">{trl}</Badge>}

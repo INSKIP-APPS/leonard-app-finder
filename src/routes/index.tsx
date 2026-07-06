@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getAaps, getDispositifs, getProjets, dataSource } from "@/services/data-store";
 import { aapEchelle } from "@/utils/echelle";
-import { joursRestants } from "@/utils/scoring-engine";
+import { joursRestants, statutEffectif } from "@/utils/scoring-engine";
 import type { AAP } from "@/types/aap";
 import type { Dispositif } from "@/types/dispositif";
 import { FicheAap } from "@/components/FicheAap";
@@ -56,7 +56,8 @@ function Dashboard() {
   const [selectedAap, setSelectedAap] = useState<AAP | null>(null);
   const [selectedDispositif, setSelectedDispositif] = useState<Dispositif | null>(null);
 
-  const ouverts = useMemo(() => aaps.filter((a) => a.statut === "open"), [aaps]);
+  // Statut EFFECTIF : un AAP « open » dont la deadline est passée est compté clôturé.
+  const ouverts = useMemo(() => aaps.filter((a) => statutEffectif(a) === "open"), [aaps]);
 
   const dated = useMemo(
     () =>

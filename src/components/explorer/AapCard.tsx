@@ -1,6 +1,7 @@
 import { ChevronRight } from "lucide-react";
 import type { AAP } from "@/types/aap";
 import { aapEchelle } from "@/utils/echelle";
+import { statutEffectif } from "@/utils/scoring-engine";
 import { fmtDate, budgetCompact, trlLabel, STATUT_AAP_LABEL } from "@/utils/format";
 import { geoBadge } from "./badges";
 
@@ -53,7 +54,7 @@ export function AapCard({ a, onOpen }: { a: AAP; onOpen: (a: AAP) => void }) {
         <div>
           <div className="text-sm font-semibold text-text">{budgetCompact(a)}</div>
           <div className="text-xs mt-1 text-muted">
-            {STATUT_AAP_LABEL[a.statut]} · {fmtDate(a.date_cloture)}
+            {STATUT_AAP_LABEL[statutEffectif(a)]} · {fmtDate(a.date_cloture)}
           </div>
         </div>
         <ChevronRight className="w-5 h-5 text-muted mt-2" />

@@ -110,6 +110,19 @@ export function joursRestants(dateCloture: string | null): number | null {
   return Math.ceil((cl - Date.now()) / (1000 * 60 * 60 * 24));
 }
 
+/**
+ * Statut EFFECTIF d'un AAP. Certaines sources (SEDIA notamment) laissent des
+ * topics en `open` alors que leur date de clôture est déjà passée : on les
+ * considère clôturés. Corrige le comptage des « AAP ouverts » et l'affichage.
+ */
+export function statutEffectif(a: Pick<AAP, "statut" | "date_cloture">): AAP["statut"] {
+  if (a.statut === "open") {
+    const jr = joursRestants(a.date_cloture);
+    if (jr !== null && jr < 0) return "closed";
+  }
+  return a.statut;
+}
+
 // ── 4.1 — Critères d'exclusion ───────────────────────────────────────
 
 /**
