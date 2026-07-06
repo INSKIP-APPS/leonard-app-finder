@@ -60,7 +60,7 @@ function RatingMark({ src, faded = false }: { src: string; faded?: boolean }) {
       src={src}
       alt=""
       aria-hidden
-      className={`w-[18px] h-[18px] shrink-0 ${faded ? "opacity-20" : ""}`}
+      className={`w-[18px] h-[18px] shrink-0 object-contain ${faded ? "opacity-20" : ""}`}
     />
   );
 }
