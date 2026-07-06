@@ -46,7 +46,33 @@ function modalitesEnPuces(txt: string | null): string[] {
     .filter(Boolean);
 }
 
-/** Échelle à 3 points, façon « Effort VINCI » de la slide. */
+/**
+ * Marque « Leonard » de la légende (cercle marine + carte à panneau) —
+ * reconstruction vectorielle nette (la source fournie était trop petite pour un
+ * extrait propre). `faded` = créneau non atteint dans l'échelle.
+ */
+function LeonardMark({ faded = false }: { faded?: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      aria-hidden
+      className={faded ? "opacity-20" : ""}
+    >
+      <circle cx="12" cy="12" r="12" fill="#003D82" />
+      <rect x="6" y="6.5" width="12" height="11" rx="2.3" fill="#fff" />
+      <rect x="6" y="6.5" width="4.3" height="11" rx="2.3" fill="#003D82" />
+      <rect x="11.2" y="9.4" width="5.4" height="1.5" rx="0.75" fill="#003D82" />
+      <rect x="11.2" y="12.6" width="5.4" height="1.5" rx="0.75" fill="#003D82" />
+    </svg>
+  );
+}
+
+/**
+ * Échelle à 3 points. « pertinence » → icônes Leonard (façon légende « Effort
+ * Leonard ») ; « difficulte » → pastilles colorées vert/orange/rouge.
+ */
 function Rating3({
   label,
   valeur,
@@ -58,22 +84,21 @@ function Rating3({
 }) {
   const lvl = niveau3(valeur);
   if (!lvl) return null;
-  const filled =
-    palette === "difficulte"
-      ? ["", "bg-emerald-500", "bg-orange-500", "bg-red-500"][lvl]
-      : "bg-navy";
+  const dotFilled = ["", "bg-emerald-500", "bg-orange-500", "bg-red-500"][lvl];
   return (
     <div className="flex items-center gap-3">
       <span className="inline-flex items-center justify-center rounded-full bg-navy text-white text-[11px] font-semibold px-3 py-1.5 min-w-[160px]">
         {label}
       </span>
       <div className="flex items-center gap-1.5">
-        {[1, 2, 3].map((i) => (
-          <span
-            key={i}
-            className={`w-2.5 h-2.5 rounded-full ${i <= lvl ? filled : "bg-transparent border border-border"}`}
-          />
-        ))}
+        {palette === "pertinence"
+          ? [1, 2, 3].map((i) => <LeonardMark key={i} faded={i > lvl} />)
+          : [1, 2, 3].map((i) => (
+              <span
+                key={i}
+                className={`w-2.5 h-2.5 rounded-full ${i <= lvl ? dotFilled : "bg-transparent border border-border"}`}
+              />
+            ))}
       </div>
       <span className="text-sm font-medium text-text">{valeur}</span>
     </div>
