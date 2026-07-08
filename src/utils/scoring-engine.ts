@@ -3,10 +3,10 @@
 //
 // Opère sur le schéma AAP réel (src/types/aap.ts) et un ProjetInput saisi dans
 // la page Matching. Produit, pour chaque AAP non exclu :
-//   • un score d'ADÉQUATION      (0-100, pondération 70%)
-//   • un score d'ACCESSIBILITÉ   (0-100, pondération 20%)
-//   • un score FINANCIER         (0-100, pondération 10%)
-//   • un SCORE COMPOSITE = 0.70·adéquation + 0.20·accessibilité + 0.10·financier
+//   • un score d'ADÉQUATION      (0-100) — pertinence méritée : thématiques + mots-clés
+//   • un score d'ACCESSIBILITÉ   (0-100) — facilité de montage du dossier
+//   • un score FINANCIER         (0-100) — attractivité / couverture du besoin
+//   • un SCORE COMPOSITE = 0.80·adéquation + 0.12·accessibilité + 0.08·financier
 // + des raisons et points d'attention en langage naturel (base de la Couche 2 Claude).
 // ──────────────────────────────────────────────────────────────────────
 
