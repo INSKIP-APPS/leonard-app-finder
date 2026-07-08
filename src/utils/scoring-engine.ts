@@ -171,18 +171,42 @@ function aapHaystack(aap: AAP): string {
 }
 
 // ── Mots-clés du projet (pour la pertinence sémantique légère) ───────
+// Mots fréquents mais non discriminants (FR + EN) : exclus pour que les
+// mots-clés retenus portent réellement le sujet, pas du bruit de langage.
+const STOPWORDS = new Set(
+  (
+    "pour dans avec les des une aux sur par plus leur nos vos ces cette sont etre leurs " +
+    "projet projets entreprise entreprises innovation innovant developpement systeme solution " +
+    "solutions cadre acteur acteurs euros million millions vinci type nouvelle nouveau objectif " +
+    "long production mise place votre notre ainsi afin dont entre " +
+    "with that this from will your the and for les"
+  ).split(/\s+/),
+);
+
 function keywordsFromProjet(projet: ProjetInput): string[] {
   const raw = `${projet.nom} ${projet.description} ${projet.motsClesLibres ?? ""}`;
   return [
     ...new Set(
       norm(raw)
         .split(/[^a-z0-9]+/)
-        .filter((w) => w.length >= 4),
+        .filter((w) => w.length >= 4 && !STOPWORDS.has(w)),
     ),
   ];
 }
 
 // ── 4.2 — Adéquation projet / AAP (0-100) ────────────────────────────
+//
+// Score MÉRITÉ, dominé par la pertinence réelle (recoupement thématique +
+// mots-clés), sans plancher artificiel. Ancienne version : profil=70 et
+// géo=90 constants + 1 seule thématique = 70 → tout montait à ~75 (des
+// milliers de « prioritaires »). Ici :
+//   • recoupement thématique par NOMBRE de thématiques communes (barème ↓) ;
+//   • mots-clés = signal de spécificité (il en faut plusieurs pour saturer) ;
+//   • adéquation = 60 % thématique + 40 % mots-clés (aucun autre terme).
+// Le TRL et le géo ne gonflent plus le score (le TRL reste un filtre dur via
+// exclusion() ; il est juste rappelé en clair s'il est dans la cible).
+const THEME_SCORE = [15, 40, 65, 85, 100]; // index = nb de thématiques communes (max 4)
+
 function scoreAdequation(
   aap: AAP,
   projet: ProjetInput,
@@ -192,64 +216,36 @@ function scoreAdequation(
 ): { score: number; raisons: string[] } {
   const raisons: string[] = [];
 
-  // Alignement thématique (40%)
-  let themeScore = 50; // neutre si le projet n'a pas précisé de secteur
-  if (projThemes.length > 0) {
-    const inter = aap.thematiques.filter((t) => projThemes.includes(t));
-    themeScore = inter.length === 0 ? 15 : clamp(45 + inter.length * 25);
-    if (inter.length > 0) raisons.push(`Alignement thématique : ${inter.join(", ")}`);
-  }
-
-  // Compatibilité TRL (25%) — UNIQUEMENT si le TRL est renseigné des deux côtés.
-  // La quasi-totalité des aides françaises (guichets, subventions) n'ont pas de
-  // notion de TRL : on ne fabrique donc pas de score neutre qui figerait 25% du
-  // total. Le poids du TRL est redistribué sur les autres critères quand il est
-  // absent (voir pondération dynamique plus bas).
-  const trlComparable = projet.trl != null && aap.trl_min != null && aap.trl_max != null;
-  let trlScore = 0;
-  if (trlComparable) {
-    const gap =
-      projet.trl! < aap.trl_min!
-        ? aap.trl_min! - projet.trl!
-        : projet.trl! > aap.trl_max!
-          ? projet.trl! - aap.trl_max!
-          : 0;
-    trlScore = gap === 0 ? 100 : gap === 1 ? 70 : 40;
-    if (gap === 0)
-      raisons.push(
-        `TRL du projet (${projet.trl}) dans la cible de l'AAP (${aap.trl_min}–${aap.trl_max})`,
-      );
-  }
-
-  // Pertinence mots-clés (20%) — kws/hay fournis par l'appelant (hoistés)
+  const inter = aap.thematiques.filter((t) => projThemes.includes(t));
   const hits = kws.filter((k) => hay.includes(k));
-  const kwScore = clamp(Math.min(hits.length, 5) * 20);
+  const kwScore = clamp(Math.min(hits.length, 6) * 17); // 6 mots-clés → 100
+
+  let score: number;
+  if (projThemes.length > 0) {
+    const themeScore = THEME_SCORE[Math.min(inter.length, 4)];
+    score = clamp(0.6 * themeScore + 0.4 * kwScore);
+    if (inter.length > 0) raisons.push(`Alignement thématique : ${inter.join(", ")}`);
+  } else {
+    // Pas de secteur déclaré → pertinence portée uniquement par les mots-clés.
+    score = kwScore;
+  }
+
   if (hits.length >= 2) raisons.push(`Mots-clés en commun : ${hits.slice(0, 4).join(", ")}`);
 
-  // Profil porteur (10%) — Horizon Europe ouvert à tous les types d'acteurs
-  const profilScore = 70;
-
-  // Alignement géographique (5%) — dispositifs EU : éligibles aux entités françaises
-  const geoScore = 90;
-
-  // Pondération dynamique : poids de base, TRL neutralisé (et redistribué) si non comparable.
-  const W = { theme: 0.4, trl: 0.25, kw: 0.2, profil: 0.1, geo: 0.05 };
-  let wTheme = W.theme,
-    wTrl = W.trl,
-    wKw = W.kw,
-    wProfil = W.profil,
-    wGeo = W.geo;
-  if (!trlComparable) {
-    const reste = W.theme + W.kw + W.profil + W.geo; // 0.75
-    wTrl = 0;
-    wTheme = W.theme / reste;
-    wKw = W.kw / reste;
-    wProfil = W.profil / reste;
-    wGeo = W.geo / reste;
+  // TRL : purement informatif (n'entre plus dans le score ; exclusion() écarte
+  // déjà les écarts > 2 points).
+  if (
+    projet.trl != null &&
+    aap.trl_min != null &&
+    aap.trl_max != null &&
+    projet.trl >= aap.trl_min &&
+    projet.trl <= aap.trl_max
+  ) {
+    raisons.push(
+      `TRL du projet (${projet.trl}) dans la cible de l'AAP (${aap.trl_min}–${aap.trl_max})`,
+    );
   }
-  const score = clamp(
-    themeScore * wTheme + trlScore * wTrl + kwScore * wKw + profilScore * wProfil + geoScore * wGeo,
-  );
+
   return { score, raisons };
 }
 
@@ -336,7 +332,9 @@ export function scoreProjet(
   const { score: accessibilite, points } = scoreAccessibilite(aap);
   const financier = scoreFinancier(aap, projet);
 
-  const score = clamp(adequation * 0.7 + accessibilite * 0.2 + financier * 0.1);
+  // L'adéquation (pertinence réelle) domine ; accessibilité et financier ne
+  // sont que des modulateurs légers (évite qu'ils ne gonflent un AAP hors-sujet).
+  const score = clamp(adequation * 0.8 + accessibilite * 0.12 + financier * 0.08);
 
   return {
     aap,
