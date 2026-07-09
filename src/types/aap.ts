@@ -82,6 +82,10 @@ export interface AAP {
   /** Montants en texte libre (sources françaises : les-aides.fr, ADEME…) */
   montants?: string | null;
 
+  /** Nom de la région pour les aides régionales/locales (rempli par les
+   *  connecteurs — Aides-territoires notamment). Null si non résolu. */
+  region?: string | null;
+
   /**
    * Autres sources où le MÊME AAP est référencé (dédup inter-sources).
    * Rempli à la lecture par getAaps() : une aide relayée par plusieurs portails

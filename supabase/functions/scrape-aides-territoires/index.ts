@@ -4,6 +4,8 @@
 // Récupère les AAP « secteur privé » d'Aides-territoires (API État), les mappe
 // au schéma AAP et les upsert dans la table `aaps` avec source="Aides-territoires".
 // Deltas cantonnés à cette source (n'affecte pas les AAP SEDIA).
+// V2.1 : stocke aussi le NOM de la région (champ `region`) quand le périmètre
+// de l'aide est régional — utilisé par le filtre géographique du matching.
 //
 // Auth : clé API échangée contre un JWT (secret AIDES_TERRITOIRES_TOKEN).
 // ──────────────────────────────────────────────────────────────────────
@@ -52,11 +54,9 @@ function joursRestants(d: string | null): number | null {
 
 type DispRow = { id: string; programme: string | null; nom: string; organisme: string | null };
 function norm(s: string) { return (s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, ""); }
-// Rattachement approximatif financeur AAP → dispositif de la base
 function mapDispositif(financer: string, disp: DispRow[]): string | null {
   const f = norm(financer);
   if (!f) return null;
-  // jetons distinctifs du financeur
   const tokens = [f, ...f.split(/[^a-z0-9]+/).filter((w) => w.length >= 4)];
   let best: { id: string; score: number } | null = null;
   for (const d of disp) {
@@ -71,9 +71,20 @@ function mapDispositif(financer: string, disp: DispRow[]): string | null {
 interface ATAid {
   id: number; name: string; description?: string; financers?: string[]; aid_types?: string[];
   categories?: string[]; targeted_audiences?: string[]; perimeter_scale?: string;
+  perimeter?: string | null;
   submission_deadline?: string | null; start_date?: string | null; european_aid?: string | null;
   url?: string; origin_url?: string | null; application_url?: string | null;
 }
+
+/** Nom de région si (et seulement si) le périmètre de l'aide est régional.
+ *  Département/EPCI/commune → null : la région n'est pas connue avec certitude,
+ *  et le filtre géo du front est tolérant à l'absence (l'AAP reste proposé). */
+function regionDePerimetre(a: ATAid): string | null {
+  const scale = norm(a.perimeter_scale ?? "");
+  if (!scale.includes("region")) return null;
+  return a.perimeter?.trim() || null;
+}
+
 function toAAP(a: ATAid, disp: DispRow[], scrapedAt: string) {
   const financer = (a.financers ?? [])[0] ?? "Aides-territoires";
   const description = stripHtml(a.description ?? "");
@@ -103,6 +114,7 @@ function toAAP(a: ATAid, disp: DispRow[], scrapedAt: string) {
     lien_officiel: a.application_url || a.origin_url || `${AT}${a.url ?? ""}`,
     dispositif_id: mapDispositif(financer, disp),
     echelle: a.perimeter_scale ?? null,
+    region: regionDePerimetre(a),
     source: SOURCE,
     date_scraping: scrapedAt,
   };
@@ -118,17 +130,14 @@ Deno.serve(async (req: Request) => {
   const scrapedAt = new Date().toISOString();
 
   try {
-    // 1) Auth : clé → JWT
     const cx = await fetch(`${AT}/api/connexion/`, { method: "POST", headers: { "X-AUTH-TOKEN": key } });
     if (!cx.ok) throw new Error(`connexion ${cx.status}`);
     const { token } = await cx.json();
     const H = { Authorization: `Bearer ${token}` };
 
-    // 2) Dispositifs (France) pour le rattachement
     const { data: dispRows } = await supabase.from("dispositifs").select("id, programme, nom, organisme").in("echelle", ["National", "Régional"]);
     const disp = (dispRows ?? []) as DispRow[];
 
-    // 3) Fetch AAP secteur privé (pagination via next)
     const byId = new Map<string, ReturnType<typeof toAAP>>();
     let next: string | null = `${AT}/api/aids/?call_for_projects_only=true&targeted_audiences=private_sector`;
     while (next && byId.size < MAX) {
@@ -144,13 +153,11 @@ Deno.serve(async (req: Request) => {
     }
     const aaps = [...byId.values()];
 
-    // 4) Deltas cantonnés à source=Aides-territoires
     const { data: existing } = await supabase.from("aaps").select("id").eq("source", SOURCE);
     const existingIds = new Set((existing ?? []).map((x: { id: string }) => x.id));
     const nouveaux = aaps.filter((a) => !existingIds.has(a.id)).length;
     const mis_a_jour = aaps.length - nouveaux;
 
-    // 5) Upsert
     const rows = aaps.map((a) => ({
       id: a.id, titre: a.titre, programme: a.programme, pilier: a.pilier, cluster: a.cluster,
       statut: a.statut, type_action: a.type_action, date_ouverture: a.date_ouverture, date_cloture: a.date_cloture,
@@ -158,13 +165,11 @@ Deno.serve(async (req: Request) => {
       thematiques: a.thematiques, dispositif_id: a.dispositif_id, data: a, date_scraping: a.date_scraping,
       source: SOURCE, updated_at: scrapedAt,
     }));
-    // upsert par lots de 200
     for (let i = 0; i < rows.length; i += 200) {
       const { error } = await supabase.from("aaps").upsert(rows.slice(i, i + 200), { onConflict: "id" });
       if (error) throw new Error(`upsert: ${error.message}`);
     }
 
-    // 6) Clôturer les AAP AT disparus (deadline passée, non rafraîchis)
     const { data: closedRows } = await supabase.from("aaps").update({ statut: "closed", updated_at: scrapedAt })
       .eq("source", SOURCE).lt("date_cloture", scrapedAt).lt("updated_at", scrapedAt).neq("statut", "closed").select("id");
     const fermes = (closedRows ?? []).length;

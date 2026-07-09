@@ -1,21 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  ChevronDown,
-  ChevronRight,
-  SlidersHorizontal,
-  AlertTriangle,
-  Sparkles,
-  Loader2,
-} from "lucide-react";
+import { ChevronDown, ChevronRight, AlertTriangle, Sparkles, Loader2, SearchX } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getAaps, saveMatchingRequest } from "@/services/data-store";
 import type { AAP } from "@/types/aap";
-import { matchProjet, type ProjetInput, type ScoredAap } from "@/utils/scoring-engine";
-import { affinerAvecClaude, type MatchMode } from "@/services/claude-matching";
-import { TIERS, TIER_ORDER, tierFor } from "@/utils/tier";
+import type { ProjetInput } from "@/utils/scoring-engine";
+import { preselectionner, type Preselection, type Candidat } from "@/utils/preselection";
+import { jugerCandidats, type JugementResult } from "@/services/claude-judge";
 import { FicheAap } from "@/components/FicheAap";
-import { ResultCard } from "@/components/matching/ResultCard";
+import { VerdictCard } from "@/components/matching/VerdictCard";
 import {
   Stepper,
   Block,
@@ -23,7 +16,6 @@ import {
   TextInput,
   Select,
   MultiSelect,
-  SliderField,
 } from "@/components/matching/FormFields";
 import {
   POLES,
@@ -34,6 +26,7 @@ import {
   REGIONS_FR,
   PARTENAIRES,
 } from "@/components/matching/constants";
+import { fmtDate } from "@/utils/format";
 
 export const Route = createFileRoute("/matching")({
   head: () => ({
@@ -48,9 +41,6 @@ export const Route = createFileRoute("/matching")({
   }),
   component: Matching,
 });
-
-// Référence stable pour « aucun matching lancé » (évite les re-rendus inutiles).
-const EMPTY_SCORED: ScoredAap[] = [];
 
 function Matching() {
   const [step, setStep] = useState<"form" | "results">("form");
@@ -78,11 +68,7 @@ function Matching() {
   const [dateDeploiement, setDateDeploiement] = useState("");
   const [autresInfos, setAutresInfos] = useState("");
 
-  // Filtres dynamiques (jauges)
-  const [minScore, setMinScore] = useState(40);
-  const [minAdequation, setMinAdequation] = useState(0);
-  const [minAccessibilite, setMinAccessibilite] = useState(0);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showEcartes, setShowEcartes] = useState(false);
 
   const { data: aaps = [], isLoading } = useQuery({ queryKey: ["aaps"], queryFn: () => getAaps() });
 
@@ -97,6 +83,7 @@ function Matching() {
       nom: nomProjet,
       description,
       profil: typeActeur ? mapProfil(typeActeur) : undefined,
+      typeActeur: typeActeur || undefined,
       secteurs: secteursSel,
       trl: trl ? parseInt(trl) : undefined,
       region: region || undefined,
@@ -118,101 +105,99 @@ function Matching() {
     ],
   );
 
-  // Projet SOUMIS (figé au clic « Lancer le matching »). Le scoring des ~2 500
-  // AAP ne tourne qu'à la soumission — pas à chaque frappe dans le formulaire.
-  // `aaps` reste en dépendance : si la base arrive après le clic (chargement
-  // initial), les résultats se calculent dès qu'elle est disponible.
+  // ── Pipeline V2.1 : présélection (locale) → juge IA (verdicts) ──────
+  // Le projet est FIGÉ au clic « Lancer le matching » ; la présélection ne
+  // tourne qu'à la soumission. `aaps` reste en dépendance pour couvrir le cas
+  // « base pas encore chargée au moment du clic ».
   const [submitted, setSubmitted] = useState<ProjetInput | null>(null);
-  const scored = useMemo(
-    () => (submitted ? matchProjet(aaps, submitted) : EMPTY_SCORED),
+  const presel: Preselection | null = useMemo(
+    () => (submitted && aaps.length > 0 ? preselectionner(aaps, submitted, 30) : null),
     [aaps, submitted],
   );
 
-  // Couche 2 — affinage Claude (à la demande)
-  const [enriched, setEnriched] = useState<ScoredAap[] | null>(null);
-  const [affinement, setAffinement] = useState<"idle" | "loading" | "done">("idle");
-  const [affinementMode, setAffinementMode] = useState<MatchMode | null>(null);
-  const [affinementError, setAffinementError] = useState<string | null>(null);
-
-  // Toute modification du projet (donc de `scored`) invalide l'affinage précédent.
-  useEffect(() => {
-    setEnriched(null);
-    setAffinement("idle");
-    setAffinementMode(null);
-    setAffinementError(null);
-  }, [scored]);
-
-  const effectiveScored = enriched ?? scored;
-
-  const lancerAffinage = async () => {
-    if (!submitted) return; // résultats affichés ⇒ toujours défini
-    setAffinement("loading");
-    const res = await affinerAvecClaude(submitted, scored);
-    setEnriched(res.scored);
-    setAffinementMode(res.mode);
-    setAffinementError(res.error ?? null);
-    setAffinement("done");
-  };
-
-  // Lancement du matching : enregistre la demande en base (une fois par saisie
-  // distincte) puis affiche les résultats. La sauvegarde ne bloque pas l'UI.
+  const [jugement, setJugement] = useState<JugementResult | null>(null);
+  const [statutJuge, setStatutJuge] = useState<"idle" | "loading" | "done">("idle");
+  const requeteRef = useRef(0);
   const savedSigRef = useRef("");
-  const lancerMatching = () => {
-    const sig = JSON.stringify([
-      nomProjet,
-      description,
-      secteursSel,
-      trl,
-      region,
-      typeActeur,
-      budget,
-      financement,
-    ]);
-    if (nomProjet.trim() && sig !== savedSigRef.current) {
-      savedSigRef.current = sig;
-      void saveMatchingRequest({
-        nom: nomProjet,
-        description,
-        filiale: entitePorteuse || pole || undefined,
-        trl: trl ? parseInt(trl) : null,
-        secteurs: secteursSel,
-        region: region || undefined,
-        profil: typeActeur || undefined,
-        budget: budget || undefined,
-        financement: financement || undefined,
-        motsCles: [...typesProjet],
-        nb_resultats: matchProjet(aaps, projet).length,
-        extra: { pole, typesProjet, partenaires, dateDeploiement, autresInfos },
-      });
+
+  useEffect(() => {
+    setJugement(null);
+    setShowEcartes(false);
+    if (!presel || !submitted) {
+      setStatutJuge("idle");
+      return;
     }
+    if (presel.candidats.length === 0) {
+      setJugement({ verdicts: {}, mode: "juge" });
+      setStatutJuge("done");
+      return;
+    }
+    const reqId = ++requeteRef.current;
+    setStatutJuge("loading");
+    void jugerCandidats(submitted, presel.candidats).then((res) => {
+      if (requeteRef.current !== reqId) return; // une soumission plus récente existe
+      setJugement(res);
+      setStatutJuge("done");
+      // Historisation : une fois le verdict rendu, avec le nombre de retenus.
+      const sig = JSON.stringify([
+        submitted.nom,
+        submitted.description,
+        submitted.secteurs,
+        submitted.trl,
+        submitted.region,
+        submitted.typeActeur,
+      ]);
+      if (submitted.nom.trim() && sig !== savedSigRef.current) {
+        savedSigRef.current = sig;
+        const nbRetenus =
+          res.mode === "juge"
+            ? presel.candidats.filter((c) => res.verdicts[c.aap.id]?.pertinent).length
+            : presel.candidats.length;
+        void saveMatchingRequest({
+          nom: submitted.nom,
+          description: submitted.description,
+          filiale: entitePorteuse || pole || undefined,
+          trl: submitted.trl ?? null,
+          secteurs: submitted.secteurs,
+          region: submitted.region,
+          profil: submitted.typeActeur,
+          budget: submitted.budgetTotal,
+          financement: submitted.financementRecherche,
+          motsCles: [...typesProjet],
+          nb_resultats: nbRetenus,
+          extra: { pole, typesProjet, partenaires, dateDeploiement, autresInfos },
+        });
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [presel, submitted]);
+
+  const lancerMatching = () => {
     setSubmitted(projet);
     setStep("results");
   };
 
-  const results = useMemo(
-    () =>
-      effectiveScored.filter(
-        (r) =>
-          r.score >= minScore &&
-          r.sous_scores.adequation >= minAdequation &&
-          r.sous_scores.accessibilite >= minAccessibilite,
-      ),
-    [effectiveScored, minScore, minAdequation, minAccessibilite],
-  );
-
-  const filtersDirty = minScore !== 40 || minAdequation !== 0 || minAccessibilite !== 0;
-  const resetFilters = () => {
-    setMinScore(40);
-    setMinAdequation(0);
-    setMinAccessibilite(0);
-  };
+  // ── Tri des candidats selon les verdicts ──
+  const retenus: { c: Candidat; raison: string; points: string[] }[] = [];
+  const ecartes: { c: Candidat; motif: string }[] = [];
+  const nonJuges: Candidat[] = [];
+  if (presel && jugement && jugement.mode === "juge") {
+    for (const c of presel.candidats) {
+      const v = jugement.verdicts[c.aap.id];
+      if (!v) nonJuges.push(c);
+      else if (v.pertinent) retenus.push({ c, raison: v.raison, points: v.points_attention });
+      else ecartes.push({ c, motif: v.motif_ecart || v.raison || "Hors du sujet du projet" });
+    }
+  }
+  const fallback = jugement?.mode === "fallback";
 
   return (
     <>
       <header className="mb-6">
         <h1 className="text-2xl">Matching à la demande</h1>
         <div className="text-sm text-muted mt-1">
-          Décrivez votre projet pour identifier les AAP compatibles.
+          Décrivez votre projet — l'outil présélectionne puis l'IA ne retient que les AAP réellement
+          en rapport.
         </div>
       </header>
 
@@ -288,7 +273,10 @@ function Matching() {
                   ))}
                 </select>
               </Field>
-              <Field label="Localisation">
+              <Field
+                label="Localisation"
+                hint="Une région précise = uniquement les aides de cette région."
+              >
                 <Select value={region} onChange={setRegion} options={REGIONS_FR} />
               </Field>
             </div>
@@ -349,149 +337,157 @@ function Matching() {
 
       {step === "results" && (
         <div className="mt-6">
-          <div className="flex items-center justify-between mb-4 gap-3">
+          <div className="flex items-center justify-between mb-1 gap-3">
             <h2 className="text-lg font-semibold text-navy">
-              {results.length} AAP compatibles{nomProjet ? ` avec « ${nomProjet} »` : ""}
+              {statutJuge === "done" && !fallback
+                ? `${retenus.length} AAP correspondent à votre projet`
+                : nomProjet
+                  ? `Matching « ${nomProjet} »`
+                  : "Matching"}
             </h2>
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={lancerAffinage}
-                disabled={affinement === "loading"}
-                className="inline-flex items-center gap-2 bg-purple text-white px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 disabled:opacity-60"
-                title="Analyse sémantique du top des résultats par Claude"
-              >
-                {affinement === "loading" ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Sparkles className="w-4 h-4" />
-                )}
-                {affinement === "loading" ? "Analyse en cours…" : "Affiner avec l'IA"}
-              </button>
-              <button
-                onClick={() => setStep("form")}
-                className="border border-navy text-navy px-4 py-2 rounded-md text-sm font-medium hover:bg-[var(--color-accent)]"
-              >
-                ← Modifier les critères
-              </button>
-            </div>
+            <button
+              onClick={() => setStep("form")}
+              className="shrink-0 border border-navy text-navy px-4 py-2 rounded-md text-sm font-medium hover:bg-[var(--color-accent)]"
+            >
+              ← Modifier les critères
+            </button>
           </div>
 
-          {affinement === "done" && affinementMode === "claude" && (
-            <div className="mb-4 flex items-center gap-2 text-xs bg-[#F3E8FF] text-purple px-3 py-2 rounded-md">
-              <Sparkles className="w-4 h-4 shrink-0" />
-              Top {Math.min(18, results.length)} affiné par Claude (Sonnet 5) — score fusionné 60 %
-              structurel / 40 % sémantique, raisons et points d'attention reformulés.
-            </div>
-          )}
-          {affinement === "done" && affinementMode === "fallback" && (
-            <div className="mb-4 flex items-start gap-2 text-xs bg-[#FFF4E6] text-orange-700 px-3 py-2 rounded-md">
-              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>
-                Affinage IA indisponible — repli sur le scoring structurel.
-                {affinementError ? ` (${affinementError})` : ""} La clé API Anthropic doit être
-                configurée côté serveur.
-              </span>
+          {presel && (
+            <div className="text-xs text-muted mb-4">
+              {presel.totalActifs.toLocaleString("fr-FR")} AAP actifs passés au crible ·{" "}
+              {presel.candidats.length} candidats étudiés par l'IA
+              {presel.exclusions.acteurs > 0 &&
+                ` · ${presel.exclusions.acteurs} écartés (acteurs non éligibles)`}
+              {presel.exclusions.geo > 0 &&
+                ` · ${presel.exclusions.geo} écartés (hors périmètre géographique)`}
             </div>
           )}
 
-          <div className="mb-4">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowFilters((v) => !v)}
-                className="inline-flex items-center gap-2 text-sm font-medium text-navy border border-border bg-white px-3 py-1.5 rounded-md hover:border-navy"
-              >
-                <SlidersHorizontal className="w-4 h-4" />
-                Affiner les résultats
-                <ChevronDown
-                  className={`w-4 h-4 transition-transform ${showFilters ? "rotate-180" : ""}`}
-                />
-              </button>
-              {filtersDirty && (
-                <button
-                  onClick={resetFilters}
-                  className="text-xs text-pink hover:underline font-medium"
-                >
-                  Réinitialiser
-                </button>
-              )}
+          {(isLoading || (submitted && !presel)) && (
+            <div className="card-flat p-8 text-center text-muted">
+              <Loader2 className="w-5 h-5 animate-spin inline mr-2" />
+              Chargement de la base d'AAP…
             </div>
-            {showFilters && (
-              <div className="card-flat p-4 mt-3 grid grid-cols-1 md:grid-cols-3 gap-5">
-                <SliderField
-                  label="Score d'opportunité min."
-                  value={minScore}
-                  onChange={setMinScore}
-                />
-                <SliderField
-                  label="Adéquation min."
-                  value={minAdequation}
-                  onChange={setMinAdequation}
-                />
-                <SliderField
-                  label="Accessibilité min."
-                  value={minAccessibilite}
-                  onChange={setMinAccessibilite}
-                />
-              </div>
-            )}
-          </div>
+          )}
 
-          {/* Légende */}
-          <div className="flex flex-wrap items-center gap-3 mb-4 text-xs text-muted">
-            <span className="font-medium text-navy">Légende :</span>
-            {TIER_ORDER.map((k) => {
-              const t = TIERS[k];
-              const Icon = t.icon;
-              return (
-                <span
-                  key={k}
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-medium ${t.className}`}
-                >
-                  <Icon className="w-3 h-3" />
-                  {t.label} <span className="opacity-70 font-normal ml-1">{t.range}</span>
+          {statutJuge === "loading" && presel && (
+            <div className="card-flat p-8 text-center text-muted">
+              <Loader2 className="w-5 h-5 animate-spin inline mr-2" />
+              L'IA analyse les {presel.candidats.length} candidats face à votre projet… (~10 s)
+            </div>
+          )}
+
+          {/* Repli : juge indisponible → présélection brute, annoncée comme telle */}
+          {statutJuge === "done" && fallback && presel && (
+            <>
+              <div className="mb-4 flex items-start gap-2 text-xs bg-[#FFF4E6] text-orange-700 px-3 py-2 rounded-md">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>
+                  Juge IA indisponible{jugement?.error ? ` (${jugement.error})` : ""} — voici la
+                  présélection brute, non validée. Réessayez plus tard pour un tri définitif.
                 </span>
-              );
-            })}
-          </div>
-
-          {isLoading && (
-            <div className="card-flat p-8 text-center text-muted">
-              Chargement des appels à projets…
-            </div>
+              </div>
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                {presel.candidats.slice(0, 12).map((c) => (
+                  <button
+                    key={c.aap.id}
+                    type="button"
+                    onClick={() => setSelectedAap(c.aap)}
+                    className="card-flat p-4 hover:border-navy transition text-left"
+                  >
+                    <div className="font-semibold text-navy text-sm">{c.aap.titre}</div>
+                    <div className="text-xs text-muted mt-1">
+                      {c.aap.source} · clôture {fmtDate(c.aap.date_cloture)}
+                    </div>
+                    {c.raisons[0] && <div className="text-xs text-text mt-2">{c.raisons[0]}</div>}
+                  </button>
+                ))}
+              </div>
+            </>
           )}
 
-          {!isLoading && results.length === 0 && (
-            <div className="card-flat p-8 text-center text-muted">
-              Aucun AAP ne correspond à vos critères. Élargissez le périmètre.
-            </div>
-          )}
+          {/* Mode nominal : short-list validée par le juge */}
+          {statutJuge === "done" && !fallback && (
+            <>
+              {retenus.length > 0 && (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6">
+                  {retenus.map(({ c }) => (
+                    <VerdictCard
+                      key={c.aap.id}
+                      candidat={c}
+                      verdict={jugement!.verdicts[c.aap.id]}
+                      onOpen={setSelectedAap}
+                    />
+                  ))}
+                </div>
+              )}
 
-          {!isLoading &&
-            TIER_ORDER.map((k) => {
-              const group = results.filter((r) => tierFor(r.score).key === k);
-              if (group.length === 0) return null;
-              const t = TIERS[k];
-              const Icon = t.icon;
-              return (
-                <div key={k} className="mb-6 last:mb-0">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span
-                      className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${t.className}`}
-                    >
-                      <Icon className="w-3.5 h-3.5" />
-                    </span>
-                    <h3 className="text-sm font-semibold text-navy">
-                      {t.label}s <span className="text-muted font-normal">({group.length})</span>
-                    </h3>
+              {retenus.length === 0 && (
+                <div className="card-flat p-8 text-center mb-6">
+                  <SearchX className="w-8 h-8 text-muted mx-auto mb-3" />
+                  <div className="text-sm font-medium text-navy mb-1">
+                    Aucun AAP ne correspond vraiment à ce projet aujourd'hui.
                   </div>
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                    {group.map((r) => (
-                      <ResultCard key={r.aap.id} scored={r} onOpen={setSelectedAap} />
-                    ))}
+                  <div className="text-xs text-muted max-w-md mx-auto">
+                    La base évolue chaque nuit — retentez plus tard, élargissez la description, ou
+                    consultez ci-dessous les candidats les plus proches examinés par l'IA.
                   </div>
                 </div>
-              );
-            })}
+              )}
+
+              {(ecartes.length > 0 || nonJuges.length > 0) && (
+                <div className="border-t border-border pt-4">
+                  <button
+                    onClick={() => setShowEcartes((v) => !v)}
+                    className="inline-flex items-center gap-2 text-sm font-medium text-muted hover:text-navy"
+                  >
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform ${showEcartes ? "rotate-180" : ""}`}
+                    />
+                    {ecartes.length + nonJuges.length} candidats examinés et écartés par l'IA
+                  </button>
+                  {showEcartes && (
+                    <div className="mt-3 space-y-2">
+                      {ecartes.map(({ c, motif }) => (
+                        <button
+                          key={c.aap.id}
+                          type="button"
+                          onClick={() => setSelectedAap(c.aap)}
+                          className="w-full text-left rounded-md border border-border bg-white p-3 hover:border-navy transition"
+                        >
+                          <div className="text-sm font-medium text-text">{c.aap.titre}</div>
+                          <div className="text-xs text-muted mt-0.5 flex items-start gap-1">
+                            <SearchX className="w-3.5 h-3.5 shrink-0 mt-0.5 text-pink/70" />
+                            <span>{motif}</span>
+                          </div>
+                        </button>
+                      ))}
+                      {nonJuges.map((c) => (
+                        <button
+                          key={c.aap.id}
+                          type="button"
+                          onClick={() => setSelectedAap(c.aap)}
+                          className="w-full text-left rounded-md border border-border bg-white p-3 hover:border-navy transition"
+                        >
+                          <div className="text-sm font-medium text-text">{c.aap.titre}</div>
+                          <div className="text-xs text-muted mt-0.5">
+                            Non analysé (incident technique) — à vérifier manuellement.
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-4 flex items-center gap-2 text-[11px] text-muted">
+                <Sparkles className="w-3.5 h-3.5" />
+                Verdicts rendus par Claude sur la base du titre et de la description de chaque AAP —
+                vérifiez toujours les critères d'éligibilité sur l'appel officiel.
+              </div>
+            </>
+          )}
         </div>
       )}
 

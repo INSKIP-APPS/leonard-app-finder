@@ -17,6 +17,8 @@ export interface ProjetInput {
   nom: string;
   description: string;
   profil?: "BU" | "Startup" | "GT";
+  /** Type d'acteur brut du formulaire (filtre acteurs éligibles, V2.1). */
+  typeActeur?: string;
   secteurs: string[]; // libellés de la liste SECTEURS du formulaire
   trl?: number;
   region?: string;
