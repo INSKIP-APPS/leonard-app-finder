@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getAaps, getDispositifs, getProjets, dataSource } from "@/services/data-store";
+import { getAaps, getDispositifs, getProjets } from "@/services/data-store";
 import { aapEchelle } from "@/utils/echelle";
 import { joursRestants, statutEffectif } from "@/utils/scoring-engine";
 import type { AAP } from "@/types/aap";
@@ -134,10 +134,7 @@ function Dashboard() {
       <header className="mb-5 flex items-end justify-between fade-up">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Cockpit veille AAP</h1>
-          <div className="text-xs text-muted mt-1">
-            Mis à jour le {today} · source{" "}
-            {dataSource === "supabase" ? "Supabase (live)" : "locale"}
-          </div>
+          <div className="text-xs text-muted mt-1">Données mises à jour le {today}</div>
         </div>
         <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-border text-xs font-medium">
           <span className="w-2 h-2 rounded-full bg-sky live-dot" />{" "}

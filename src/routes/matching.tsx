@@ -242,8 +242,7 @@ function Matching() {
       <header className="mb-6">
         <h1 className="text-2xl">Matching à la demande</h1>
         <div className="text-sm text-muted mt-1">
-          Décrivez votre projet — l'outil présélectionne puis l'IA ne retient que les AAP réellement
-          en rapport.
+          Décrivez votre projet et découvrez les aides qui lui correspondent vraiment.
         </div>
       </header>
 
@@ -321,7 +320,7 @@ function Matching() {
               </Field>
               <Field
                 label="Localisation"
-                hint="Une région précise = uniquement les aides de cette région."
+                hint="Choisir une région affiche uniquement les aides propres à cette région."
               >
                 <Select value={region} onChange={setRegion} options={REGIONS_FR} />
               </Field>
@@ -330,7 +329,7 @@ function Matching() {
 
           <Block
             title="Informations complémentaires"
-            subtitle="Optionnel — affine les recommandations sans bloquer le parcours."
+            subtitle="Optionnel. Ces informations affinent les recommandations."
           >
             <div className="grid grid-cols-2 gap-4">
               <Field label="Budget total estimé du projet">
@@ -425,12 +424,12 @@ function Matching() {
 
           {vueResultats === "ia" && presel && (
             <div className="text-xs text-muted mb-4">
-              {presel.totalActifs.toLocaleString("fr-FR")} AAP actifs passés au crible ·{" "}
-              {presel.candidats.length} candidats étudiés par l'IA
+              {presel.totalActifs.toLocaleString("fr-FR")} appels ouverts analysés
               {presel.exclusions.acteurs > 0 &&
-                ` · ${presel.exclusions.acteurs} écartés (acteurs non éligibles)`}
+                `, dont ${presel.exclusions.acteurs} réservés à d'autres types d'acteurs`}
               {presel.exclusions.geo > 0 &&
-                ` · ${presel.exclusions.geo} écartés (hors périmètre géographique)`}
+                ` et ${presel.exclusions.geo} hors du périmètre géographique choisi`}
+              .
             </div>
           )}
 
@@ -444,7 +443,8 @@ function Matching() {
           {vueResultats === "ia" && statutJuge === "loading" && presel && (
             <div className="card-flat p-8 text-center text-muted">
               <Loader2 className="w-5 h-5 animate-spin inline mr-2" />
-              L'IA analyse les {presel.candidats.length} candidats face à votre projet… (~10 s)
+              L'IA compare les appels les plus proches à votre projet. Comptez une dizaine de
+              secondes.
             </div>
           )}
 
@@ -454,8 +454,8 @@ function Matching() {
               <div className="mb-4 flex items-start gap-2 text-xs bg-[#FFF4E6] text-orange-700 px-3 py-2 rounded-md">
                 <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>
-                  Juge IA indisponible{jugement?.error ? ` (${jugement.error})` : ""} — voici la
-                  présélection brute, non validée. Réessayez plus tard pour un tri définitif.
+                  L'analyse IA est momentanément indisponible. Voici les appels les plus proches
+                  selon nos critères, à confirmer en relançant plus tard.
                 </span>
               </div>
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -500,8 +500,8 @@ function Matching() {
                     Aucun AAP ne correspond vraiment à ce projet aujourd'hui.
                   </div>
                   <div className="text-xs text-muted max-w-md mx-auto">
-                    La base évolue chaque nuit — retentez plus tard, élargissez la description, ou
-                    consultez ci-dessous les candidats les plus proches examinés par l'IA.
+                    La base est mise à jour chaque nuit. Réessayez plus tard, élargissez la
+                    description, ou consultez ci-dessous les appels les plus proches.
                   </div>
                 </div>
               )}
@@ -515,7 +515,7 @@ function Matching() {
                     <ChevronDown
                       className={`w-4 h-4 transition-transform ${showEcartes ? "rotate-180" : ""}`}
                     />
-                    {ecartes.length + nonJuges.length} candidats examinés et écartés par l'IA
+                    Voir les {ecartes.length + nonJuges.length} appels étudiés puis écartés
                   </button>
                   {showEcartes && (
                     <div className="mt-3 space-y-2">
@@ -542,7 +542,7 @@ function Matching() {
                         >
                           <div className="text-sm font-medium text-text">{c.aap.titre}</div>
                           <div className="text-xs text-muted mt-0.5">
-                            Non analysé (incident technique) — à vérifier manuellement.
+                            Non analysé suite à un incident technique. À vérifier manuellement.
                           </div>
                         </button>
                       ))}
@@ -553,8 +553,8 @@ function Matching() {
 
               <div className="mt-4 flex items-center gap-2 text-[11px] text-muted">
                 <Sparkles className="w-3.5 h-3.5" />
-                Verdicts rendus par Claude sur la base du titre et de la description de chaque AAP —
-                vérifiez toujours les critères d'éligibilité sur l'appel officiel.
+                Analyse réalisée par IA à partir du descriptif officiel de chaque appel. Vérifiez
+                toujours les critères d'éligibilité auprès de l'organisme.
               </div>
             </>
           )}

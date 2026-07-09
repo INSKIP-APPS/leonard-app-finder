@@ -2,51 +2,53 @@ import {
   X,
   ExternalLink,
   FileDown,
-  Calendar,
   Coins,
-  Users,
   Layers,
-  Tag,
+  Users,
+  AlertTriangle,
   Bookmark,
   BookmarkCheck,
 } from "lucide-react";
 import type { AAP } from "@/types/aap";
 import { aapEchelle } from "@/utils/echelle";
-import { joursRestants, statutEffectif } from "@/utils/scoring-engine";
+import { joursRestants, statutEffectif, difficulteCandidature } from "@/utils/scoring-engine";
 import { useSavedIds, toggleSaved } from "@/utils/savedAaps";
 import {
   fmtDateLongue,
-  budgetDetaille,
+  montantAffiche,
   trlLabel,
   STATUT_AAP_LABEL,
   escapeHtml as esc,
 } from "@/utils/format";
 import { Badge } from "@/components/Badge";
+import { Rating3, SectionTitle, InfoLine, Puces } from "@/components/fiche/partials";
 
 // ──────────────────────────────────────────────────────────────────────
-// Fiche détaillée d'un AAP (modale). Un clic sur un AAP l'ouvre au lieu de
-// partir directement sur le lien externe : on voit la carte, on peut
-// l'exporter en PDF, et on garde le lien cliquable vers l'appel officiel.
+// Fiche détaillée d'un APPEL À PROJETS (modale), sur la même mise en forme
+// que la fiche dispositif : niveaux 3 points (difficulté de candidature),
+// sections structurées, puces, export PDF et lien officiel.
 // ──────────────────────────────────────────────────────────────────────
 
 /** Génère une fenêtre imprimable propre (l'utilisateur choisit « Enregistrer en PDF »). */
 function exporterPdf(a: AAP) {
   const jr = joursRestants(a.date_cloture);
+  const diff = difficulteCandidature(a);
   const rows: [string, string][] = [
     ["Programme / financeur", a.programme],
     ["Source", a.source],
     ["Échelle", aapEchelle(a)],
     ["Statut", STATUT_AAP_LABEL[statutEffectif(a)] ?? a.statut],
+    ["Difficulté de candidature", diff.niveau],
     ["Date d'ouverture", fmtDateLongue(a.date_ouverture)],
     [
       "Date de clôture",
       fmtDateLongue(a.date_cloture) + (jr != null && jr >= 0 ? ` (J-${jr})` : ""),
     ],
-    ["Budget", budgetDetaille(a)],
-    ["Maturité (TRL)", trlLabel(a.trl_min, a.trl_max) ?? "—"],
-    ["Acteurs éligibles", (a.acteurs_eligibles ?? []).join(", ") || "—"],
+    ["Montant", montantAffiche(a)],
+    ["Maturité (TRL)", trlLabel(a.trl_min, a.trl_max) ?? "Non précisé"],
+    ["Acteurs éligibles", (a.acteurs_eligibles ?? []).join(", ") || "Non précisé"],
     ["Type d'action", a.type_action_detail || a.type_action],
-    ["Thématiques", (a.thematiques ?? []).join(", ") || "—"],
+    ["Thématiques", (a.thematiques ?? []).join(", ") || "Non précisé"],
   ];
   const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8">
 <title>${esc(a.titre)}</title>
@@ -64,13 +66,13 @@ function exporterPdf(a: AAP) {
   a { color: #2b5cad; }
   .foot { margin-top: 24px; font-size: 11px; color: #9aa7bd; border-top: 1px solid #e7ebf3; padding-top: 10px; }
 </style></head><body>
-  <div class="brand">Leonard — Veille AAP</div>
+  <div class="brand">Leonard · Veille AAP</div>
   <h1>${esc(a.titre)}</h1>
   <div class="prog">${esc(a.programme)}${a.cluster ? " · " + esc(a.cluster) : ""}</div>
   <table><tbody>${rows.map(([k, v]) => `<tr><td class="k">${esc(k)}</td><td>${esc(v)}</td></tr>`).join("")}</tbody></table>
   ${a.description ? `<h2>Description</h2><p class="desc">${esc(a.description)}</p>` : ""}
   <h2>Lien officiel</h2><p><a href="${esc(a.lien_officiel)}">${esc(a.lien_officiel)}</a></p>
-  <div class="foot">Fiche générée le ${new Date().toLocaleDateString("fr-FR")} — Leonard AAP Finder</div>
+  <div class="foot">Fiche générée le ${new Date().toLocaleDateString("fr-FR")} · Leonard AAP Finder</div>
   <script>window.onload = function(){ window.print(); }</script>
 </body></html>`;
   const w = window.open("", "_blank", "width=820,height=1000");
@@ -82,18 +84,6 @@ function exporterPdf(a: AAP) {
   w.document.close();
 }
 
-function InfoLine({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <div className="flex items-start gap-2">
-      <span className="text-muted mt-0.5">{icon}</span>
-      <div>
-        <div className="label-caps text-[10px]">{label}</div>
-        <div className="text-sm text-text">{value}</div>
-      </div>
-    </div>
-  );
-}
-
 export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => void }) {
   const saved = useSavedIds().includes(aap?.id ?? "");
   if (!aap) return null;
@@ -101,6 +91,7 @@ export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => voi
   const echelle = aapEchelle(aap);
   const trl = trlLabel(aap.trl_min, aap.trl_max);
   const statut = statutEffectif(aap);
+  const diff = difficulteCandidature(aap);
 
   return (
     <div
@@ -108,17 +99,25 @@ export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => voi
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl w-full max-w-2xl my-8 shadow-xl"
+        className="bg-white rounded-xl w-full max-w-3xl my-8 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* En-tête */}
-        <div className="flex items-start justify-between gap-4 p-5 border-b border-border">
+        <div className="flex items-start justify-between gap-4 p-5 border-b border-border bg-[#F5F8FC] rounded-t-xl">
           <div className="min-w-0">
             <div className="label-caps text-[10px] mb-1">{aap.source}</div>
             <h2 className="text-lg font-bold text-navy leading-snug">{aap.titre}</h2>
             <div className="text-sm text-muted mt-1">
               {aap.programme}
               {aap.cluster ? ` · ${aap.cluster}` : ""}
+            </div>
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              <Badge tone="sky">{echelle}</Badge>
+              <Badge tone={statut === "closed" ? "pink" : "emerald"}>
+                {STATUT_AAP_LABEL[statut] ?? statut}
+              </Badge>
+              <Badge tone="purple">{aap.type_action}</Badge>
+              {trl && <Badge tone="muted">{trl}</Badge>}
             </div>
           </div>
           <button
@@ -130,62 +129,90 @@ export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => voi
           </button>
         </div>
 
-        {/* Badges */}
-        <div className="flex flex-wrap gap-1.5 px-5 pt-4">
-          <Badge tone="sky">{echelle}</Badge>
-          <Badge tone={statut === "closed" ? "pink" : "emerald"}>
-            {STATUT_AAP_LABEL[statut] ?? statut}
-          </Badge>
-          <Badge tone="purple">{aap.type_action}</Badge>
-          {trl && <Badge tone="muted">{trl}</Badge>}
-          {(aap.thematiques ?? []).slice(0, 4).map((t) => (
-            <Badge key={t} tone="muted">
-              {t}
-            </Badge>
-          ))}
-        </div>
-
-        {/* Infos clés */}
-        <div className="grid grid-cols-2 gap-4 px-5 py-4">
-          <InfoLine
-            icon={<Calendar className="w-4 h-4" />}
-            label="Clôture"
-            value={`${fmtDateLongue(aap.date_cloture)}${jr != null && jr >= 0 ? ` · J-${jr}` : ""}`}
-          />
-          <InfoLine
-            icon={<Calendar className="w-4 h-4" />}
-            label="Ouverture"
-            value={fmtDateLongue(aap.date_ouverture)}
-          />
-          <InfoLine
-            icon={<Coins className="w-4 h-4" />}
-            label="Budget"
-            value={budgetDetaille(aap)}
-          />
-          <InfoLine
-            icon={<Users className="w-4 h-4" />}
-            label="Acteurs éligibles"
-            value={(aap.acteurs_eligibles ?? []).join(", ") || "—"}
-          />
-        </div>
-
-        {/* Aussi disponible via */}
-        {aap.sources_multiples && aap.sources_multiples.length > 0 && (
-          <div className="px-5 pb-2 flex items-center gap-2 text-xs text-emerald-700">
-            <Layers className="w-3.5 h-3.5" /> Aussi référencé sur :{" "}
-            {aap.sources_multiples.join(", ")}
+        {/* Niveau (3 points) + points de vigilance */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 px-5 py-4 border-b border-border">
+          <div className="space-y-2.5">
+            <Rating3 label="Difficulté de candidature" valeur={diff.niveau} palette="difficulte" />
           </div>
-        )}
+          <div>
+            {diff.points.length > 0 && (
+              <>
+                <div className="label-caps text-[10px] mb-1.5 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" /> Points de vigilance
+                </div>
+                <ul className="space-y-1">
+                  {diff.points.slice(0, 3).map((p) => (
+                    <li key={p} className="flex items-start gap-1.5 text-xs text-muted">
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                      <span>{p}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* 3 colonnes : périmètre · financement · acteurs */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 px-5 py-4">
+          <div className="space-y-3">
+            <SectionTitle>Périmètre & nature</SectionTitle>
+            <InfoLine label="Source" value={aap.source} />
+            <InfoLine label="Échelle" value={echelle} />
+            <InfoLine label="Statut" value={STATUT_AAP_LABEL[statut] ?? statut} />
+            <InfoLine label="Type d'action" value={aap.type_action_detail || aap.type_action} />
+          </div>
+          <div className="space-y-3">
+            <SectionTitle icon={<Coins className="w-3.5 h-3.5" />}>
+              Financement & calendrier
+            </SectionTitle>
+            <InfoLine label="Montant" value={montantAffiche(aap)} />
+            <InfoLine label="Ouverture" value={fmtDateLongue(aap.date_ouverture)} />
+            <InfoLine
+              label="Clôture"
+              value={`${fmtDateLongue(aap.date_cloture)}${jr != null && jr >= 0 ? ` (J-${jr})` : ""}`}
+            />
+            <InfoLine label="Maturité (TRL)" value={trl ?? "Non précisé"} />
+          </div>
+          <div>
+            <SectionTitle icon={<Users className="w-3.5 h-3.5" />}>Acteurs éligibles</SectionTitle>
+            {(aap.acteurs_eligibles ?? []).length > 0 ? (
+              <Puces items={(aap.acteurs_eligibles ?? []).slice(0, 8)} />
+            ) : (
+              <div className="text-sm text-muted italic">Non précisé.</div>
+            )}
+          </div>
+        </div>
+
+        {/* Thématiques + multi-sources */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 px-5 pb-4 border-t border-border pt-4">
+          <div>
+            <SectionTitle icon={<Layers className="w-3.5 h-3.5" />}>Thématiques</SectionTitle>
+            {(aap.thematiques ?? []).length > 0 ? (
+              <Puces items={aap.thematiques} />
+            ) : (
+              <div className="text-sm text-muted italic">Non précisé.</div>
+            )}
+          </div>
+          <div>
+            {aap.sources_multiples && aap.sources_multiples.length > 0 && (
+              <>
+                <SectionTitle>Aussi référencé sur</SectionTitle>
+                <Puces items={aap.sources_multiples} />
+              </>
+            )}
+          </div>
+        </div>
 
         {/* Description */}
         {aap.description && (
           <div className="px-5 pb-4">
-            <div className="label-caps text-[10px] mb-1 flex items-center gap-1">
-              <Tag className="w-3 h-3" /> Description
+            <div className="rounded-lg bg-[#F5F7FB] border border-border p-3">
+              <div className="label-caps text-[10px] mb-1">Description</div>
+              <p className="text-sm text-text whitespace-pre-wrap max-h-64 overflow-y-auto">
+                {aap.description}
+              </p>
             </div>
-            <p className="text-sm text-text whitespace-pre-wrap max-h-64 overflow-y-auto">
-              {aap.description}
-            </p>
           </div>
         )}
 

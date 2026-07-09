@@ -360,7 +360,9 @@ export function preselectionner(aaps: AAP[], projet: ProjetInput, topN = 30): Pr
     // ── Signaux pour le juge ──
     const flags: string[] = [];
     if (va.flagRecherche)
-      flags.push("Portage laboratoire/organisme de recherche requis — accessible en consortium");
+      flags.push(
+        "Portage par un laboratoire ou organisme de recherche requis, accessible en consortium",
+      );
     if (projet.trl != null && a.trl_min != null && a.trl_max != null) {
       const gap =
         projet.trl < a.trl_min
@@ -370,7 +372,7 @@ export function preselectionner(aaps: AAP[], projet: ProjetInput, topN = 30): Pr
             : 0;
       if (gap > 0)
         flags.push(
-          `TRL de l'appel ${a.trl_min}–${a.trl_max} vs projet TRL ${projet.trl} — écart à justifier`,
+          `L'appel vise un TRL ${a.trl_min} à ${a.trl_max}, le projet est TRL ${projet.trl} : écart à justifier`,
         );
     }
     if (besoin != null && a.budget_par_projet != null && a.budget_par_projet < besoin)

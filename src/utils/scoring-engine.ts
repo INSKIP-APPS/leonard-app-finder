@@ -296,6 +296,21 @@ function scoreAccessibilite(aap: AAP): { score: number; points: string[] } {
   return { score: clamp(score), points };
 }
 
+/**
+ * Difficulté de CANDIDATURE à un AAP (échelle 3 niveaux, fiches). Dérivée des
+ * mêmes heuristiques que l'accessibilité : consortium exigé, co-financement,
+ * maturité élevée, deadline proche, dossier lourd. Plus le score
+ * d'accessibilité est bas, plus candidater est difficile.
+ */
+export function difficulteCandidature(aap: AAP): {
+  niveau: "Faible" | "Moyenne" | "Forte";
+  points: string[];
+} {
+  const { score, points } = scoreAccessibilite(aap);
+  const niveau = score >= 85 ? "Faible" : score >= 60 ? "Moyenne" : "Forte";
+  return { niveau, points };
+}
+
 // ── 4.4 — Adéquation financière (0-100) ──────────────────────────────
 function scoreFinancier(aap: AAP, projet: ProjetInput): number {
   const besoin = parseMontantEuros(projet.financementRecherche);

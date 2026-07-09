@@ -10,7 +10,7 @@ import {
   Layers,
   FileText,
 } from "lucide-react";
-import { getDispositifs, getAaps, dataSource } from "@/services/data-store";
+import { getDispositifs, getAaps } from "@/services/data-store";
 import type { Dispositif, Thematiques } from "@/types/dispositif";
 import { THEMATIQUE_LABELS } from "@/types/dispositif";
 import type { AAP } from "@/types/aap";
@@ -210,14 +210,11 @@ function Explorer() {
         <div>
           <h1 className="text-2xl font-bold text-navy">Base de financements</h1>
           <p className="text-sm text-muted mt-1">
-            Explorez les dispositifs et les appels à projets scrapés
+            Explorez l'ensemble des dispositifs et des appels à projets suivis par la veille
           </p>
         </div>
         <span className="text-xs text-muted whitespace-nowrap">
-          {dispositifs.length} dispositifs · {aaps.length} AAP
-          <span className="ml-2 opacity-60">
-            ({dataSource === "supabase" ? "Supabase" : "local"})
-          </span>
+          {dispositifs.length} dispositifs · {aaps.length} appels à projets
         </span>
       </header>
 
@@ -239,7 +236,7 @@ function Explorer() {
           }`}
         >
           <FileText className="w-4 h-4" />
-          AAP scrapés
+          Appels à projets
         </button>
       </div>
 
