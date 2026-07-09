@@ -65,7 +65,7 @@ const BU_THEMES: { id: string; nom: string; logo: string; themes: (keyof Themati
   },
 ];
 
-const LEONARD: PerimetreVinci = { id: "leonard", nom: "Leonard", logo: "/logos/leonard.png" };
+const LEONARD: PerimetreVinci = { id: "leonard", nom: "Leonard", logo: "/logos/leonard-brand.png" };
 
 /**
  * Renvoie la liste des BU VINCI concernées par le dispositif (selon ses

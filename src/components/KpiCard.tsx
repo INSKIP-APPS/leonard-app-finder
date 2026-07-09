@@ -19,15 +19,20 @@ export function KpiCard({
 }) {
   const toneClass =
     deltaTone === "up"
-      ? "text-sky bg-sky/10"
+      ? "text-sky-ink bg-sky/10"
       : deltaTone === "down"
         ? "text-pink bg-pink/10"
         : "text-muted bg-bg";
 
-  const iconWrap = accent ? "bg-pink/10 text-pink" : "bg-sky/10 text-sky";
+  const iconWrap = accent ? "bg-pink/10 text-pink" : "bg-sky/10 text-sky-ink";
 
   return (
-    <div className="card-flat card-hover p-5 group fade-up">
+    <div className="card-flat card-hover p-5 group fade-up relative overflow-hidden">
+      {/* Barre d'accent verticale — signature des cartes du dashboard client */}
+      <span
+        className={`absolute top-0 left-0 h-full w-1 ${accent ? "bg-pink" : "bg-sky"}`}
+        aria-hidden
+      />
       <div className="flex items-start justify-between">
         <div className={`p-2 rounded-xl ${iconWrap} transition-colors`}>
           {icon ?? <DefaultIcon />}
@@ -41,7 +46,7 @@ export function KpiCard({
       <div className="label-caps mt-5">{label}</div>
       <div
         className={`mt-1 text-[30px] leading-none font-bold transition-colors ${
-          accent ? "text-pink" : "text-navy group-hover:text-sky"
+          accent ? "text-pink" : "text-navy group-hover:text-sky-ink"
         }`}
       >
         {value}

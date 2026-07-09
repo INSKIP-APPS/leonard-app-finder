@@ -73,8 +73,8 @@ export function Sidebar() {
                 collapsed ? "justify-center h-10 w-10 mx-auto" : "px-3 py-2.5"
               } ${
                 active
-                  ? "bg-navy text-white"
-                  : "text-text hover:bg-[var(--color-accent)] hover:text-navy"
+                  ? "bg-sky text-white"
+                  : "text-text hover:bg-[var(--color-accent)] hover:text-sky-ink"
               }`}
             >
               <Icon className="w-4 h-4 shrink-0" />

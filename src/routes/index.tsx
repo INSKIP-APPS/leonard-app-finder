@@ -163,6 +163,7 @@ function Dashboard() {
           value={nbSources}
           sub="plateformes"
           icon={<Layers className="w-4 h-4" />}
+          tone="purple"
         />
         <KpiTile
           label="Demandes de matching"
@@ -209,7 +210,7 @@ function Dashboard() {
         {/* === DROITE : Dernières demandes de matching === */}
         <div className="col-span-12 lg:col-span-6 space-y-4">
           <Panel
-            icon={<Target className="w-4 h-4 text-sky" />}
+            icon={<Target className="w-4 h-4 text-sky-ink" />}
             title="Dernières demandes de matching"
             count={projets.length}
             accent="sky"
@@ -236,7 +237,7 @@ function Dashboard() {
                         {p.description || "—"}
                       </div>
                       {typeof nb === "number" && (
-                        <div className="text-[10px] text-sky font-medium mt-1">
+                        <div className="text-[10px] text-sky-ink font-medium mt-1">
                           {nb} AAP compatibles
                         </div>
                       )}
@@ -299,7 +300,7 @@ function Dashboard() {
             <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
               <div>
                 <h3 className="text-base flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-sky" />
+                  <TrendingUp className="w-4 h-4 text-sky-ink" />
                   Répartition des AAP ouverts
                 </h3>
                 <div className="text-[11px] text-muted mt-1">
@@ -398,26 +399,32 @@ function KpiTile({
   sub,
   icon,
   accent = false,
+  tone,
 }: {
   label: string;
   value: number;
   sub: string;
   icon: React.ReactNode;
   accent?: boolean;
+  tone?: "sky" | "pink" | "purple";
 }) {
+  // Barre d'accent verticale — signature des cartes du dashboard client.
+  const barColor = tone ?? (accent ? "pink" : "sky");
+  const barClass = { sky: "bg-sky", pink: "bg-pink", purple: "bg-purple" }[barColor];
   return (
-    <div className="card-flat p-4 group hover:border-sky/40 transition-colors fade-up flex flex-col justify-between gap-3 min-h-[110px]">
+    <div className="card-flat p-4 group hover:border-sky/40 transition-colors fade-up flex flex-col justify-between gap-3 min-h-[110px] relative overflow-hidden">
+      <span className={`absolute top-0 left-0 h-full w-1 ${barClass}`} aria-hidden />
       <div className="flex items-center justify-between">
         <div className="label-caps text-[10px]">{label}</div>
         <span
-          className={accent ? "text-pink" : "text-muted group-hover:text-sky transition-colors"}
+          className={accent ? "text-pink" : "text-muted group-hover:text-sky-ink transition-colors"}
         >
           {icon}
         </span>
       </div>
       <div>
         <div
-          className={`text-3xl font-bold leading-none tabular-nums ${accent ? "text-pink" : "text-navy group-hover:text-sky"} transition-colors`}
+          className={`text-3xl font-bold leading-none tabular-nums ${accent ? "text-pink" : "text-navy group-hover:text-sky-ink"} transition-colors`}
         >
           {value.toLocaleString("fr-FR")}
         </div>

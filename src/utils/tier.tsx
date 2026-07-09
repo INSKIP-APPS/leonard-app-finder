@@ -23,7 +23,7 @@ export const TIERS: Record<TierKey, TierInfo> = {
     label: "Intéressant",
     range: "55–74",
     icon: Eye,
-    className: "bg-sky-100 text-sky-800",
+    className: "bg-sky-100 text-sky-ink-800",
   },
   investiguer: {
     key: "investiguer",
