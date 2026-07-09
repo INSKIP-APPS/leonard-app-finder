@@ -1,14 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronRight, AlertTriangle, Sparkles, Loader2, SearchX } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  AlertTriangle,
+  Sparkles,
+  Loader2,
+  SearchX,
+  SlidersHorizontal,
+  ListOrdered,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getAaps, saveMatchingRequest } from "@/services/data-store";
 import type { AAP } from "@/types/aap";
-import type { ProjetInput } from "@/utils/scoring-engine";
+import { matchProjet, type ProjetInput, type ScoredAap } from "@/utils/scoring-engine";
+import { TIERS, TIER_ORDER, tierFor } from "@/utils/tier";
 import { preselectionner, type Preselection, type Candidat } from "@/utils/preselection";
 import { jugerCandidats, type JugementResult } from "@/services/claude-judge";
 import { FicheAap } from "@/components/FicheAap";
 import { VerdictCard } from "@/components/matching/VerdictCard";
+import { ResultCard } from "@/components/matching/ResultCard";
 import {
   Stepper,
   Block,
@@ -16,6 +27,7 @@ import {
   TextInput,
   Select,
   MultiSelect,
+  SliderField,
 } from "@/components/matching/FormFields";
 import {
   POLES,
@@ -70,6 +82,14 @@ function Matching() {
 
   const [showEcartes, setShowEcartes] = useState(false);
 
+  // Deux vues de résultats : « ia » = short-list jugée (défaut) ;
+  // « classement » = ancienne présentation (tiers, curseurs, barres de sous-scores).
+  const [vueResultats, setVueResultats] = useState<"ia" | "classement">("ia");
+  const [minScore, setMinScore] = useState(40);
+  const [minAdequation, setMinAdequation] = useState(0);
+  const [minAccessibilite, setMinAccessibilite] = useState(0);
+  const [showFilters, setShowFilters] = useState(false);
+
   const { data: aaps = [], isLoading } = useQuery({ queryKey: ["aaps"], queryFn: () => getAaps() });
 
   const mapProfil = (t: string): "BU" | "Startup" | "GT" => {
@@ -114,6 +134,32 @@ function Matching() {
     () => (submitted && aaps.length > 0 ? preselectionner(aaps, submitted, 30) : null),
     [aaps, submitted],
   );
+
+  // Vue classement : l'ancien moteur structurel, calculé uniquement si la vue
+  // est active (aucun coût tant qu'on reste sur la short-list IA).
+  const scoredClassement: ScoredAap[] = useMemo(
+    () =>
+      submitted && vueResultats === "classement" && aaps.length > 0
+        ? matchProjet(aaps, submitted)
+        : [],
+    [aaps, submitted, vueResultats],
+  );
+  const resultsClassement = useMemo(
+    () =>
+      scoredClassement.filter(
+        (r) =>
+          r.score >= minScore &&
+          r.sous_scores.adequation >= minAdequation &&
+          r.sous_scores.accessibilite >= minAccessibilite,
+      ),
+    [scoredClassement, minScore, minAdequation, minAccessibilite],
+  );
+  const filtersDirty = minScore !== 40 || minAdequation !== 0 || minAccessibilite !== 0;
+  const resetFilters = () => {
+    setMinScore(40);
+    setMinAdequation(0);
+    setMinAccessibilite(0);
+  };
 
   const [jugement, setJugement] = useState<JugementResult | null>(null);
   const [statutJuge, setStatutJuge] = useState<"idle" | "loading" | "done">("idle");
@@ -339,11 +385,13 @@ function Matching() {
         <div className="mt-6">
           <div className="flex items-center justify-between mb-1 gap-3">
             <h2 className="text-lg font-semibold text-navy">
-              {statutJuge === "done" && !fallback
-                ? `${retenus.length} AAP correspondent à votre projet`
-                : nomProjet
-                  ? `Matching « ${nomProjet} »`
-                  : "Matching"}
+              {vueResultats === "classement"
+                ? `${resultsClassement.length} AAP compatibles — classement complet`
+                : statutJuge === "done" && !fallback
+                  ? `${retenus.length} AAP correspondent à votre projet`
+                  : nomProjet
+                    ? `Matching « ${nomProjet} »`
+                    : "Matching"}
             </h2>
             <button
               onClick={() => setStep("form")}
@@ -353,7 +401,29 @@ function Matching() {
             </button>
           </div>
 
-          {presel && (
+          {/* Bascule entre la short-list jugée et le classement complet */}
+          <div className="inline-flex items-center rounded-lg border border-border bg-white p-1 mb-3">
+            <button
+              onClick={() => setVueResultats("ia")}
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition ${
+                vueResultats === "ia" ? "bg-navy text-white" : "text-text hover:text-navy"
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              Sélection IA
+            </button>
+            <button
+              onClick={() => setVueResultats("classement")}
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition ${
+                vueResultats === "classement" ? "bg-navy text-white" : "text-text hover:text-navy"
+              }`}
+            >
+              <ListOrdered className="w-3.5 h-3.5" />
+              Classement complet
+            </button>
+          </div>
+
+          {vueResultats === "ia" && presel && (
             <div className="text-xs text-muted mb-4">
               {presel.totalActifs.toLocaleString("fr-FR")} AAP actifs passés au crible ·{" "}
               {presel.candidats.length} candidats étudiés par l'IA
@@ -371,7 +441,7 @@ function Matching() {
             </div>
           )}
 
-          {statutJuge === "loading" && presel && (
+          {vueResultats === "ia" && statutJuge === "loading" && presel && (
             <div className="card-flat p-8 text-center text-muted">
               <Loader2 className="w-5 h-5 animate-spin inline mr-2" />
               L'IA analyse les {presel.candidats.length} candidats face à votre projet… (~10 s)
@@ -379,7 +449,7 @@ function Matching() {
           )}
 
           {/* Repli : juge indisponible → présélection brute, annoncée comme telle */}
-          {statutJuge === "done" && fallback && presel && (
+          {vueResultats === "ia" && statutJuge === "done" && fallback && presel && (
             <>
               <div className="mb-4 flex items-start gap-2 text-xs bg-[#FFF4E6] text-orange-700 px-3 py-2 rounded-md">
                 <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -408,7 +478,7 @@ function Matching() {
           )}
 
           {/* Mode nominal : short-list validée par le juge */}
-          {statutJuge === "done" && !fallback && (
+          {vueResultats === "ia" && statutJuge === "done" && !fallback && (
             <>
               {retenus.length > 0 && (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6">
@@ -486,6 +556,103 @@ function Matching() {
                 Verdicts rendus par Claude sur la base du titre et de la description de chaque AAP —
                 vérifiez toujours les critères d'éligibilité sur l'appel officiel.
               </div>
+            </>
+          )}
+
+          {/* ── Vue classement : l'ancienne présentation (tiers, curseurs, barres) ── */}
+          {vueResultats === "classement" && !isLoading && (
+            <>
+              <div className="mb-4">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowFilters((v) => !v)}
+                    className="inline-flex items-center gap-2 text-sm font-medium text-navy border border-border bg-white px-3 py-1.5 rounded-md hover:border-navy"
+                  >
+                    <SlidersHorizontal className="w-4 h-4" />
+                    Affiner les résultats
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform ${showFilters ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                  {filtersDirty && (
+                    <button
+                      onClick={resetFilters}
+                      className="text-xs text-pink hover:underline font-medium"
+                    >
+                      Réinitialiser
+                    </button>
+                  )}
+                </div>
+                {showFilters && (
+                  <div className="card-flat p-4 mt-3 grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <SliderField
+                      label="Score d'opportunité min."
+                      value={minScore}
+                      onChange={setMinScore}
+                    />
+                    <SliderField
+                      label="Adéquation min."
+                      value={minAdequation}
+                      onChange={setMinAdequation}
+                    />
+                    <SliderField
+                      label="Accessibilité min."
+                      value={minAccessibilite}
+                      onChange={setMinAccessibilite}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Légende */}
+              <div className="flex flex-wrap items-center gap-3 mb-4 text-xs text-muted">
+                <span className="font-medium text-navy">Légende :</span>
+                {TIER_ORDER.map((k) => {
+                  const t = TIERS[k];
+                  const Icon = t.icon;
+                  return (
+                    <span
+                      key={k}
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-medium ${t.className}`}
+                    >
+                      <Icon className="w-3 h-3" />
+                      {t.label} <span className="opacity-70 font-normal ml-1">{t.range}</span>
+                    </span>
+                  );
+                })}
+              </div>
+
+              {resultsClassement.length === 0 && (
+                <div className="card-flat p-8 text-center text-muted">
+                  Aucun AAP ne correspond à vos critères. Élargissez le périmètre.
+                </div>
+              )}
+
+              {TIER_ORDER.map((k) => {
+                const group = resultsClassement.filter((r) => tierFor(r.score).key === k);
+                if (group.length === 0) return null;
+                const t = TIERS[k];
+                const Icon = t.icon;
+                return (
+                  <div key={k} className="mb-6 last:mb-0">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span
+                        className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${t.className}`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                      </span>
+                      <h3 className="text-sm font-semibold text-navy">
+                        {t.label}s <span className="text-muted font-normal">({group.length})</span>
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                      {group.map((r) => (
+                        <ResultCard key={r.aap.id} scored={r} onOpen={setSelectedAap} />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </>
           )}
         </div>

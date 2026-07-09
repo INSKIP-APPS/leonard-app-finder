@@ -194,3 +194,32 @@ export function MultiSelect({
     </div>
   );
 }
+export function SliderField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div>
+      <div className="flex items-baseline justify-between mb-1.5">
+        <span className="text-xs font-medium text-text">{label}</span>
+        <span className="text-sm font-semibold text-navy tabular-nums">
+          {value}
+          <span className="text-muted font-normal text-xs">/100</span>
+        </span>
+      </div>
+      <input
+        type="range"
+        min={0}
+        max={100}
+        value={value}
+        onChange={(e) => onChange(parseInt(e.target.value))}
+        className="w-full accent-[var(--color-navy,#001D3D)] cursor-pointer"
+      />
+    </div>
+  );
+}
