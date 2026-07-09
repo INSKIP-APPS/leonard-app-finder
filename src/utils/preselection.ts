@@ -308,6 +308,12 @@ export function preselectionner(aaps: AAP[], projet: ProjetInput, topN = 30): Pr
   const besoin = parseMontantEuros(projet.financementRecherche);
   const acceptesActeurs = acteursAcceptes(projet.typeActeur ?? "");
 
+  // Projet sans matière (ni secteur ni texte exploitable) : rien à rapprocher.
+  // On renvoie zéro candidat plutôt que des aides génériques hors de propos.
+  if (projThemes.length === 0 && uniq.length === 0) {
+    return { candidats: [], totalActifs: 0, exclusions: { acteurs: 0, geo: 0, sansLien: 0 } };
+  }
+
   const exclusions = { acteurs: 0, geo: 0, sansLien: 0 };
   let totalActifs = 0;
   const candidats: Candidat[] = [];

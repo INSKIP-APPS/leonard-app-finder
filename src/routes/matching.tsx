@@ -237,19 +237,27 @@ function Matching() {
   }
   const fallback = jugement?.mode === "fallback";
 
+  // Lancement possible seulement si le projet est décrit a minima : un nom,
+  // une description ou au moins un secteur. Sans rien, le matching n'a aucune
+  // matière et renverrait des aides génériques.
+  const formulaireValide =
+    nomProjet.trim() !== "" || description.trim() !== "" || secteursSel.length > 0;
+
   return (
-    <>
-      <header className="mb-6">
+    <div className="max-w-[1100px] mx-auto">
+      <header className="mb-6 text-center">
         <h1 className="text-2xl">Matching à la demande</h1>
         <div className="text-sm text-muted mt-1">
           Décrivez votre projet et découvrez les aides qui lui correspondent vraiment.
         </div>
       </header>
 
-      <Stepper step={step} />
+      <div className="flex justify-center">
+        <Stepper step={step} />
+      </div>
 
       {step === "form" && (
-        <div className="card-flat p-6 mt-6 max-w-4xl">
+        <div className="card-flat p-6 md:p-8 mt-6 max-w-3xl mx-auto">
           <Block title="Le projet">
             <div className="grid grid-cols-1 gap-4">
               <Field label="Nom du projet">
@@ -373,10 +381,17 @@ function Matching() {
 
           <button
             onClick={lancerMatching}
-            className="w-full mt-6 bg-navy text-white py-3 rounded-md font-medium hover:opacity-90 flex items-center justify-center gap-2"
+            disabled={!formulaireValide}
+            className="w-full mt-6 bg-navy text-white py-3 rounded-md font-medium hover:opacity-90 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Lancer le matching <ChevronRight className="w-4 h-4" />
           </button>
+          {!formulaireValide && (
+            <div className="text-xs text-muted text-center mt-2">
+              Renseignez au moins le nom, la description ou un secteur du projet pour lancer le
+              matching.
+            </div>
+          )}
         </div>
       )}
 
@@ -659,6 +674,6 @@ function Matching() {
       )}
 
       <FicheAap aap={selectedAap} onClose={() => setSelectedAap(null)} />
-    </>
+    </div>
   );
 }

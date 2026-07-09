@@ -27,7 +27,7 @@ export function VerdictCard({
     <button
       type="button"
       onClick={() => onOpen(aap)}
-      className="card-flat p-4 hover:border-navy transition flex flex-col gap-3 text-left w-full h-full min-h-[280px]"
+      className="card-flat p-4 hover:border-navy transition flex flex-col gap-3 text-left w-full h-full min-h-[250px]"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
