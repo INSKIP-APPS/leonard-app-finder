@@ -1,44 +1,19 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { LayoutDashboard, Target, Search, Settings } from "lucide-react";
+import { LayoutDashboard, Target, Search } from "lucide-react";
 import { Logo } from "./Logo";
 import { useSidebar } from "@/hooks/useSidebar";
-import { getScrapeLogs } from "@/services/data-store";
-
-/** « Aujourd'hui · 08h12 », « Hier · 08h12 » ou « 12 juin · 08h12 ». */
-function syncLabel(iso: string): string {
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return "—";
-  const heure = d
-    .toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
-    .replace(":", "h");
-  const today = new Date();
-  const hier = new Date(today);
-  hier.setDate(today.getDate() - 1);
-  if (d.toDateString() === today.toDateString()) return `Aujourd'hui · ${heure}`;
-  if (d.toDateString() === hier.toDateString()) return `Hier · ${heure}`;
-  return `${d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })} · ${heure}`;
-}
 
 const items = [
   { to: "/", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/matching", label: "Matching à la demande", icon: Target },
   // { to: "/push", label: "Veille push", icon: BellRing }, // masqué (pas prioritaire — réactivable)
   { to: "/explorer", label: "Explorer", icon: Search },
-  { to: "/admin", label: "Administration", icon: Settings },
+  // { to: "/admin", label: "Administration", icon: Settings }, // masqué pour la démo client (ne pas exposer les connecteurs/API) — réactivable
 ];
 
 export function Sidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { collapsed, setCollapsed } = useSidebar();
-
-  // Dernière exécution réelle du scraping (scrape_logs) — remplace l'ancien
-  // texte statique. Requête légère (1 ligne), cache react-query global.
-  const { data: lastLog } = useQuery({
-    queryKey: ["scrape-logs", "last"],
-    queryFn: () => getScrapeLogs(1),
-    select: (logs) => logs[0] ?? null,
-  });
 
   return (
     <aside
@@ -84,24 +59,8 @@ export function Sidebar() {
         })}
       </nav>
 
-      {!collapsed && (
-        <div className="p-4 border-t border-border">
-          <div className="label-caps mb-1">Dernière synchro</div>
-          <div
-            className="flex items-center gap-2 text-xs text-muted"
-            title={
-              lastLog && !lastLog.ok ? (lastLog.error ?? "Dernière exécution en échec") : undefined
-            }
-          >
-            <span
-              className={`inline-block w-2 h-2 rounded-full ${
-                lastLog ? (lastLog.ok ? "bg-emerald-500 live-dot" : "bg-pink") : "bg-border-strong"
-              }`}
-            />
-            {lastLog ? syncLabel(lastLog.run_at) : "—"}
-          </div>
-        </div>
-      )}
+      {/* Bloc « Dernière synchro » masqué pour la démo client (ne pas exposer
+          le scraping en direct) — réactivable : voir historique git. */}
     </aside>
   );
 }
