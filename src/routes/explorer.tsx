@@ -37,7 +37,7 @@ export const Route = createFileRoute("/explorer")({
   component: Explorer,
 });
 
-const geos = ["Europe", "National", "Régional", "Local"];
+const geos = ["Europe", "National", "Régional"];
 const secteurs = ["Construction", "Énergie", "Mobilité", "Numérique-IA", "Eau", "Environnement"];
 
 // Chaque secteur d'affichage regroupe plusieurs thématiques du schéma Dispositif.
@@ -191,8 +191,7 @@ function Explorer() {
         const match =
           (geoActif === "Europe" && ech === "EU") ||
           (geoActif === "National" && ech === "National") ||
-          (geoActif === "Régional" && ech === "Régional") ||
-          (geoActif === "Local" && ech === "Local");
+          (geoActif === "Régional" && ech === "Régional");
         if (!match) return false;
       }
       if (secteurActif && !aapMatchesSecteur(a, secteurActif)) return false;
@@ -293,29 +292,35 @@ function Explorer() {
               ))}
             </div>
           </div>
-          <button
-            onClick={() => setShowAdvanced((v) => !v)}
-            className={`shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm font-medium transition ${
-              showAdvanced || nbAdv > 0
-                ? "border-navy bg-navy text-white"
-                : "border-border bg-white text-text hover:border-navy"
-            }`}
-          >
-            <SlidersHorizontal className="w-4 h-4" />
-            Filtres avancés
-            {nbAdv > 0 && (
-              <span className="ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-white text-navy text-[10px] font-bold">
-                {nbAdv}
-              </span>
-            )}
-            <ChevronDown
-              className={`w-4 h-4 transition-transform ${showAdvanced ? "rotate-180" : ""}`}
-            />
-          </button>
+          {/* Les filtres avancés portent sur des champs propres aux dispositifs :
+              on ne les propose que dans le mode « Dispositifs ». */}
+          {mode === "dispositifs" && (
+            <button
+              onClick={() => setShowAdvanced((v) => !v)}
+              className={`shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm font-medium transition ${
+                showAdvanced || nbAdv > 0
+                  ? "border-navy bg-navy text-white"
+                  : "border-border bg-white text-text hover:border-navy"
+              }`}
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              Filtres avancés
+              {nbAdv > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-white text-navy text-[10px] font-bold">
+                  {nbAdv}
+                </span>
+              )}
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${showAdvanced ? "rotate-180" : ""}`}
+              />
+            </button>
+          )}
         </div>
 
-        {/* Panneau filtres avancés (dispositifs) */}
-        {showAdvanced && <AdvancedFiltersPanel adv={adv} setAdv={setAdv} />}
+        {/* Panneau filtres avancés (dispositifs uniquement) */}
+        {mode === "dispositifs" && showAdvanced && (
+          <AdvancedFiltersPanel adv={adv} setAdv={setAdv} />
+        )}
       </div>
 
       {/* Tri + vue */}
@@ -326,10 +331,6 @@ function Explorer() {
             : `${filteredAaps.length} AAP`}
         </span>
         <div className="flex items-center gap-3">
-          <button className="inline-flex items-center gap-1 text-sm text-text hover:text-navy">
-            Trier par : <span className="font-medium">Pertinence</span>
-            <ChevronDown className="w-4 h-4" />
-          </button>
           <div className="flex items-center rounded-md border border-border bg-white overflow-hidden">
             <button
               onClick={() => setVue("liste")}

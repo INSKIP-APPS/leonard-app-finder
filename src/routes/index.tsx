@@ -9,6 +9,7 @@ import type { Dispositif } from "@/types/dispositif";
 import { FicheAap } from "@/components/FicheAap";
 import { FicheDispositif } from "@/components/FicheDispositif";
 import { useSavedIds, useSavedDispositifIds } from "@/utils/savedAaps";
+import { setMatchingPrefill, prefillFromProjet } from "@/utils/matchingPrefill";
 
 // Pertinence VINCI = nombre de thématiques « métier » concrètes (on écarte la
 // R&D générique, trop peu discriminante pour prioriser un secteur d'activité).
@@ -106,7 +107,7 @@ function Dashboard() {
   }, [ouverts]);
 
   const parGeo = useMemo(() => {
-    const order = ["EU", "National", "Régional", "Local"];
+    const order = ["EU", "National", "Régional"];
     const c: Record<string, number> = {};
     for (const a of ouverts) {
       const e = aapEchelle(a);
@@ -227,6 +228,7 @@ function Dashboard() {
                     <Link
                       key={p.id ?? i}
                       to="/matching"
+                      onClick={() => setMatchingPrefill(prefillFromProjet(p))}
                       className="block w-full text-left p-3 rounded-lg border border-border hover:border-sky/40 hover:bg-sky/[0.02] transition"
                     >
                       <div className="text-xs font-semibold text-navy line-clamp-1">{p.nom}</div>

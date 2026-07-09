@@ -39,6 +39,43 @@ import {
   PARTENAIRES,
 } from "@/components/matching/constants";
 import { fmtDate } from "@/utils/format";
+import { takeMatchingPrefill, type MatchingPrefill } from "@/utils/matchingPrefill";
+
+// Profil porteur → catégorie du scoring (constante, hors composant).
+function mapProfil(t: string): "BU" | "Startup" | "GT" {
+  if (t.includes("Startup")) return "Startup";
+  if (t.includes("Partenaire externe") || t.includes("écosystème")) return "GT";
+  return "BU";
+}
+
+interface ProjetFields {
+  nom: string;
+  description: string;
+  typeActeur: string;
+  secteurs: string[];
+  trl: string;
+  region: string;
+  budget: string;
+  financement: string;
+  typesProjet: string[];
+  autresInfos: string;
+}
+
+/** Construit un ProjetInput à partir des champs du formulaire (source unique). */
+function toProjetInput(f: ProjetFields): ProjetInput {
+  return {
+    nom: f.nom,
+    description: f.description,
+    profil: f.typeActeur ? mapProfil(f.typeActeur) : undefined,
+    typeActeur: f.typeActeur || undefined,
+    secteurs: f.secteurs,
+    trl: f.trl ? parseInt(f.trl) : undefined,
+    region: f.region || undefined,
+    budgetTotal: f.budget || undefined,
+    financementRecherche: f.financement || undefined,
+    motsClesLibres: `${f.typesProjet.join(" ")} ${f.autresInfos}`,
+  };
+}
 
 export const Route = createFileRoute("/matching")({
   head: () => ({
@@ -55,30 +92,36 @@ export const Route = createFileRoute("/matching")({
 });
 
 function Matching() {
-  const [step, setStep] = useState<"form" | "results">("form");
+  // Prefill éventuel déposé par le tableau de bord (clic sur une demande de
+  // l'historique). Lu une seule fois par instance, même sous StrictMode.
+  const prefillRef = useRef<MatchingPrefill | null | undefined>(undefined);
+  if (prefillRef.current === undefined) prefillRef.current = takeMatchingPrefill();
+  const prefill = prefillRef.current;
+
+  const [step, setStep] = useState<"form" | "results">(prefill ? "results" : "form");
   const [selectedAap, setSelectedAap] = useState<AAP | null>(null);
 
   // Informations générales
-  const [nomProjet, setNomProjet] = useState("");
-  const [description, setDescription] = useState("");
+  const [nomProjet, setNomProjet] = useState(prefill?.nom ?? "");
+  const [description, setDescription] = useState(prefill?.description ?? "");
 
   // Profil porteur
-  const [pole, setPole] = useState("");
-  const [typeActeur, setTypeActeur] = useState("");
-  const [entitePorteuse, setEntitePorteuse] = useState("");
+  const [pole, setPole] = useState(prefill?.pole ?? "");
+  const [typeActeur, setTypeActeur] = useState(prefill?.typeActeur ?? "");
+  const [entitePorteuse, setEntitePorteuse] = useState(prefill?.entitePorteuse ?? "");
 
   // Nature du projet
-  const [typesProjet, setTypesProjet] = useState<string[]>([]);
-  const [secteursSel, setSecteursSel] = useState<string[]>([]);
-  const [trl, setTrl] = useState("");
-  const [region, setRegion] = useState("");
+  const [typesProjet, setTypesProjet] = useState<string[]>(prefill?.typesProjet ?? []);
+  const [secteursSel, setSecteursSel] = useState<string[]>(prefill?.secteurs ?? []);
+  const [trl, setTrl] = useState(prefill?.trl ?? "");
+  const [region, setRegion] = useState(prefill?.region ?? "");
 
   // Complémentaires
-  const [budget, setBudget] = useState("");
-  const [financement, setFinancement] = useState("");
-  const [partenaires, setPartenaires] = useState<string[]>([]);
+  const [budget, setBudget] = useState(prefill?.budget ?? "");
+  const [financement, setFinancement] = useState(prefill?.financement ?? "");
+  const [partenaires, setPartenaires] = useState<string[]>(prefill?.partenaires ?? []);
   const [dateDeploiement, setDateDeploiement] = useState("");
-  const [autresInfos, setAutresInfos] = useState("");
+  const [autresInfos, setAutresInfos] = useState(prefill?.autresInfos ?? "");
 
   const [showEcartes, setShowEcartes] = useState(false);
 
@@ -92,25 +135,20 @@ function Matching() {
 
   const { data: aaps = [], isLoading } = useQuery({ queryKey: ["aaps"], queryFn: () => getAaps() });
 
-  const mapProfil = (t: string): "BU" | "Startup" | "GT" => {
-    if (t.includes("Startup")) return "Startup";
-    if (t.includes("Partenaire externe") || t.includes("écosystème")) return "GT";
-    return "BU";
-  };
-
   const projet: ProjetInput = useMemo(
-    () => ({
-      nom: nomProjet,
-      description,
-      profil: typeActeur ? mapProfil(typeActeur) : undefined,
-      typeActeur: typeActeur || undefined,
-      secteurs: secteursSel,
-      trl: trl ? parseInt(trl) : undefined,
-      region: region || undefined,
-      budgetTotal: budget || undefined,
-      financementRecherche: financement || undefined,
-      motsClesLibres: `${typesProjet.join(" ")} ${autresInfos}`,
-    }),
+    () =>
+      toProjetInput({
+        nom: nomProjet,
+        description,
+        typeActeur,
+        secteurs: secteursSel,
+        trl,
+        region,
+        budget,
+        financement,
+        typesProjet,
+        autresInfos,
+      }),
     [
       nomProjet,
       description,
@@ -129,7 +167,22 @@ function Matching() {
   // Le projet est FIGÉ au clic « Lancer le matching » ; la présélection ne
   // tourne qu'à la soumission. `aaps` reste en dépendance pour couvrir le cas
   // « base pas encore chargée au moment du clic ».
-  const [submitted, setSubmitted] = useState<ProjetInput | null>(null);
+  const [submitted, setSubmitted] = useState<ProjetInput | null>(() =>
+    prefill
+      ? toProjetInput({
+          nom: prefill.nom,
+          description: prefill.description,
+          typeActeur: prefill.typeActeur,
+          secteurs: prefill.secteurs,
+          trl: prefill.trl,
+          region: prefill.region,
+          budget: prefill.budget,
+          financement: prefill.financement,
+          typesProjet: prefill.typesProjet,
+          autresInfos: prefill.autresInfos,
+        })
+      : null,
+  );
   const presel: Preselection | null = useMemo(
     () => (submitted && aaps.length > 0 ? preselectionner(aaps, submitted, 30) : null),
     [aaps, submitted],
