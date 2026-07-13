@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quick Scan Eau - Cartographie interactive</title>
+
+<!--
+  ============================================================
+  QUICK SCAN EAU - Prototype interactif pour SharePoint
+  ============================================================
+
+  Fichier autonome (HTML + CSS + JS inline).
+  A deposer dans une bibliotheque de documents SharePoint,
+  puis appeler depuis un web part Embed via son URL directe.
+
+  Lecture des donnees : API REST SharePoint sur la liste
+  QuickScan_Fiches. L'authentification est heritee de la
+  session utilisateur SharePoint (cookies).
+
+  ===== POUR AJUSTER LA MISE AU POINT VISUELLE =====
+
+  - Coordonnees des zones cliquables   : constante ZONES (bas)
+  - URL de l'image de fond              : CONFIG.BACKGROUND_IMAGE
+  - URL du site SharePoint (si iframe)  : CONFIG.SITE_URL
+  - Nom de la liste SharePoint          : CONFIG.LIST_NAME
+  - Couleur par defaut colonne gauche   : CONFIG.DEFAULT_COLOR
+  - Mode debug (contour rouge des zones): ajouter ?debug=1 a
+    l'URL de la page.
+-->
+
+<style>
+  /* ===================== Reset minimal ===================== */
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: #002d5b;
+    background: #ffffff;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  img { max-width: 100%; display: block; }
+  button { font-family: inherit; cursor: pointer; }
+  a { color: inherit; }
+
+  /* ===================== Layout general ===================== */
+  #app { min-height: 100vh; }
+
+  .loader, .error {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 60vh; padding: 24px; text-align: center;
+  }
+  .error {
+    color: #a00; font-weight: 600; max-width: 600px; margin: 0 auto;
+  }
+  .error small { display: block; margin-top: 8px; font-weight: 400; color: #666; }
+
+  /* ===================== Ecran d'accueil ===================== */
+  .home {
+    position: relative;
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 8px;
+  }
+  .home__image-wrapper {
+    position: relative;
+    width: 100%;
+    /* Preserve le ratio de l'image de fond (1920 x 1080 environ). */
+    aspect-ratio: 16 / 9;
+    background: #f5f7fa;
+    background-image: var(--bg-image);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  .zone {
+    position: absolute;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 120ms ease, box-shadow 120ms ease;
+    border-radius: 6px;
+  }
+  .zone:hover, .zone:focus-visible {
+    background-color: rgba(184, 210, 0, 0.28); /* vert Actemium translucide */
+    box-shadow: 0 0 0 2px rgba(0, 45, 91, 0.35);
+  }
+  .zone__label {
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    transform: translate(-50%, 8px);
+    background: #002d5b;
+    color: white;
+    padding: 4px 10px;
+    font-size: 12px;
+    white-space: nowrap;
+    border-radius: 4px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 120ms ease;
+  }
+  .zone:hover .zone__label,
+  .zone:focus-visible .zone__label { opacity: 1; }
+
+  /* Mode debug : contour rouge visible */
+  .home--debug .zone {
+    background-color: rgba(255, 0, 0, 0.22);
+    outline: 1px dashed rgba(255, 0, 0, 0.9);
+  }
+  .home--debug .zone__label {
+    opacity: 1;
+    background: #b00020;
+    font-weight: 600;
+  }
+
+  /* ===================== Ecran liste ===================== */
+  .list-screen {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+  .list-screen__back {
+    background: none; border: none; color: #002d5b;
+    font-size: 15px; padding: 6px 0; margin-bottom: 12px;
+  }
+  .list-screen__back::before { content: "\2190 "; }
+  .list-screen__title {
+    font-size: 26px; margin: 0 0 24px; color: #002d5b;
+  }
+  .fiche-card {
+    display: block; width: 100%; text-align: left;
+    background: white; border: 1px solid #e0e6ee;
+    border-left: 6px solid #b8d200;
+    border-radius: 6px; padding: 16px 20px; margin-bottom: 12px;
+    font-size: 15px; color: #002d5b;
+    transition: box-shadow 120ms ease, transform 120ms ease;
+  }
+  .fiche-card:hover {
+    box-shadow: 0 4px 14px rgba(0,45,91,0.12);
+    transform: translateY(-1px);
+  }
+  .fiche-card__num {
+    font-size: 12px; letter-spacing: 0.05em; color: #6a7a8c;
+    text-transform: uppercase; margin-bottom: 4px;
+  }
+  .fiche-card__title { font-weight: 700; font-size: 17px; }
+
+  /* ===================== Ecran detail (3 colonnes) ===================== */
+  .detail {
+    display: grid;
+    grid-template-columns: 300px 1fr 300px;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Colonne gauche (couleur pilotee par CouleurZone) */
+  .detail__left {
+    background: var(--zone-color, #002d5b);
+    color: white;
+    padding: 28px 24px;
+    overflow-y: auto;
+  }
+  .detail__num {
+    font-size: 12px; letter-spacing: 0.1em; opacity: 0.85;
+    text-transform: uppercase;
+  }
+  .detail__title {
+    font-size: 24px; font-weight: 700;
+    margin: 6px 0 16px; line-height: 1.25;
+  }
+  .detail__loc {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 14px; opacity: 0.95; margin-bottom: 24px;
+  }
+  .detail__loc svg { flex: 0 0 14px; }
+  .detail__block { margin-bottom: 22px; }
+  .detail__block h3 {
+    font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
+    margin: 0 0 6px; font-weight: 700;
+  }
+  .detail__block p {
+    margin: 0; font-size: 14px; line-height: 1.5;
+    white-space: pre-wrap;
+  }
+
+  /* Colonne centrale (fond blanc, scrollable) */
+  .detail__center {
+    background: white;
+    padding: 24px 32px 40px;
+    overflow-y: auto;
+  }
+  .detail__menu {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #f0f3f7; color: #002d5b;
+    border: 1px solid #d5dde7;
+    border-radius: 20px; padding: 6px 14px 6px 10px;
+    font-size: 13px; font-weight: 600;
+    margin-bottom: 24px;
+  }
+  .detail__menu:hover { background: #e6ecf3; }
+  .detail__center-title {
+    font-size: 22px; margin: 0 0 20px;
+    color: #002d5b; font-weight: 700;
+  }
+  .section {
+    margin-bottom: 20px; padding-bottom: 16px;
+    border-bottom: 1px solid #eef1f5;
+  }
+  .section:last-of-type { border-bottom: none; }
+  .section__title {
+    font-size: 15px; font-weight: 700;
+    margin: 0 0 6px; color: #002d5b;
+  }
+  .section__body {
+    font-size: 14px; line-height: 1.55; color: #2a3b52;
+    white-space: pre-wrap;
+  }
+  .section__body p { margin: 0 0 6px; }
+  .schema {
+    margin-top: 24px; padding: 12px;
+    background: #f7f9fc; border: 1px solid #e0e6ee; border-radius: 6px;
+  }
+  .schema img { width: 100%; }
+
+  /* Colonne droite */
+  .detail__right {
+    background: #f7f9fc;
+    padding: 24px 20px;
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .detail__photo {
+    width: 100%; border-radius: 6px; overflow: hidden;
+    background: #e6ecf3; min-height: 140px;
+    display: flex; align-items: center; justify-content: center;
+    color: #6a7a8c; font-size: 12px;
+  }
+  .detail__photo img { width: 100%; height: 100%; object-fit: cover; }
+
+  .referents {
+    background: #002d5b; color: white; border-radius: 6px;
+    padding: 18px; margin-top: auto;
+  }
+  .referents h3 {
+    margin: 0 0 12px; font-size: 14px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .referents__name { font-weight: 700; font-size: 15px; margin-bottom: 8px; }
+  .referents__line {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; margin-bottom: 4px; word-break: break-all;
+  }
+  .referents__line svg { flex: 0 0 14px; opacity: 0.85; }
+  .referents a { color: white; text-decoration: none; }
+  .referents a:hover { text-decoration: underline; }
+
+  /* ===================== Responsive ===================== */
+  /* Tablette */
+  @media (max-width: 1100px) {
+    .detail {
+      grid-template-columns: 260px 1fr 260px;
+    }
+    .detail__center { padding: 20px 22px 32px; }
+  }
+  /* Mobile : empilement vertical */
+  @media (max-width: 780px) {
+    .detail {
+      grid-template-columns: 1fr;
+      height: auto;
+      min-height: 100vh;
+      overflow: visible;
+    }
+    .detail__left, .detail__center, .detail__right {
+      height: auto; overflow: visible;
+    }
+    .detail__right { padding-bottom: 40px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="loader">Chargement des fiches...</div>
+</div>
+
+<script>
+/* ==========================================================
+ * CONFIGURATION - Ajuster ci-dessous
+ * ========================================================== */
+const CONFIG = {
+  // URL de l'image de fond (schema isometrique de l'usine).
+  // Deposer l'image dans SharePoint puis coller ici son URL directe.
+  // Ex : "/sites/QuickScan/SiteAssets/quickscan-eau.png"
+  BACKGROUND_IMAGE: "/sites/QuickScan/SiteAssets/quickscan-eau.png",
+
+  // URL absolue du site SharePoint (racine du site, sans slash final).
+  // Laisser vide pour tenter une auto-detection depuis window.location.
+  // Ex : "https://contoso.sharepoint.com/sites/QuickScan"
+  SITE_URL: "",
+
+  // Nom (title) de la liste SharePoint qui contient les fiches.
+  LIST_NAME: "QuickScan_Fiches",
+
+  // Couleur par defaut de la colonne gauche si la fiche n'a pas
+  // de valeur CouleurZone renseignee (format hex).
+  DEFAULT_COLOR: "#002d5b",
+
+  // Mode debug : contour rouge des zones cliquables.
+  // Actif si l'URL contient ?debug=1 (ou modifier ici pour forcer).
+  DEBUG: new URLSearchParams(location.search).get("debug") === "1",
+};
+
+/* ==========================================================
+ * ZONES CLIQUABLES - Coordonnees en % de la largeur/hauteur
+ * de l'image de fond. Ajuster a l'oeil avec ?debug=1.
+ *
+ * IMPORTANT : la valeur "label" doit correspondre exactement
+ * a une valeur du champ Choix "ZoneAssociee" dans la liste
+ * SharePoint (sans quoi les fiches ne seront pas mappees).
+ * ========================================================== */
+const ZONES = [
+  { id: "transition_numerique",   label: "Transition numérique",         x: 35.5, y: 19.0, w: 13.8, h: 6.2 },
+  { id: "traitement_eaux_brutes", label: "Traitement des eaux brutes",   x: 30.5, y: 25.8, w: 12.5, h: 8.0 },
+  { id: "bassins_versants",       label: "Gestion des bassins versants", x: 20.8, y: 34.2, w: 11.8, h: 9.8 },
+  { id: "stockage_distribution",  label: "Stockage distribution",        x: 68.8, y: 12.0, w: 11.3, h: 6.7 },
+  { id: "traitement_purifiee",    label: "Traitement des eaux purifiée", x: 59.5, y: 31.1, w:  7.5, h: 6.7 },
+  { id: "consommation_process",   label: "Consommation process",         x: 77.0, y: 58.0, w: 13.3, h: 6.7 },
+  { id: "valorisation_hydrique",  label: "Valorisation hydrique",        x: 72.0, y: 74.9, w: 11.8, h: 7.1 },
+  { id: "valorisation_energetique",label:"Valorisation énergetique",     x: 19.5, y: 71.8, w: 12.8, h: 6.7 },
+  { id: "assainissement",         label: "Assainissement",               x: 35.5, y: 93.3, w: 12.8, h: 5.8 },
+];
+
+/* ==========================================================
+ * Sections affichees dans la colonne centrale ("Rex techniques").
+ * Chaque entree map un titre visible a un ou plusieurs champs
+ * de la liste SharePoint. Editable librement.
+ *
+ * type "text"    : affichage brut du contenu du champ
+ * type "compose" : concatene plusieurs champs (etiquette : valeur)
+ * ========================================================== */
+const CENTER_SECTIONS = [
+  {
+    title: "Périmètre",
+    type: "compose",
+    parts: [
+      { label: "MOA",       field: "MOA" },
+      { label: "MOE",       field: "MOE" },
+      { label: "Entreprise",field: "Entreprise" },
+    ],
+  },
+  { title: "Bénéfices",   type: "text", field: "Benefices" },
+  { title: "Contraintes", type: "text", field: "Contraintes" },
+  { title: "Rex financiers", type: "text", field: "RexFinanciers" },
+  { title: "Autre",       type: "text", field: "Autre" },
+];
+
+/* ==========================================================
+ * Etat applicatif
+ * ========================================================== */
+const state = {
+  fiches: [],           // toutes les fiches SharePoint
+  fichesByZone: {},     // regroupees par label de zone
+  view: "home",         // "home" | "list" | "detail"
+  currentZone: null,
+  currentFiche: null,
+};
+
+const appEl = document.getElementById("app");
+
+/* ==========================================================
+ * Auto-detection de l'URL du site SharePoint
+ * ========================================================== */
+function detectSiteUrl() {
+  if (CONFIG.SITE_URL) return CONFIG.SITE_URL.replace(/\/$/, "");
+  const url = location.href;
+  const patterns = [
+    "/Shared%20Documents/", "/Shared Documents/",
+    "/SitePages/", "/Documents/", "/SiteAssets/",
+  ];
+  for (const p of patterns) {
+    const idx = url.indexOf(p);
+    if (idx > -1) return url.substring(0, idx);
+  }
+  const m = url.match(/^(https?:\/\/[^/]+\/(?:sites|teams)\/[^/]+)/);
+  if (m) return m[1];
+  return location.origin;
+}
+
+/* ==========================================================
+ * Appel API REST SharePoint
+ * ========================================================== */
+async function fetchFiches() {
+  const site = detectSiteUrl();
+  const fields = [
+    "ID", "Title",
+    "ZoneAssociee", "Localisation",
+    "Solution", "CasUsage",
+    "RexFinanciers", "MOA", "MOE", "Entreprise",
+    "Benefices", "Contraintes", "Autre",
+    "ReferentNom", "ReferentTelephone", "ReferentEmail",
+    "Photo1", "Photo2",
+    "CouleurZone", "SchemaZone",
+  ].join(",");
+
+  const url = `${site}/_api/web/lists/getbytitle('${encodeURIComponent(CONFIG.LIST_NAME)}')/items`
+            + `?$select=${fields}&$top=500`;
+
+  const res = await fetch(url, {
+    method: "GET",
+    credentials: "include",
+    headers: { "Accept": "application/json;odata=nometadata" },
+  });
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status} ${res.statusText}`);
+  }
+  const data = await res.json();
+  return data.value || data.d?.results || [];
+}
+
+/* ==========================================================
+ * Normalise la valeur d'un champ image SharePoint
+ * (colonnes Photo1 / Photo2 / SchemaZone) en URL absolue.
+ * Gere : chaine URL, objet { Url }, JSON serverRelativeUrl.
+ * ========================================================== */
+function resolveImageUrl(raw) {
+  if (!raw) return "";
+  const site = detectSiteUrl();
+  const origin = new URL(site).origin;
+
+  // objet hyperlink { Url, Description }
+  if (typeof raw === "object" && raw.Url) return raw.Url;
+
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    // JSON (colonne Image moderne)
+    if (trimmed.startsWith("{")) {
+      try {
+        const obj = JSON.parse(trimmed);
+        const rel = obj.serverRelativeUrl || obj.serverUrl || obj.fileName;
+        if (rel && rel.startsWith("http")) return rel;
+        if (rel) return origin + rel;
+      } catch (e) { /* ignore */ }
+    }
+    if (trimmed.startsWith("http")) return trimmed;
+    if (trimmed.startsWith("/")) return origin + trimmed;
+    return trimmed;
+  }
+  return "";
+}
+
+/* ==========================================================
+ * Utilitaires
+ * ========================================================== */
+function safeColor(hex) {
+  if (typeof hex !== "string") return CONFIG.DEFAULT_COLOR;
+  const m = hex.trim().match(/^#[0-9a-fA-F]{3,8}$/);
+  return m ? m[0] : CONFIG.DEFAULT_COLOR;
+}
+
+function escapeHtml(s) {
+  if (s == null) return "";
+  return String(s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function ficheNumber(fiche) {
+  return "Fiche N°" + String(fiche.ID).padStart(2, "0");
+}
+
+/* ==========================================================
+ * Groupement des fiches par zone (via ZoneAssociee)
+ * ========================================================== */
+function groupByZone(fiches) {
+  const map = {};
+  for (const f of fiches) {
+    const z = (f.ZoneAssociee || "").trim();
+    if (!z) continue;
+    (map[z] = map[z] || []).push(f);
+  }
+  return map;
+}
+
+/* ==========================================================
+ * ICONES SVG inline (pas de dependance externe)
+ * ========================================================== */
+const ICON_PIN = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+const ICON_PHONE = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.86 19.86 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.94.36 1.86.7 2.73a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.35-1.27a2 2 0 0 1 2.11-.45c.87.34 1.79.57 2.73.7A2 2 0 0 1 22 16.92z"/></svg>`;
+const ICON_MAIL = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`;
+
+/* ==========================================================
+ * Rendu - Ecran d'accueil
+ * ========================================================== */
+function renderHome() {
+  const debugCls = CONFIG.DEBUG ? "home--debug" : "";
+  const zonesHtml = ZONES.map(z => `
+    <button class="zone" type="button"
+      data-zone="${escapeHtml(z.label)}"
+      title="${escapeHtml(z.label)}"
+      style="left:${z.x}%; top:${z.y}%; width:${z.w}%; height:${z.h}%;">
+      <span class="zone__label">${escapeHtml(z.label)}</span>
+    </button>
+  `).join("");
+
+  appEl.innerHTML = `
+    <div class="home ${debugCls}">
+      <div class="home__image-wrapper"
+        style="--bg-image: url('${escapeHtml(CONFIG.BACKGROUND_IMAGE)}')">
+        ${zonesHtml}
+      </div>
+    </div>
+  `;
+
+  appEl.querySelectorAll(".zone").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const label = btn.getAttribute("data-zone");
+      openZone(label);
+    });
+  });
+}
+
+/* ==========================================================
+ * Rendu - Ecran liste (quand plusieurs fiches pour une zone)
+ * ========================================================== */
+function renderList(zoneLabel, fiches) {
+  const cardsHtml = fiches.map(f => `
+    <button class="fiche-card" type="button" data-id="${f.ID}">
+      <div class="fiche-card__num">${ficheNumber(f)}</div>
+      <div class="fiche-card__title">${escapeHtml(f.Title || "(sans titre)")}</div>
+    </button>
+  `).join("");
+
+  appEl.innerHTML = `
+    <div class="list-screen">
+      <button class="list-screen__back" type="button" id="back-home">Retour a la carte</button>
+      <h1 class="list-screen__title">${escapeHtml(zoneLabel)}</h1>
+      ${cardsHtml || "<p>Aucune fiche disponible pour cette zone.</p>"}
+    </div>
+  `;
+
+  document.getElementById("back-home").addEventListener("click", goHome);
+  appEl.querySelectorAll(".fiche-card").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = Number(btn.getAttribute("data-id"));
+      const fiche = state.fiches.find(f => f.ID === id);
+      if (fiche) openFiche(fiche);
+    });
+  });
+}
+
+/* ==========================================================
+ * Rendu - Ecran detail (fiche)
+ * ========================================================== */
+function renderDetail(fiche) {
+  const color = safeColor(fiche.CouleurZone);
+
+  // Colonne gauche
+  const leftHtml = `
+    <div class="detail__num">${ficheNumber(fiche)}</div>
+    <h2 class="detail__title">${escapeHtml(fiche.Title || "")}</h2>
+    ${fiche.Localisation ? `
+      <div class="detail__loc">${ICON_PIN}<span>${escapeHtml(fiche.Localisation)}</span></div>
+    ` : ""}
+    ${fiche.Solution ? `
+      <div class="detail__block">
+        <h3>Solution</h3>
+        <p>${escapeHtml(fiche.Solution)}</p>
+      </div>
+    ` : ""}
+    ${fiche.CasUsage ? `
+      <div class="detail__block">
+        <h3>Cas d'usage</h3>
+        <p>${escapeHtml(fiche.CasUsage)}</p>
+      </div>
+    ` : ""}
+  `;
+
+  // Colonne centrale - sections
+  const sectionsHtml = CENTER_SECTIONS.map(sec => {
+    let body = "";
+    if (sec.type === "compose") {
+      const lines = sec.parts
+        .map(p => {
+          const v = fiche[p.field];
+          return v ? `<p><strong>${escapeHtml(p.label)} :</strong> ${escapeHtml(v)}</p>` : "";
+        })
+        .filter(Boolean).join("");
+      if (!lines) return "";
+      body = lines;
+    } else {
+      const v = fiche[sec.field];
+      if (!v) return "";
+      body = `<p>${escapeHtml(v)}</p>`;
+    }
+    return `
+      <div class="section">
+        <div class="section__title">${escapeHtml(sec.title)}</div>
+        <div class="section__body">${body}</div>
+      </div>
+    `;
+  }).join("");
+
+  const schemaUrl = resolveImageUrl(fiche.SchemaZone);
+  const schemaHtml = schemaUrl ? `
+    <div class="schema">
+      <img src="${escapeHtml(schemaUrl)}" alt="Schéma illustratif" />
+    </div>
+  ` : "";
+
+  const centerHtml = `
+    <button class="detail__menu" type="button" id="btn-menu">&larr; Menu</button>
+    <h2 class="detail__center-title">Rex techniques</h2>
+    ${sectionsHtml || "<p>Aucune information technique renseignée.</p>"}
+    ${schemaHtml}
+  `;
+
+  // Colonne droite - photos + referents
+  const photo1 = resolveImageUrl(fiche.Photo1);
+  const photo2 = resolveImageUrl(fiche.Photo2);
+  const rightHtml = `
+    <div class="detail__photo">
+      ${photo1 ? `<img src="${escapeHtml(photo1)}" alt="Photo 1" />` : "Photo 1"}
+    </div>
+    <div class="detail__photo">
+      ${photo2 ? `<img src="${escapeHtml(photo2)}" alt="Photo 2" />` : "Photo 2"}
+    </div>
+    <div class="referents">
+      <h3>Référents</h3>
+      ${fiche.ReferentNom ? `<div class="referents__name">${escapeHtml(fiche.ReferentNom)}</div>` : ""}
+      ${fiche.ReferentTelephone ? `
+        <div class="referents__line">${ICON_PHONE}
+          <a href="tel:${escapeHtml(fiche.ReferentTelephone)}">${escapeHtml(fiche.ReferentTelephone)}</a>
+        </div>` : ""}
+      ${fiche.ReferentEmail ? `
+        <div class="referents__line">${ICON_MAIL}
+          <a href="mailto:${escapeHtml(fiche.ReferentEmail)}">${escapeHtml(fiche.ReferentEmail)}</a>
+        </div>` : ""}
+    </div>
+  `;
+
+  appEl.innerHTML = `
+    <div class="detail" style="--zone-color: ${color}">
+      <aside class="detail__left">${leftHtml}</aside>
+      <main class="detail__center">${centerHtml}</main>
+      <aside class="detail__right">${rightHtml}</aside>
+    </div>
+  `;
+
+  document.getElementById("btn-menu").addEventListener("click", goHome);
+}
+
+/* ==========================================================
+ * Navigation
+ * ========================================================== */
+function goHome() {
+  state.view = "home";
+  state.currentZone = null;
+  state.currentFiche = null;
+  renderHome();
+}
+
+function openZone(zoneLabel) {
+  const fiches = state.fichesByZone[zoneLabel] || [];
+  state.currentZone = zoneLabel;
+  if (fiches.length === 1) {
+    openFiche(fiches[0]);
+  } else {
+    state.view = "list";
+    renderList(zoneLabel, fiches);
+  }
+}
+
+function openFiche(fiche) {
+  state.view = "detail";
+  state.currentFiche = fiche;
+  renderDetail(fiche);
+  // Remonte en haut de la page quand on ouvre une fiche
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+/* ==========================================================
+ * Boot
+ * ========================================================== */
+async function init() {
+  try {
+    state.fiches = await fetchFiches();
+    state.fichesByZone = groupByZone(state.fiches);
+    renderHome();
+  } catch (err) {
+    console.error("[QuickScan] Erreur de chargement :", err);
+    appEl.innerHTML = `
+      <div class="error">
+        <div>
+          Impossible de charger les fiches depuis SharePoint.
+          <small>
+            ${escapeHtml(String(err.message || err))}<br>
+            Verifiez que la liste "${escapeHtml(CONFIG.LIST_NAME)}" existe
+            et que vous etes bien authentifie sur SharePoint.
+          </small>
+        </div>
+      </div>
+    `;
+  }
+}
+
+init();
+</script>
+
+</body>
+</html>
