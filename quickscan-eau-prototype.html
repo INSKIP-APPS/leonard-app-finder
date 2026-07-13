@@ -344,15 +344,7 @@ const ZONES = [
  * type "compose" : concatene plusieurs champs (etiquette : valeur)
  * ========================================================== */
 const CENTER_SECTIONS = [
-  {
-    title: "Périmètre",
-    type: "compose",
-    parts: [
-      { label: "MOA",       field: "MOA" },
-      { label: "MOE",       field: "MOE" },
-      { label: "Entreprise",field: "Entreprise" },
-    ],
-  },
+  { title: "Périmètre",         type: "text", field: "Perimetre" },
   { title: "Durée des travaux", type: "text", field: "DureeTravaux" },
   { title: "Bénéfices",         type: "text", field: "Benefices" },
   { title: "Contraintes",       type: "text", field: "Contraintes" },
@@ -401,7 +393,7 @@ async function fetchFiches() {
     "ZoneAssociee", "Localisation",
     "Solution", "CasUsage",
     "RexFinanciers", "MOA", "MOE", "Entreprise",
-    "DureeTravaux",
+    "Perimetre", "DureeTravaux",
     "Benefices", "Contraintes", "Autre",
     "ReferentNom", "ReferentTelephone", "ReferentEmail",
     "Photo1", "Photo2",
