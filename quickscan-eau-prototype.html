@@ -579,6 +579,22 @@ function renderDetail(fiche) {
         <p>${escapeHtml(fiche.CasUsage)}</p>
       </div>
     ` : ""}
+    ${fiche.RexFinanciers ? `
+      <div class="detail__block">
+        <h3>REX financiers</h3>
+        <p>${escapeHtml(fiche.RexFinanciers)}</p>
+      </div>
+    ` : ""}
+    ${(fiche.MOA || fiche.MOE || fiche.Entreprise) ? `
+      <div class="detail__block">
+        <h3>Acteurs</h3>
+        <p>${[
+          fiche.MOA        ? `<strong>MOA :</strong> ${escapeHtml(fiche.MOA)}`               : "",
+          fiche.MOE        ? `<strong>MOE :</strong> ${escapeHtml(fiche.MOE)}`               : "",
+          fiche.Entreprise ? `<strong>Entreprise :</strong> ${escapeHtml(fiche.Entreprise)}` : "",
+        ].filter(Boolean).join("<br>")}</p>
+      </div>
+    ` : ""}
   `;
 
   // Colonne centrale - sections
