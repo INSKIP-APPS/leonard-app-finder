@@ -160,17 +160,27 @@ export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => voi
             <InfoLine label="Source" value={aap.source} />
             <InfoLine label="Échelle" value={echelle} />
             <InfoLine label="Statut" value={STATUT_AAP_LABEL[statut] ?? statut} />
-            <InfoLine label="Type d'action" value={aap.type_action_detail || aap.type_action} />
+            <InfoLine
+              label="Type d'action"
+              value={aap.type_action_detail || aap.type_action || "Non précisé"}
+            />
           </div>
           <div className="space-y-3">
             <SectionTitle icon={<Coins className="w-3.5 h-3.5" />}>
               Financement & calendrier
             </SectionTitle>
             <InfoLine label="Montant" value={montantAffiche(aap)} />
-            <InfoLine label="Ouverture" value={fmtDateLongue(aap.date_ouverture)} />
+            <InfoLine
+              label="Ouverture"
+              value={aap.date_ouverture ? fmtDateLongue(aap.date_ouverture) : "Non précisée"}
+            />
             <InfoLine
               label="Clôture"
-              value={`${fmtDateLongue(aap.date_cloture)}${jr != null && jr >= 0 ? ` (J-${jr})` : ""}`}
+              value={
+                aap.date_cloture
+                  ? `${fmtDateLongue(aap.date_cloture)}${jr != null && jr >= 0 ? ` (J-${jr})` : ""}`
+                  : "Non précisée"
+              }
             />
             <InfoLine label="Maturité (TRL)" value={trl ?? "Non précisé"} />
           </div>

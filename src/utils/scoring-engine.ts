@@ -297,18 +297,93 @@ function scoreAccessibilite(aap: AAP): { score: number; points: string[] } {
 }
 
 /**
- * Difficulté de CANDIDATURE à un AAP (échelle 3 niveaux, fiches). Dérivée des
- * mêmes heuristiques que l'accessibilité : consortium exigé, co-financement,
- * maturité élevée, deadline proche, dossier lourd. Plus le score
- * d'accessibilité est bas, plus candidater est difficile.
+ * Difficulté de CANDIDATURE à un AAP (échelle 3 niveaux).
+ * Somme de signaux binaires + pondération ; ne dépend pas du dispositif parent
+ * (règle validée : calcul uniquement depuis les faits AAP). Seuils :
+ *   0-1 → Faible, 2-3 → Moyenne, ≥ 4 → Forte
+ * Signaux : programme européen (+2), consortium (+2), co-financement (+1),
+ * formalisme France 2030 (+2), TRL étroit (+1), gros budget (+1),
+ * deadline serrée (+2).
  */
 export function difficulteCandidature(aap: AAP): {
   niveau: "Faible" | "Moyenne" | "Forte";
   points: string[];
 } {
-  const { score, points } = scoreAccessibilite(aap);
-  const niveau = score >= 85 ? "Faible" : score >= 60 ? "Moyenne" : "Forte";
-  return { niveau, points };
+  let pts = 0;
+  const raisons: string[] = [];
+
+  const desc = norm(aap.description || "");
+  const prog = norm(aap.programme || "");
+  const isEU = aap.source === "EU Funding & Tenders (SEDIA)";
+  const isEICAccelerator = aap.type_action === "EIC" && /accelerator/i.test(aap.type_action_detail || "");
+  const isFrance2030 =
+    /france 2030|\bpia\b|premiere usine|i-nov|i-demo|projet innovant/.test(prog) ||
+    aap.source === "Banque des Territoires (France 2030)";
+
+  // 1. Programme européen : compte dans le score de difficulté mais n'ajoute
+  //    plus de point de vigilance affiché (informatif, pas actionnable ;
+  //    la source SEDIA et le badge « Forte » disent déjà la même chose).
+  if (isEU) {
+    pts += 2;
+  }
+
+  // 2. Consortium multi-partenaires exigé.
+  //  - explicite : type_action ∈ RIA/IA/COFUND
+  //  - programme européen (SEDIA) : consortium par défaut sauf EIC Accelerator (mono-startup)
+  //  - mots-clés : description mentionne un consortium (FR ou EN)
+  const consortiumTypeAction = ["RIA", "IA", "COFUND"].includes(aap.type_action);
+  const consortiumSEDIA = isEU && !isEICAccelerator;
+  const consortiumMotClef =
+    /consortium|consorti\b|multi-partenaires|coordinat(ed|eur) by|eligible entities|beneficiaries must|partners? from|at least [23] (partners|entities|different)|associated countries|different member states/.test(
+      desc,
+    );
+  if (consortiumTypeAction || consortiumSEDIA || consortiumMotClef) {
+    pts += 2;
+    raisons.push("Consortium multi-partenaires à monter");
+  }
+
+  // 3. Co-financement à trouver (Innovation Action ~70 %, COFUND)
+  if (aap.type_action === "IA") {
+    pts += 1;
+    raisons.push("Co-financement à prévoir : 30 % du budget à sécuriser");
+  } else if (aap.type_action === "COFUND") {
+    pts += 1;
+    raisons.push("Co-financement à prévoir avec les agences nationales");
+  }
+
+  // 4. France 2030 : compte dans le score de difficulté mais n'ajoute plus
+  //    de point de vigilance affiché (vague et pas actionnable — tous les
+  //    F2030 ont un jury, ça ne pilote pas une décision).
+  if (isFrance2030 && !isEU) {
+    pts += 2;
+  }
+
+  // 5. Fenêtre TRL étroite — sélection technique forte
+  if (
+    aap.trl_min != null &&
+    aap.trl_max != null &&
+    aap.trl_max - aap.trl_min <= 2 &&
+    aap.trl_min >= 5
+  ) {
+    pts += 1;
+    raisons.push(`Fenêtre TRL étroite (${aap.trl_min}–${aap.trl_max})`);
+  }
+
+  // 6. Dossier lourd — gros budget par projet
+  if (aap.budget_par_projet != null && aap.budget_par_projet >= 5_000_000) {
+    pts += 1;
+    raisons.push("Dossier conséquent (financement > 5 M€ par projet)");
+  }
+
+  // 7. Deadline serrée
+  const jr = joursRestants(aap.date_cloture);
+  if (jr !== null && jr >= 0 && jr < 30) {
+    pts += 2;
+    raisons.push(`Deadline proche (${jr} j) — dossier à monter vite`);
+  }
+
+  const niveau = pts >= 4 ? "Forte" : pts >= 2 ? "Moyenne" : "Faible";
+  return { niveau, points: raisons };
 }
 
 // ── 4.4 — Adéquation financière (0-100) ──────────────────────────────

@@ -259,6 +259,10 @@ export async function saveMatchingRequest(input: {
 }): Promise<void> {
   if (!supabase) return;
   if (!input.nom?.trim()) return; // on ne journalise pas une saisie vide
+  // Depuis la sécurité étape 2 : la table `projets` est fermée à `anon`.
+  // On skip silencieusement si aucune session (mode démo publique).
+  const { data: sess } = await supabase.auth.getSession();
+  if (!sess.session) return;
   const row = {
     nom: input.nom.trim(),
     filiale: input.filiale || null,
@@ -359,4 +363,67 @@ export async function runScrapeNow(): Promise<{ ok: boolean; message?: string }>
   const { error } = await supabase.rpc("run_scrape_now");
   if (error) return { ok: false, message: error.message };
   return { ok: true };
+}
+
+// ── Administration : utilisateurs & rôles (Sécurité étape 2 phase D) ─
+
+export type Role = "admin" | "editeur" | "lecture";
+export interface AdminUser {
+  id: string;
+  email: string;
+  nom: string | null;
+  entite: string | null;
+  role: Role;
+  created_at: string;
+  last_sign_in_at: string | null;
+}
+
+/** Liste tous les utilisateurs (admin uniquement — fonction SQL protégée). */
+export async function adminListUsers(): Promise<AdminUser[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase.rpc("admin_list_users");
+  if (error) throw new Error(`adminListUsers: ${error.message}`);
+  return (data ?? []) as AdminUser[];
+}
+
+/** Change le rôle d'un utilisateur (admin uniquement — garde interne). */
+export async function adminSetRole(userId: string, role: Role): Promise<void> {
+  if (!supabase) throw new Error("Supabase non configuré.");
+  const { error } = await supabase.rpc("admin_set_role", { target_id: userId, new_role: role });
+  if (error) throw new Error(`adminSetRole: ${error.message}`);
+}
+
+/** Envoie une invitation email à un nouveau contributeur (via Edge Function admin). */
+export async function adminInviteUser(input: {
+  email: string;
+  nom?: string;
+  entite?: string;
+  role?: Role;
+}): Promise<{ ok: boolean; message?: string }> {
+  if (!supabase) return { ok: false, message: "Supabase non configuré." };
+  // On récupère le JWT de session pour l'envoyer explicitement en Authorization.
+  const { data: sess } = await supabase.auth.getSession();
+  const token = sess.session?.access_token;
+  if (!token) return { ok: false, message: "Session expirée — reconnectez-vous." };
+  const url = import.meta.env.VITE_SUPABASE_URL as string;
+  const anon = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+  try {
+    const redirectTo = `${window.location.origin}/auth/callback`;
+    const res = await fetch(`${url}/functions/v1/admin-invite-user`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        apikey: anon,
+      },
+      body: JSON.stringify({ ...input, redirectTo }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok || body?.ok === false) {
+      return { ok: false, message: body?.error || `HTTP ${res.status}` };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : String(e) };
+  }
 }

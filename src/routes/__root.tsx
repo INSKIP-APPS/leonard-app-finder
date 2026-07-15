@@ -4,11 +4,16 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
+  useNavigate,
   HeadContent,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 import { Sidebar } from "../components/Sidebar";
 import { SidebarProvider, useSidebar } from "../hooks/useSidebar";
+import { useSession, isAuthEnabled } from "@/services/auth";
 
 function NotFoundComponent() {
   return (
@@ -75,17 +80,52 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // Routes publiques (plein écran, sans sidebar, sans AuthGate)
+  const publicRoutes = ["/login", "/auth/callback"];
+  const isPublicRoute = publicRoutes.includes(pathname);
+
   return (
     <QueryClientProvider client={queryClient}>
       <HeadContent />
-      <SidebarProvider>
-        <div className="min-h-screen bg-bg">
-          <Sidebar />
-          <Main />
-        </div>
-      </SidebarProvider>
+      {isPublicRoute ? (
+        <Outlet />
+      ) : (
+        <AuthGate>
+          <SidebarProvider>
+            <div className="min-h-screen bg-bg">
+              <Sidebar />
+              <Main />
+            </div>
+          </SidebarProvider>
+        </AuthGate>
+      )}
     </QueryClientProvider>
   );
+}
+
+/** Redirige vers /login si aucune session Supabase active. */
+function AuthGate({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
+  const { session, loading } = useSession();
+
+  useEffect(() => {
+    if (!isAuthEnabled) return; // Mode JSON local sans Supabase : pas d'auth
+    if (!loading && !session) navigate({ to: "/login" });
+  }, [session, loading, navigate]);
+
+  // Splash pendant que la session se charge
+  if (isAuthEnabled && loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-bg">
+        <Loader2 className="w-6 h-6 animate-spin text-navy" />
+      </div>
+    );
+  }
+  // Pendant la redirection, on n'affiche rien pour éviter le flash de l'app
+  if (isAuthEnabled && !session) return null;
+
+  return <>{children}</>;
 }
 
 function Main() {

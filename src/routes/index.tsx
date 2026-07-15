@@ -1,15 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getAaps, getDispositifs, getProjets } from "@/services/data-store";
-import { aapEchelle } from "@/utils/echelle";
+import { getAaps } from "@/services/data-store";
+import { getProgrammes, getProjetsCountByProgramme } from "@/services/programmes";
 import { joursRestants, statutEffectif } from "@/utils/scoring-engine";
 import type { AAP } from "@/types/aap";
-import type { Dispositif } from "@/types/dispositif";
+import type { Programme, ProgrammeId } from "@/types/programme";
 import { FicheAap } from "@/components/FicheAap";
-import { FicheDispositif } from "@/components/FicheDispositif";
-import { useSavedIds, useSavedDispositifIds } from "@/utils/savedAaps";
-import { setMatchingPrefill, prefillFromProjet } from "@/utils/matchingPrefill";
 
 // Pertinence VINCI = nombre de thématiques « métier » concrètes (on écarte la
 // R&D générique, trop peu discriminante pour prioriser un secteur d'activité).
@@ -17,9 +14,14 @@ const GENERIC_THEME = "Recherche & développement";
 function vinciRelevance(a: AAP): number {
   return (a.thematiques ?? []).filter((t) => t !== GENERIC_THEME).length;
 }
-import { BarChart } from "@/components/BarChart";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle, TrendingUp, Target, Bookmark, Layers, Loader2 } from "lucide-react";
+import {
+  AlertCircle,
+  TrendingUp,
+  Layers,
+  Loader2,
+  Rocket,
+  ChevronRight,
+} from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -49,72 +51,35 @@ const SOURCE_SHORT: Record<string, string> = {
 
 function Dashboard() {
   const { data: aaps = [], isLoading } = useQuery({ queryKey: ["aaps"], queryFn: () => getAaps() });
-  const { data: dispositifs = [] } = useQuery({
-    queryKey: ["dispositifs"],
-    queryFn: getDispositifs,
+  const { data: programmes = [] } = useQuery({
+    queryKey: ["programmes"],
+    queryFn: getProgrammes,
+    staleTime: 5 * 60_000,
   });
-  const { data: projets = [] } = useQuery({ queryKey: ["projets"], queryFn: () => getProjets() });
+  const { data: projetCounts = {
+    intrapreneur: 0,
+    seed: 0,
+    catalyst: 0,
+    ia: 0,
+    prospective: 0,
+    scaleup: 0,
+  } } = useQuery({
+    queryKey: ["projets-count-by-programme"],
+    queryFn: getProjetsCountByProgramme,
+  });
   const [selectedAap, setSelectedAap] = useState<AAP | null>(null);
-  const [selectedDispositif, setSelectedDispositif] = useState<Dispositif | null>(null);
 
   // Statut EFFECTIF : un AAP « open » dont la deadline est passée est compté clôturé.
   const ouverts = useMemo(() => aaps.filter((a) => statutEffectif(a) === "open"), [aaps]);
-
-  const dated = useMemo(
+  const ferm30 = useMemo(
     () =>
-      ouverts
-        .map((a) => ({ a, j: joursRestants(a.date_cloture) }))
-        .filter((x): x is { a: AAP; j: number } => x.j !== null && x.j >= 0),
+      ouverts.filter((a) => {
+        const j = joursRestants(a.date_cloture);
+        return j !== null && j >= 0 && j <= 30;
+      }),
     [ouverts],
   );
-  const ferm30 = useMemo(() => dated.filter((x) => x.j <= 30), [dated]);
-  // À saisir en priorité : pertinence VINCI d'abord, échéance ensuite (fenêtre 120 j).
-  const prioritaires = useMemo(
-    () =>
-      [...dated]
-        .filter((x) => x.j <= 120)
-        .sort((x, y) => vinciRelevance(y.a) - vinciRelevance(x.a) || x.j - y.j),
-    [dated],
-  );
-
   const nbSources = useMemo(() => new Set(aaps.map((a) => a.source)).size, [aaps]);
-  const savedIds = useSavedIds();
-  const savedAaps = useMemo(() => aaps.filter((a) => savedIds.includes(a.id)), [aaps, savedIds]);
-  const savedDispIds = useSavedDispositifIds();
-  const savedDispositifs = useMemo(
-    () => dispositifs.filter((d) => savedDispIds.includes(d.id)),
-    [dispositifs, savedDispIds],
-  );
-
-  const parTheme = useMemo(() => {
-    const c: Record<string, number> = {};
-    for (const a of ouverts) for (const t of a.thematiques ?? []) c[t] = (c[t] ?? 0) + 1;
-    return Object.entries(c)
-      .map(([label, value]) => ({ label, value }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 10);
-  }, [ouverts]);
-
-  const parSource = useMemo(() => {
-    const c: Record<string, number> = {};
-    for (const a of ouverts) {
-      const s = SOURCE_SHORT[a.source] ?? a.source;
-      c[s] = (c[s] ?? 0) + 1;
-    }
-    return Object.entries(c)
-      .map(([label, value]) => ({ label, value }))
-      .sort((a, b) => b.value - a.value);
-  }, [ouverts]);
-
-  const parGeo = useMemo(() => {
-    const order = ["EU", "National", "Régional"];
-    const c: Record<string, number> = {};
-    for (const a of ouverts) {
-      const e = aapEchelle(a);
-      c[e] = (c[e] ?? 0) + 1;
-    }
-    return order.filter((k) => c[k]).map((k) => ({ label: k, value: c[k] }));
-  }, [ouverts]);
 
   const today = new Date().toLocaleDateString("fr-FR", {
     day: "numeric",
@@ -159,237 +124,173 @@ function Dashboard() {
           accent
         />
         <KpiTile
-          label="Sources connectées"
-          value={nbSources}
-          sub="plateformes"
-          icon={<Layers className="w-4 h-4" />}
+          label="Projets rattachés"
+          value={Object.values(projetCounts).reduce((a, b) => a + b, 0)}
+          sub={`sur ${programmes.length} programmes`}
+          icon={<Rocket className="w-4 h-4" />}
           tone="purple"
         />
         <KpiTile
-          label="Demandes de matching"
-          value={projets.length}
-          sub="historisées"
-          icon={<Target className="w-4 h-4" />}
+          label="Sources connectées"
+          value={nbSources}
+          sub="plateformes de veille"
+          icon={<Layers className="w-4 h-4" />}
         />
       </div>
 
-      <div className="grid grid-cols-12 gap-4">
-        {/* === GAUCHE : Fermetures imminentes === */}
-        <Panel
-          className="col-span-12 lg:col-span-6"
-          icon={<AlertCircle className="w-4 h-4 text-pink" />}
-          title="À saisir en priorité"
-          count={prioritaires.length}
-          accent="pink"
-          subtitle="Pertinence VINCI d'abord · échéance < 120 j"
-        >
-          <div className="space-y-2">
-            {prioritaires.slice(0, 7).map(({ a, j }) => (
-              <button
-                type="button"
-                key={a.id}
-                onClick={() => setSelectedAap(a)}
-                className="w-full text-left p-3 rounded-lg border border-border hover:border-pink/40 hover:bg-pink/[0.02] transition flex items-start gap-3"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold text-navy line-clamp-2 leading-snug">
-                    {a.titre}
-                  </div>
-                  <div className="text-[10px] text-muted mt-1 truncate">
-                    {SOURCE_SHORT[a.source] ?? a.source} ·{" "}
-                    {new Date(a.date_cloture!).toLocaleDateString("fr-FR")}
-                  </div>
-                </div>
-                <JoursBadge jours={j} />
-              </button>
-            ))}
-            {prioritaires.length === 0 && <EmptyState text="Aucune échéance à venir." />}
-          </div>
-        </Panel>
-
-        {/* === DROITE : Dernières demandes de matching === */}
-        <div className="col-span-12 lg:col-span-6 space-y-4">
-          <Panel
-            icon={<Target className="w-4 h-4 text-sky-ink" />}
-            title="Dernières demandes de matching"
-            count={projets.length}
-            accent="sky"
-            subtitle="Projets soumis au matching"
-          >
-            {projets.length === 0 && (
-              <EmptyState text="Aucune demande pour l'instant. Lancez un matching pour l'historiser ici." />
-            )}
-            <div className="space-y-2">
-              {[...projets]
-                .reverse()
-                .slice(0, 6)
-                .map((p, i) => {
-                  const nb = (p as { data?: { nb_resultats?: number } }).data?.nb_resultats;
-                  return (
-                    <Link
-                      key={p.id ?? i}
-                      to="/matching"
-                      onClick={() => setMatchingPrefill(prefillFromProjet(p))}
-                      className="block w-full text-left p-3 rounded-lg border border-border hover:border-sky/40 hover:bg-sky/[0.02] transition"
-                    >
-                      <div className="text-xs font-semibold text-navy line-clamp-1">{p.nom}</div>
-                      <div className="text-[10px] text-muted mt-1 line-clamp-1">
-                        {p.description || "—"}
-                      </div>
-                      {typeof nb === "number" && (
-                        <div className="text-[10px] text-sky-ink font-medium mt-1">
-                          {nb} AAP compatibles
-                        </div>
-                      )}
-                    </Link>
-                  );
-                })}
-            </div>
-          </Panel>
-
-          <Panel
-            icon={<Bookmark className="w-4 h-4 text-pink" />}
-            title="Sauvegardés"
-            count={savedAaps.length + savedDispositifs.length}
-            accent="pink"
-            subtitle="Vos AAP et dispositifs mis de côté"
-          >
-            {savedAaps.length === 0 && savedDispositifs.length === 0 && (
-              <EmptyState text="Rien de sauvegardé. Ouvrez une fiche (AAP ou dispositif) et cliquez « Sauvegarder » pour la retrouver ici." />
-            )}
-            <div className="space-y-2">
-              {savedDispositifs.slice(0, 4).map((d) => (
-                <button
-                  type="button"
-                  key={d.id}
-                  onClick={() => setSelectedDispositif(d)}
-                  className="w-full text-left p-3 rounded-lg border border-border hover:border-pink/40 hover:bg-pink/[0.02] transition"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide bg-navy/10 text-navy">
-                      Dispositif
-                    </span>
-                    <div className="text-xs font-semibold text-navy line-clamp-1">{d.nom}</div>
-                  </div>
-                  <div className="text-[10px] text-muted mt-1 truncate">{d.organisme}</div>
-                </button>
-              ))}
-              {savedAaps.slice(0, 8).map((a) => (
-                <button
-                  type="button"
-                  key={a.id}
-                  onClick={() => setSelectedAap(a)}
-                  className="w-full text-left p-3 rounded-lg border border-border hover:border-pink/40 hover:bg-pink/[0.02] transition"
-                >
-                  <div className="text-xs font-semibold text-navy line-clamp-1">{a.titre}</div>
-                  <div className="text-[10px] text-muted mt-1 truncate">
-                    {SOURCE_SHORT[a.source] ?? a.source}
-                    {a.date_cloture
-                      ? ` · clôture ${new Date(a.date_cloture).toLocaleDateString("fr-FR")}`
-                      : ""}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </Panel>
-        </div>
-
-        {/* === BAS : Répartition des AAP ouverts === */}
-        <div className="col-span-12 card-flat p-6 fade-up">
-          <Tabs defaultValue="thematique">
-            <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-              <div>
-                <h3 className="text-base flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-sky-ink" />
-                  Répartition des AAP ouverts
-                </h3>
-                <div className="text-[11px] text-muted mt-1">
-                  {ouverts.length.toLocaleString("fr-FR")} AAP ouverts — vue par critère
-                </div>
+      {/* Ligne principale : Programmes (gauche) + AAP forts VINCI (droite) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Programmes Leonard */}
+        {programmes.length > 0 && (
+          <section className="lg:col-span-2">
+            <div className="mb-3">
+              <h2 className="text-base font-semibold text-navy">Programmes Leonard</h2>
+              <div className="text-[11px] text-muted mt-0.5">
+                Chaque programme suit ses projets et reçoit des propositions d'AAP au fil des veilles.
               </div>
-              <TabsList className="bg-bg">
-                <TabsTrigger value="thematique">Thématique</TabsTrigger>
-                <TabsTrigger value="source">Source</TabsTrigger>
-                <TabsTrigger value="geo">Géographie</TabsTrigger>
-              </TabsList>
             </div>
-            <TabsContent value="thematique" className="mt-0">
-              <BarChart title="" data={parTheme} bare />
-            </TabsContent>
-            <TabsContent value="source" className="mt-0">
-              <BarChart title="" data={parSource} bare />
-            </TabsContent>
-            <TabsContent value="geo" className="mt-0">
-              <BarChart title="" data={parGeo} bare />
-            </TabsContent>
-          </Tabs>
-        </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {programmes.map((p) => (
+                <ProgrammeTile
+                  key={p.id}
+                  programme={p}
+                  nbProjets={projetCounts[p.id as ProgrammeId] ?? 0}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* AAP du moment (top pertinence VINCI) */}
+        <AapDuMoment
+          aaps={ouverts}
+          onSelect={setSelectedAap}
+        />
       </div>
 
       <FicheAap aap={selectedAap} onClose={() => setSelectedAap(null)} />
-      <FicheDispositif
-        dispositif={selectedDispositif}
-        onClose={() => setSelectedDispositif(null)}
-      />
     </>
   );
 }
 
-function Panel({
-  icon,
-  title,
-  count,
-  subtitle,
-  accent,
-  children,
-  className,
+function AapDuMoment({
+  aaps,
+  onSelect,
 }: {
-  icon: React.ReactNode;
-  title: string;
-  count?: number;
-  subtitle?: string;
-  accent: "pink" | "sky";
-  children: React.ReactNode;
-  className?: string;
+  aaps: AAP[];
+  onSelect: (a: AAP) => void;
 }) {
-  const dot = accent === "pink" ? "bg-pink" : "bg-sky";
+  // Top pertinence VINCI + échéance proche (fenêtre 180 j).
+  const top = useMemo(() => {
+    return aaps
+      .map((a) => ({
+        a,
+        j: joursRestants(a.date_cloture),
+        score: vinciRelevance(a),
+      }))
+      .filter(
+        (x): x is { a: AAP; j: number; score: number } =>
+          x.j !== null && x.j >= 0 && x.j <= 180 && x.score >= 2,
+      )
+      .sort((x, y) => y.score - x.score || x.j - y.j)
+      .slice(0, 6);
+  }, [aaps]);
+
   return (
-    <section className={`card-flat p-4 fade-up ${className ?? ""}`}>
-      <header className="flex items-center justify-between mb-3 pb-3 border-b border-border">
+    <aside className="card-flat p-4 fade-up flex flex-col">
+      <header className="mb-3 pb-3 border-b border-border">
         <div className="flex items-center gap-2">
-          {icon}
+          <TrendingUp className="w-4 h-4 text-sky-ink" />
           <div>
-            <h3 className="text-sm font-semibold text-navy leading-none">{title}</h3>
-            {subtitle && <div className="text-[10px] text-muted mt-1">{subtitle}</div>}
+            <h3 className="text-sm font-semibold text-navy leading-none">AAP du moment</h3>
+            <div className="text-[10px] text-muted mt-1">
+              Les plus forts dans le scope VINCI · échéance &lt; 180 j
+            </div>
           </div>
         </div>
-        {typeof count === "number" && (
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-navy">
-            <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
-            {count}
-          </span>
-        )}
       </header>
-      {children}
-    </section>
+
+      {top.length === 0 ? (
+        <div className="text-xs text-muted text-center py-6">
+          Aucun AAP prioritaire pour l'instant.
+        </div>
+      ) : (
+        <div className="space-y-2 flex-1">
+          {top.map(({ a, j, score }) => (
+            <button
+              type="button"
+              key={a.id}
+              onClick={() => onSelect(a)}
+              className="w-full text-left p-2.5 rounded-lg border border-border hover:border-sky/40 hover:bg-sky/[0.02] transition flex items-start gap-2.5"
+            >
+              <div className="w-8 h-8 shrink-0 rounded-md bg-[#ECE8FB] text-purple font-bold text-[11px] flex items-center justify-center">
+                {score}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-semibold text-navy line-clamp-2 leading-snug">
+                  {a.titre}
+                </div>
+                <div className="text-[10px] text-muted mt-1 flex items-center gap-1.5">
+                  <span className="truncate">{SOURCE_SHORT[a.source] ?? a.source}</span>
+                  <span>·</span>
+                  <span className={j <= 30 ? "text-pink font-semibold" : ""}>J-{j}</span>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </aside>
   );
 }
 
-function EmptyState({ text }: { text: string }) {
-  return <div className="text-xs text-muted text-center py-6 px-2">{text}</div>;
-}
-
-function JoursBadge({ jours }: { jours: number }) {
-  const tone =
-    jours <= 7
-      ? "bg-pink/10 text-pink"
-      : jours <= 15
-        ? "bg-[#FFF4E6] text-orange-700"
-        : "bg-bg text-muted";
+function ProgrammeTile({
+  programme,
+  nbProjets,
+}: {
+  programme: Programme;
+  nbProjets: number;
+}) {
+  const navigate = useNavigate();
+  const couleur = programme.couleur ?? "#2A1A6E";
   return (
-    <span className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full ${tone}`}>
-      J-{jours}
-    </span>
+    <button
+      type="button"
+      onClick={() => navigate({ to: "/programmes/$id", params: { id: programme.id } })}
+      className="relative overflow-hidden text-left bg-white border border-border rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-border-strong transition-all p-5 flex flex-col"
+    >
+      <span
+        className="absolute right-0 top-0 w-24 h-24 rounded-full blur-2xl opacity-30 pointer-events-none"
+        style={{ background: couleur, transform: "translate(35%, -35%)" }}
+      />
+      <div className="flex items-center gap-2 mb-2 relative">
+        <span
+          className="w-2 h-2 rounded-full shrink-0"
+          style={{ background: couleur }}
+        />
+        <span
+          className="text-[10px] uppercase tracking-widest font-bold"
+          style={{ color: couleur }}
+        >
+          Programme
+        </span>
+      </div>
+      <div className="text-xl font-bold text-navy tracking-tight leading-tight">
+        {programme.nom}
+      </div>
+      {programme.sous_titre && (
+        <div className="text-xs text-muted mt-1 line-clamp-2">{programme.sous_titre}</div>
+      )}
+      <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
+        <div className="text-xs">
+          <span className="text-2xl font-bold text-navy tabular-nums">{nbProjets}</span>
+          <span className="text-muted ml-1.5">
+            projet{nbProjets > 1 ? "s" : ""} suivi{nbProjets > 1 ? "s" : ""}
+          </span>
+        </div>
+        <ChevronRight className="w-4 h-4 text-muted" />
+      </div>
+    </button>
   );
 }
 

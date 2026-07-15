@@ -11,9 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PushRouteImport } from './routes/push'
 import { Route as MatchingRouteImport } from './routes/matching'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as ExplorerRouteImport } from './routes/explorer'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProjetsIdRouteImport } from './routes/projets.$id'
+import { Route as ProgrammesIdRouteImport } from './routes/programmes.$id'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 
 const PushRoute = PushRouteImport.update({
   id: '/push',
@@ -23,6 +27,11 @@ const PushRoute = PushRouteImport.update({
 const MatchingRoute = MatchingRouteImport.update({
   id: '/matching',
   path: '/matching',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExplorerRoute = ExplorerRouteImport.update({
@@ -40,43 +49,102 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProjetsIdRoute = ProjetsIdRouteImport.update({
+  id: '/projets/$id',
+  path: '/projets/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProgrammesIdRoute = ProgrammesIdRouteImport.update({
+  id: '/programmes/$id',
+  path: '/programmes/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/explorer': typeof ExplorerRoute
+  '/login': typeof LoginRoute
   '/matching': typeof MatchingRoute
   '/push': typeof PushRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/programmes/$id': typeof ProgrammesIdRoute
+  '/projets/$id': typeof ProjetsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/explorer': typeof ExplorerRoute
+  '/login': typeof LoginRoute
   '/matching': typeof MatchingRoute
   '/push': typeof PushRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/programmes/$id': typeof ProgrammesIdRoute
+  '/projets/$id': typeof ProjetsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/explorer': typeof ExplorerRoute
+  '/login': typeof LoginRoute
   '/matching': typeof MatchingRoute
   '/push': typeof PushRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/programmes/$id': typeof ProgrammesIdRoute
+  '/projets/$id': typeof ProjetsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/explorer' | '/matching' | '/push'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/explorer'
+    | '/login'
+    | '/matching'
+    | '/push'
+    | '/auth/callback'
+    | '/programmes/$id'
+    | '/projets/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/explorer' | '/matching' | '/push'
-  id: '__root__' | '/' | '/admin' | '/explorer' | '/matching' | '/push'
+  to:
+    | '/'
+    | '/admin'
+    | '/explorer'
+    | '/login'
+    | '/matching'
+    | '/push'
+    | '/auth/callback'
+    | '/programmes/$id'
+    | '/projets/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/explorer'
+    | '/login'
+    | '/matching'
+    | '/push'
+    | '/auth/callback'
+    | '/programmes/$id'
+    | '/projets/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   ExplorerRoute: typeof ExplorerRoute
+  LoginRoute: typeof LoginRoute
   MatchingRoute: typeof MatchingRoute
   PushRoute: typeof PushRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
+  ProgrammesIdRoute: typeof ProgrammesIdRoute
+  ProjetsIdRoute: typeof ProjetsIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -93,6 +161,13 @@ declare module '@tanstack/react-router' {
       path: '/matching'
       fullPath: '/matching'
       preLoaderRoute: typeof MatchingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/explorer': {
@@ -116,6 +191,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/projets/$id': {
+      id: '/projets/$id'
+      path: '/projets/$id'
+      fullPath: '/projets/$id'
+      preLoaderRoute: typeof ProjetsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/programmes/$id': {
+      id: '/programmes/$id'
+      path: '/programmes/$id'
+      fullPath: '/programmes/$id'
+      preLoaderRoute: typeof ProgrammesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -123,8 +219,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   ExplorerRoute: ExplorerRoute,
+  LoginRoute: LoginRoute,
   MatchingRoute: MatchingRoute,
   PushRoute: PushRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
+  ProgrammesIdRoute: ProgrammesIdRoute,
+  ProjetsIdRoute: ProjetsIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

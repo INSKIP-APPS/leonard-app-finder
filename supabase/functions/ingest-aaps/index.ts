@@ -11,12 +11,25 @@
 // par des valeurs par défaut. `dispositif_id` est calculé si absent.
 //
 // ⚠️ UPSERT uniquement (jamais de fermeture). Non branché au cron.
+//
+// 🔒 SÉCURITÉ (étape 1) : appel refusé sauf si le header `x-ingest-secret`
+// correspond exactement au secret `INGEST_SECRET` posé dans les Edge Function
+// Secrets Supabase. Sans secret côté serveur → tout est refusé (fail-safe).
 // ──────────────────────────────────────────────────────────────────────
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
+const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-ingest-secret", "Access-Control-Allow-Methods": "POST, OPTIONS" };
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...CORS, "Content-Type": "application/json" } });
+
+// Comparaison de secret à temps constant (protection contre timing attacks)
+function safeEqual(a: string | null | undefined, b: string | null | undefined) {
+  if (typeof a !== "string" || typeof b !== "string") return false;
+  if (a.length !== b.length) return false;
+  let out = 0;
+  for (let i = 0; i < a.length; i++) out |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return out === 0;
+}
 
 function norm(s: string) { return (s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, ""); }
 
@@ -42,6 +55,14 @@ interface InAAP {
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+
+  // 🔒 Vérification du secret d'ingestion — refuse si absent des deux côtés.
+  const expected = Deno.env.get("INGEST_SECRET");
+  const received = req.headers.get("x-ingest-secret");
+  if (!expected || !received || !safeEqual(expected, received)) {
+    return json({ ok: false, error: "unauthorized" }, 401);
+  }
+
   const started = Date.now();
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
   const scrapedAt = new Date().toISOString();
