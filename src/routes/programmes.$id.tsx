@@ -9,6 +9,7 @@ import {
   Users as UsersIcon,
   Clock,
   Send,
+  Zap,
 } from "lucide-react";
 import { getProgramme, getProjetsByProgramme } from "@/services/programmes";
 import type {
@@ -18,6 +19,7 @@ import type {
 } from "@/types/programme";
 import { STATUT_LABEL, STATUT_TONE } from "@/types/programme";
 import { NewProjetModal } from "@/components/NewProjetModal";
+import { AnalyseExpressModal } from "@/components/AnalyseExpressModal";
 import { useProfil } from "@/services/auth";
 
 export const Route = createFileRoute("/programmes/$id")({
@@ -34,6 +36,7 @@ function ProgrammePage() {
   const { profil } = useProfil();
   const canCreate = profil?.role === "admin" || profil?.role === "editeur";
   const [modalOpen, setModalOpen] = useState(false);
+  const [analyseOpen, setAnalyseOpen] = useState(false);
 
   const { data: programme, isLoading: loadingProg } = useQuery({
     queryKey: ["programme", programmeId],
@@ -142,15 +145,25 @@ function ProgrammePage() {
             Chaque projet reçoit des propositions d'AAP au fil des scrapes hebdomadaires.
           </p>
         </div>
-        <button
-          onClick={() => setModalOpen(true)}
-          disabled={!canCreate}
-          title={canCreate ? "Créer un projet dans ce programme" : "Rôle Éditeur ou Administrateur requis"}
-          className="inline-flex items-center gap-1.5 bg-navy text-white px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition"
-        >
-          <Plus className="w-4 h-4" />
-          Ajouter un projet
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setAnalyseOpen(true)}
+            title="Tester un projet ad hoc et voir les AAP pertinents (rien n'est sauvegardé)"
+            className="inline-flex items-center gap-1.5 bg-white text-navy border border-navy px-4 py-2 rounded-md text-sm font-medium hover:bg-[#FFF3F6] transition"
+          >
+            <Zap className="w-4 h-4 text-pink" />
+            Analyse express
+          </button>
+          <button
+            onClick={() => setModalOpen(true)}
+            disabled={!canCreate}
+            title={canCreate ? "Créer un projet dans ce programme" : "Rôle Éditeur ou Administrateur requis"}
+            className="inline-flex items-center gap-1.5 bg-navy text-white px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          >
+            <Plus className="w-4 h-4" />
+            Ajouter un projet
+          </button>
+        </div>
       </div>
 
       {modalOpen && programme && (
@@ -162,6 +175,10 @@ function ProgrammePage() {
             qc.invalidateQueries({ queryKey: ["projets-by-programme", programmeId] });
           }}
         />
+      )}
+
+      {analyseOpen && (
+        <AnalyseExpressModal onClose={() => setAnalyseOpen(false)} />
       )}
 
       {/* Grille projets */}
