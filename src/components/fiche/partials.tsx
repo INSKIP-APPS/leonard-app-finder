@@ -77,9 +77,15 @@ export function SectionTitle({
   icon?: React.ReactNode;
   children: React.ReactNode;
 }) {
+  // Titre bleu vif + icône dans un cadre bleu clair + séparateur bleu clair
+  // façon slide « Vous aimeriez / Références » Leonard.
   return (
-    <div className="flex items-center gap-1.5 text-navy font-semibold text-sm border-b border-border pb-1.5 mb-2.5">
-      {icon}
+    <div className="flex items-center gap-2 text-sky-ink font-bold text-sm border-b-2 border-sky/25 pb-2 mb-3">
+      {icon && (
+        <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-sky/10 text-sky-ink shrink-0">
+          {icon}
+        </span>
+      )}
       {children}
     </div>
   );
