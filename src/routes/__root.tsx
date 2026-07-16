@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
@@ -8,7 +8,7 @@ import {
   useNavigate,
   HeadContent,
 } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
 
 import { Sidebar } from "../components/Sidebar";
@@ -107,12 +107,25 @@ function RootComponent() {
 /** Redirige vers /login si aucune session Supabase active. */
 function AuthGate({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { session, loading } = useSession();
+  const prevUserId = useRef<string | null>(null);
 
   useEffect(() => {
     if (!isAuthEnabled) return; // Mode JSON local sans Supabase : pas d'auth
     if (!loading && !session) navigate({ to: "/login" });
   }, [session, loading, navigate]);
+
+  // Invalide les caches react-query quand la session change (login/logout).
+  // Sans ça, un cache vide obtenu avant login (RLS bloquait) reste 10 min
+  // même après connexion et le cockpit apparaît sans tuiles programmes.
+  useEffect(() => {
+    const currentUserId = session?.user?.id ?? null;
+    if (prevUserId.current !== currentUserId) {
+      prevUserId.current = currentUserId;
+      if (currentUserId) qc.invalidateQueries();
+    }
+  }, [session, qc]);
 
   // Splash pendant que la session se charge
   if (isAuthEnabled && loading) {
