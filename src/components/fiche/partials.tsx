@@ -106,3 +106,18 @@ export function Puces({ items }: { items: string[] }) {
     </ul>
   );
 }
+
+/** Puces losange (◆) façon « Références » Leonard, pour des listes d'éléments concrets
+ *  (AAP en cours, projets exemples). Chaque item peut être un React node cliquable. */
+export function PucesLosange({ items }: { items: React.ReactNode[] }) {
+  return (
+    <ul className="space-y-1.5">
+      {items.map((it, i) => (
+        <li key={i} className="flex items-start gap-2 text-sm text-text">
+          <span className="text-sky-ink shrink-0 leading-5">◆</span>
+          <span className="flex-1 min-w-0">{it}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}

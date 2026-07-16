@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   X,
   ExternalLink,
@@ -9,13 +10,23 @@ import {
   Users,
   Bookmark,
   BookmarkCheck,
+  Send,
+  ShieldCheck,
 } from "lucide-react";
 import type { Dispositif } from "@/types/dispositif";
 import { perimetreVinci, type PerimetreVinci } from "@/utils/vinciBU";
 import { useSavedDispositifIds, toggleSavedDispositif } from "@/utils/savedAaps";
 import { trlLabel, escapeHtml as esc } from "@/utils/format";
 import { Badge } from "@/components/Badge";
-import { Rating3, SectionTitle, InfoLine, Puces } from "@/components/fiche/partials";
+import {
+  Rating3,
+  SectionTitle,
+  InfoLine,
+  Puces,
+  PucesLosange,
+} from "@/components/fiche/partials";
+import { getAaps } from "@/services/data-store";
+import { statutEffectif } from "@/utils/scoring-engine";
 
 // ──────────────────────────────────────────────────────────────────────
 // Fiche détaillée d'un DISPOSITIF (modale), mise en forme inspirée de la
@@ -128,11 +139,27 @@ export function FicheDispositif({
   onClose: () => void;
 }) {
   const saved = useSavedDispositifIds().includes(dispositif?.id ?? "");
+  // Charge la liste des AAP rattachés à ce dispositif (activé quand la modale est visible).
+  const { data: aapsLies = [] } = useQuery({
+    queryKey: ["aaps-du-dispositif", dispositif?.id],
+    queryFn: () => getAaps({ dispositifId: dispositif!.id }),
+    enabled: !!dispositif,
+    staleTime: 5 * 60_000,
+  });
   if (!dispositif) return null;
   const d = dispositif;
   const trl = trlLabel(d.trl_min, d.trl_max);
   const modalites = modalitesEnPuces(d.modalites_criteres);
   const bus = perimetreVinci(d);
+  // AAP ouverts uniquement, triés par deadline la plus proche
+  const aapsOuverts = aapsLies
+    .filter((a) => statutEffectif(a) === "open")
+    .sort((a, b) => {
+      const da = a.date_cloture ? new Date(a.date_cloture).getTime() : Infinity;
+      const db = b.date_cloture ? new Date(b.date_cloture).getTime() : Infinity;
+      return da - db;
+    })
+    .slice(0, 8);
 
   return (
     <div
@@ -229,6 +256,71 @@ export function FicheDispositif({
               <div className="label-caps text-[10px] mb-1">Analyse Leonard</div>
               <p className="text-sm text-text whitespace-pre-wrap">{d.commentaires}</p>
             </div>
+          </div>
+        )}
+
+        {/* AAP ouverts sous ce dispositif — style « Références » Leonard */}
+        {aapsOuverts.length > 0 && (
+          <div className="px-5 pb-4">
+            <SectionTitle icon={<ShieldCheck className="w-3.5 h-3.5 text-sky-ink" />}>
+              AAP ouverts sous ce dispositif
+            </SectionTitle>
+            <PucesLosange
+              items={aapsOuverts.map((a) => {
+                const j = a.date_cloture
+                  ? Math.ceil((new Date(a.date_cloture).getTime() - Date.now()) / 86400000)
+                  : null;
+                const inner = (
+                  <span className="flex items-baseline gap-2 flex-wrap">
+                    <span className="font-medium text-navy">{a.titre}</span>
+                    {j !== null && j >= 0 && (
+                      <span
+                        className={`text-[11px] ${j < 30 ? "text-pink font-semibold" : "text-muted"}`}
+                      >
+                        · J-{j}
+                      </span>
+                    )}
+                  </span>
+                );
+                return a.lien_officiel ? (
+                  <a
+                    href={a.lien_officiel}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hover:underline"
+                  >
+                    {inner}
+                  </a>
+                ) : (
+                  inner
+                );
+              })}
+            />
+            {aapsLies.filter((a) => statutEffectif(a) === "open").length > 8 && (
+              <div className="text-[11px] text-muted mt-2 italic">
+                + {aapsLies.filter((a) => statutEffectif(a) === "open").length - 8} autres AAP
+                ouverts — consultables via l'Explorer.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* En savoir plus — style « Contact » Leonard */}
+        {(d.lien_officiel || d.organisme) && (
+          <div className="mx-5 mb-4 rounded-lg border border-border bg-white p-4">
+            <div className="label-caps text-[10px] mb-1.5">En savoir plus</div>
+            <div className="text-sm font-semibold text-navy leading-snug">{d.organisme}</div>
+            {d.lien_officiel && (
+              <a
+                href={d.lien_officiel}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 inline-flex items-center gap-1.5 text-sm text-sky-ink font-medium hover:underline"
+              >
+                <Send className="w-3.5 h-3.5" />
+                Consulter la page officielle
+              </a>
+            )}
           </div>
         )}
 
