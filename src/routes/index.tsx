@@ -1,19 +1,18 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getAaps } from "@/services/data-store";
-import { getProgrammes, getProjetsCountByProgramme } from "@/services/programmes";
+import {
+  getProgrammes,
+  getProjetsCountByProgramme,
+  getMomentumFeed,
+  type FeedItem,
+} from "@/services/programmes";
 import { joursRestants, statutEffectif } from "@/utils/scoring-engine";
 import type { AAP } from "@/types/aap";
 import type { Programme, ProgrammeId } from "@/types/programme";
 import { FicheAap } from "@/components/FicheAap";
 
-// Pertinence VINCI = nombre de thématiques « métier » concrètes (on écarte la
-// R&D générique, trop peu discriminante pour prioriser un secteur d'activité).
-const GENERIC_THEME = "Recherche & développement";
-function vinciRelevance(a: AAP): number {
-  return (a.thematiques ?? []).filter((t) => t !== GENERIC_THEME).length;
-}
 import {
   AlertCircle,
   TrendingUp,
@@ -21,6 +20,9 @@ import {
   Loader2,
   Rocket,
   ChevronRight,
+  Bell,
+  Clock,
+  Sparkles,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -161,11 +163,8 @@ function Dashboard() {
           </section>
         )}
 
-        {/* AAP du moment (top pertinence VINCI) */}
-        <AapDuMoment
-          aaps={ouverts}
-          onSelect={setSelectedAap}
-        />
+        {/* « Ce qui a besoin de toi » : urgences + nouveautés cross-projets */}
+        <MomentumBlock />
       </div>
 
       <FicheAap aap={selectedAap} onClose={() => setSelectedAap(null)} />
@@ -173,76 +172,128 @@ function Dashboard() {
   );
 }
 
-function AapDuMoment({
-  aaps,
-  onSelect,
-}: {
-  aaps: AAP[];
-  onSelect: (a: AAP) => void;
-}) {
-  // Top pertinence VINCI + échéance proche (fenêtre 180 j).
-  const top = useMemo(() => {
-    return aaps
-      .map((a) => ({
-        a,
-        j: joursRestants(a.date_cloture),
-        score: vinciRelevance(a),
-      }))
-      .filter(
-        (x): x is { a: AAP; j: number; score: number } =>
-          x.j !== null && x.j >= 0 && x.j <= 180 && x.score >= 2,
-      )
-      .sort((x, y) => y.score - x.score || x.j - y.j)
-      .slice(0, 6);
-  }, [aaps]);
+function MomentumBlock() {
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ["momentum-feed"],
+    queryFn: () => getMomentumFeed(8),
+    staleTime: 60_000,
+  });
 
   return (
     <aside className="card-flat p-4 fade-up flex flex-col">
       <header className="mb-3 pb-3 border-b border-border">
         <div className="flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-sky-ink" />
-          <div>
-            <h3 className="text-sm font-semibold text-navy leading-none">AAP du moment</h3>
+          <Bell className="w-4 h-4 text-pink" />
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-navy leading-none">
+              Ce qui a besoin de toi
+            </h3>
             <div className="text-[10px] text-muted mt-1">
-              Les plus forts dans le scope VINCI · échéance &lt; 180 j
+              Urgences et nouveautés sur tes projets actifs
             </div>
           </div>
+          {items.length > 0 && (
+            <span className="text-[10px] font-bold bg-pink text-white rounded-full min-w-[18px] h-[18px] px-1.5 inline-flex items-center justify-center">
+              {items.length}
+            </span>
+          )}
         </div>
       </header>
 
-      {top.length === 0 ? (
-        <div className="text-xs text-muted text-center py-6">
-          Aucun AAP prioritaire pour l'instant.
+      {isLoading ? (
+        <div className="flex items-center justify-center py-6">
+          <Loader2 className="w-4 h-4 animate-spin text-muted" />
+        </div>
+      ) : items.length === 0 ? (
+        <div className="text-xs text-muted text-center py-6 leading-relaxed">
+          Rien d'urgent pour l'instant.
+          <br />
+          Tu es à jour sur tous tes projets.
         </div>
       ) : (
         <div className="space-y-2 flex-1">
-          {top.map(({ a, j, score }) => (
-            <button
-              type="button"
-              key={a.id}
-              onClick={() => onSelect(a)}
-              className="w-full text-left p-2.5 rounded-lg border border-border hover:border-sky/40 hover:bg-sky/[0.02] transition flex items-start gap-2.5"
-            >
-              <div className="w-8 h-8 shrink-0 rounded-md bg-[#ECE8FB] text-purple font-bold text-[11px] flex items-center justify-center">
-                {score}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-semibold text-navy line-clamp-2 leading-snug">
-                  {a.titre}
-                </div>
-                <div className="text-[10px] text-muted mt-1 flex items-center gap-1.5">
-                  <span className="truncate">{SOURCE_SHORT[a.source] ?? a.source}</span>
-                  <span>·</span>
-                  <span className={j <= 30 ? "text-pink font-semibold" : ""}>J-{j}</span>
-                </div>
-              </div>
-            </button>
+          {items.map((it) => (
+            <FeedRow key={`${it.projet_id}:${it.aap_id}`} item={it} />
           ))}
         </div>
       )}
     </aside>
   );
 }
+
+function FeedRow({ item }: { item: FeedItem }) {
+  const meta = FEED_TYPE_META[item.type];
+  return (
+    <Link
+      to="/projets/$id"
+      params={{ id: item.projet_id }}
+      className="block p-2.5 rounded-lg border border-border hover:border-sky/40 hover:bg-sky/[0.02] transition"
+    >
+      <div className="flex items-start gap-2">
+        <div
+          className={`w-7 h-7 shrink-0 rounded-md flex items-center justify-center ${meta.iconBg}`}
+        >
+          <meta.Icon className={`w-3.5 h-3.5 ${meta.iconColor}`} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <span
+              className={`text-[9px] font-bold uppercase tracking-wider ${meta.labelColor}`}
+            >
+              {item.type === "urgent"
+                ? `J-${item.jours_restants}`
+                : item.type === "nouveaute-prioritaire"
+                  ? "Nouveau · Prioritaire"
+                  : "Nouveau"}
+            </span>
+            <span className="text-[10px] text-muted truncate">· {item.projet_nom}</span>
+          </div>
+          <div className="text-xs font-semibold text-navy line-clamp-2 leading-snug">
+            {item.aap_titre}
+          </div>
+          <div className="text-[10px] text-muted mt-0.5 flex items-center gap-1.5">
+            <span className="truncate">{SOURCE_SHORT[item.aap_source] ?? item.aap_source}</span>
+            {item.score > 0 && (
+              <>
+                <span>·</span>
+                <span className="font-semibold text-text tabular-nums">{item.score}</span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+const FEED_TYPE_META: Record<
+  FeedItem["type"],
+  {
+    Icon: typeof Bell;
+    iconBg: string;
+    iconColor: string;
+    labelColor: string;
+  }
+> = {
+  urgent: {
+    Icon: Clock,
+    iconBg: "bg-[#FFE4EC]",
+    iconColor: "text-pink",
+    labelColor: "text-pink",
+  },
+  "nouveaute-prioritaire": {
+    Icon: Sparkles,
+    iconBg: "bg-emerald-100",
+    iconColor: "text-emerald-700",
+    labelColor: "text-emerald-700",
+  },
+  nouveaute: {
+    Icon: Sparkles,
+    iconBg: "bg-[#E2F7FC]",
+    iconColor: "text-sky-ink",
+    labelColor: "text-sky-ink",
+  },
+};
 
 function ProgrammeTile({
   programme,
