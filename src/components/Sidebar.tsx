@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Target, Search, LogOut, Settings } from "lucide-react";
+import { LayoutDashboard, Search, LogOut, Settings } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Logo } from "./Logo";
 import { useSidebar } from "@/hooks/useSidebar";
@@ -8,7 +8,6 @@ import { getProgrammes } from "@/services/programmes";
 
 const items = [
   { to: "/", label: "Tableau de bord", icon: LayoutDashboard },
-  { to: "/matching", label: "Matching à la demande", icon: Target },
   { to: "/explorer", label: "Explorer", icon: Search },
 ];
 
