@@ -132,19 +132,28 @@ export async function getAaps(filter: AapFilter = {}): Promise<AAP[]> {
     );
   }
   // PostgREST plafonne à 1000 lignes/requête → on pagine par lots de 1000.
+  // On charge `data` + les colonnes plates de standardisation Leonard
+  // (`titre_std`, `description_std`) que les scrapers n'écrasent pas. Ces
+  // colonnes prennent la priorité à l'affichage, avec fallback sur `data.*`
+  // pour les fiches jamais standardisées (nouveaux AAP fraîchement scrapés).
   const PAGE = 1000;
   const all: AAP[] = [];
   for (let from = 0; ; from += PAGE) {
     let q = supabase
       .from("aaps")
-      .select("data")
+      .select("data, titre_std, description_std")
       .range(from, from + PAGE - 1);
     if (filter.dispositifId) q = q.eq("dispositif_id", filter.dispositifId);
     if (filter.statut) q = q.eq("statut", filter.statut);
     if (filter.cluster) q = q.eq("cluster", filter.cluster);
     const { data, error } = await q;
     if (error) throw new Error(`getAaps: ${error.message}`);
-    const batch = (data ?? []).map((row) => row.data as AAP);
+    const batch = (data ?? []).map((row) => {
+      const aap = { ...(row.data as AAP) };
+      if (row.titre_std) aap.titre = row.titre_std;
+      if (row.description_std) aap.description = row.description_std;
+      return aap;
+    });
     all.push(...batch);
     if (batch.length < PAGE) break;
   }
