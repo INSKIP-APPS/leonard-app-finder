@@ -86,6 +86,9 @@ export interface ProjetAap {
   evalue_le: string;
   actif: boolean;
   vu: boolean;
+  feedback_pertinent: boolean | null;
+  feedback_note: string | null;
+  feedback_at: string | null;
   aap?: {
     id: string;
     titre: string;
@@ -101,6 +104,21 @@ export async function marquerAapVu(projetAapId: string): Promise<void> {
   if (!supabase) return;
   const { error } = await supabase.rpc("mark_projet_aap_vu", { p_id: projetAapId });
   if (error) throw new Error(`marquerAapVu: ${error.message}`);
+}
+
+/** Enregistre le feedback utilisateur sur une reco : pertinent ou non, avec note optionnelle. */
+export async function donnerFeedback(
+  projetAapId: string,
+  pertinent: boolean,
+  note?: string,
+): Promise<void> {
+  if (!supabase) return;
+  const { error } = await supabase.rpc("donner_feedback_projet_aap", {
+    p_id: projetAapId,
+    p_pertinent: pertinent,
+    p_note: note ?? null,
+  });
+  if (error) throw new Error(`donnerFeedback: ${error.message}`);
 }
 
 // ── Flux « Ce qui a besoin de toi » ──────────────────────────────────
@@ -206,7 +224,7 @@ export async function getProjetAaps(projetId: string): Promise<ProjetAap[]> {
   const { data, error } = await supabase
     .from("projet_aap")
     .select(
-      "id, projet_id, aap_id, score, tier, raison, motif_ecart, statut_user, detecte_le, evalue_le, actif, vu, aap:aaps(id, titre, source, programme, statut, date_cloture)",
+      "id, projet_id, aap_id, score, tier, raison, motif_ecart, statut_user, detecte_le, evalue_le, actif, vu, feedback_pertinent, feedback_note, feedback_at, aap:aaps(id, titre, source, programme, statut, date_cloture)",
     )
     .eq("projet_id", projetId)
     .order("score", { ascending: false });

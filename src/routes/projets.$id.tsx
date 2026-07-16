@@ -15,8 +15,17 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
-import { getProjetV3, getProgramme, getProjetAaps, runVeille, marquerAapVu } from "@/services/programmes";
+import {
+  getProjetV3,
+  getProgramme,
+  getProjetAaps,
+  runVeille,
+  marquerAapVu,
+  donnerFeedback,
+} from "@/services/programmes";
 import { getAaps } from "@/services/data-store";
 import type { ProjetV3, ProjetStatut, ProgrammeId } from "@/types/programme";
 import type { ProjetAap } from "@/services/programmes";
@@ -583,16 +592,43 @@ function AapRow({
   isNew?: boolean;
 }) {
   const aap = p.aap;
+  const qc = useQueryClient();
   if (!aap) return null;
   const jours = aap.date_cloture
     ? Math.ceil((new Date(aap.date_cloture).getTime() - Date.now()) / 86400000)
     : null;
   const scoreColor =
     p.score >= 70 ? "bg-emerald-500" : p.score >= 50 ? "bg-amber-500" : "bg-muted";
+
+  async function handleFeedback(e: React.MouseEvent, pertinent: boolean) {
+    e.stopPropagation();
+    const nouveau = p.feedback_pertinent === pertinent ? null : pertinent;
+    // Update optimiste dans le cache
+    qc.setQueryData<ProjetAap[]>(["projet-aaps", p.projet_id], (prev) =>
+      prev
+        ? prev.map((r) => (r.id === p.id ? { ...r, feedback_pertinent: nouveau } : r))
+        : prev,
+    );
+    if (nouveau !== null) {
+      try {
+        await donnerFeedback(p.id, nouveau);
+      } catch {
+        // silencieux
+      }
+    }
+  }
+
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onSelect}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
       className={`grid grid-cols-[46px_1fr] gap-3 items-start px-5 py-4 border-b border-border w-full text-left hover:bg-[#FBFBFD] transition cursor-pointer ${isNew ? "bg-[#FFF9FB]" : ""}`}
     >
       <div
@@ -640,13 +676,41 @@ function AapRow({
             <span>{p.motif_ecart}</span>
           </div>
         )}
-        <div className="text-[10px] text-muted mt-1">
-          Détecté le{" "}
-          {new Date(p.detecte_le).toLocaleDateString("fr-FR")} · réévalué le{" "}
-          {new Date(p.evalue_le).toLocaleDateString("fr-FR")}
+        <div className="flex items-center justify-between mt-1">
+          <div className="text-[10px] text-muted">
+            Détecté le {new Date(p.detecte_le).toLocaleDateString("fr-FR")} · réévalué le{" "}
+            {new Date(p.evalue_le).toLocaleDateString("fr-FR")}
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] text-muted mr-1">Recommandation :</span>
+            <button
+              type="button"
+              onClick={(e) => handleFeedback(e, true)}
+              title={p.actif ? "Confirmer que cette reco est pertinente" : "En fait, cette reco était pertinente"}
+              className={`p-1 rounded-md border transition ${
+                p.feedback_pertinent === true
+                  ? "bg-emerald-100 border-emerald-300 text-emerald-700"
+                  : "bg-white border-border text-muted hover:border-emerald-300 hover:text-emerald-600"
+              }`}
+            >
+              <ThumbsUp className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => handleFeedback(e, false)}
+              title={p.actif ? "Cette reco n'est pas pertinente" : "Confirmer qu'écarter était juste"}
+              className={`p-1 rounded-md border transition ${
+                p.feedback_pertinent === false
+                  ? "bg-orange-100 border-orange-300 text-orange-700"
+                  : "bg-white border-border text-muted hover:border-orange-300 hover:text-orange-600"
+              }`}
+            >
+              <ThumbsDown className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
-    </button>
+    </div>
   );
 }
 
