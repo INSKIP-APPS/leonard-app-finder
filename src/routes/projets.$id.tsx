@@ -324,11 +324,14 @@ function ProjetLeft({ projet }: { projet: ProjetV3 }) {
             <Layers className="w-3.5 h-3.5" /> Maturité &amp; besoins
           </h3>
 
-          {projet.trl != null && (
-            <KV label="Maturité (TRL)">
-              <TrlTrack current={projet.trl} target={trlVise ?? null} />
-            </KV>
-          )}
+          <KV label="Maturité (TRL)">
+            <TrlTrack current={projet.trl ?? 0} target={trlVise ?? null} />
+            {projet.trl == null && (
+              <div className="text-[10px] text-muted mt-1.5 italic">
+                Maturité non renseignée
+              </div>
+            )}
+          </KV>
           {typeActeur && (
             <KV label="Type d'acteur">
               <div className="text-sm text-text">{typeActeur}</div>
@@ -722,16 +725,20 @@ function TrlTrack({ current, target }: { current: number; target: number | null 
           );
         })}
       </div>
-      <div className="flex gap-3 mt-2 text-[10px] text-muted">
-        <span className="inline-flex items-center gap-1">
-          <span className="w-2.5 h-2.5 rounded bg-sky" /> actuel : {current}
-        </span>
-        {target != null && (
-          <span className="inline-flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded bg-purple" /> visé : {target}
-          </span>
-        )}
-      </div>
+      {(current > 0 || target != null) && (
+        <div className="flex gap-3 mt-2 text-[10px] text-muted">
+          {current > 0 && (
+            <span className="inline-flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded bg-sky" /> actuel : {current}
+            </span>
+          )}
+          {target != null && (
+            <span className="inline-flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded bg-purple" /> visé : {target}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
