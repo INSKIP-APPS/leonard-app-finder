@@ -59,6 +59,65 @@ export async function getProjetsByProgramme(
   return (data ?? []) as ProjetV3[];
 }
 
+// ── Agrégat analytique par projet (vue Analyse) ──────────────────────
+
+export interface ProjetStats {
+  projet_id: string;
+  retenus: number;
+  prioritaires: number;
+  nouveautes: number;
+  deadlines_30j: number;
+  candidatures: number;
+}
+
+/** Compte les projet_aap agrégés par projet pour la vue analyse d'un programme.
+ *  On récupère TOUT en une seule requête puis on agrège côté client (bien plus
+ *  simple qu'une vue matérialisée pour un volume < 1000 lignes).
+ */
+export async function getStatsParProjet(
+  programmeId: ProgrammeId,
+  cohorte?: number | null,
+): Promise<Record<string, ProjetStats>> {
+  if (!supabase) return {};
+  // 1) IDs des projets du programme (+ cohorte optionnelle)
+  let projQ = supabase.from("projets").select("id").eq("programme_id", programmeId).eq("actif", true);
+  if (cohorte != null) projQ = projQ.eq("cohorte", cohorte);
+  const { data: projets, error: pErr } = await projQ;
+  if (pErr) throw new Error(`getStatsParProjet projets: ${pErr.message}`);
+  const ids = (projets ?? []).map((p) => (p as { id: string }).id);
+  if (ids.length === 0) return {};
+
+  // 2) projet_aap actifs de ces projets, joints aux AAP pour la date_cloture
+  const { data, error } = await supabase
+    .from("projet_aap")
+    .select("projet_id, tier, vu, actif, statut_user, aap:aaps(date_cloture)")
+    .in("projet_id", ids);
+  if (error) throw new Error(`getStatsParProjet: ${error.message}`);
+
+  const nowMs = Date.now();
+  const stats: Record<string, ProjetStats> = {};
+  for (const pid of ids) stats[pid] = { projet_id: pid, retenus: 0, prioritaires: 0, nouveautes: 0, deadlines_30j: 0, candidatures: 0 };
+  for (const r of (data ?? []) as unknown as Array<{
+    projet_id: string; tier: string | null; vu: boolean; actif: boolean; statut_user: string;
+    aap: { date_cloture: string | null } | null;
+  }>) {
+    const s = stats[r.projet_id];
+    if (!s) continue;
+    if (["candidate", "obtenu", "refuse"].includes(r.statut_user)) {
+      s.candidatures += 1;
+      continue;
+    }
+    if (r.actif && !["ecarte"].includes(r.statut_user)) {
+      s.retenus += 1;
+      if (r.tier === "prioritaire") s.prioritaires += 1;
+      if (!r.vu) s.nouveautes += 1;
+      const dl = r.aap?.date_cloture ? new Date(r.aap.date_cloture).getTime() : null;
+      if (dl != null && dl > nowMs && dl - nowMs <= 30 * 86_400_000) s.deadlines_30j += 1;
+    }
+  }
+  return stats;
+}
+
 /** Cohortes distinctes présentes en base pour un programme (utile pour désactiver les tabs vides). */
 export async function getCohortesDispo(programmeId: ProgrammeId): Promise<number[]> {
   if (!supabase) return [];

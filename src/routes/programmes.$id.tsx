@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   ChevronRight,
   Loader2,
@@ -10,8 +10,13 @@ import {
   Clock,
   Send,
   Zap,
+  LayoutGrid,
+  Table as TableIcon,
+  ArrowUpDown,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
-import { getProgramme, getProjetsByProgramme, getCohortesDispo } from "@/services/programmes";
+import { getProgramme, getProjetsByProgramme, getCohortesDispo, getStatsParProjet, type ProjetStats } from "@/services/programmes";
 import type {
   ProgrammeId,
   ProjetV3,
@@ -40,6 +45,7 @@ function ProgrammePage() {
   // Cohorte : uniquement pertinent pour Intrapreneur. Défaut = cohorte active (10).
   const isIntrap = programmeId === "intrapreneur";
   const [cohorte, setCohorte] = useState<number>(COHORTE_ACTIVE);
+  const [vue, setVue] = useState<"grid" | "table">("grid");
 
   const { data: programme, isLoading: loadingProg } = useQuery({
     queryKey: ["programme", programmeId],
@@ -54,6 +60,12 @@ function ProgrammePage() {
     queryFn: () => getCohortesDispo(programmeId),
     enabled: isIntrap,
     staleTime: 5 * 60_000,
+  });
+  const { data: stats = {} } = useQuery({
+    queryKey: ["stats-par-projet", programmeId, isIntrap ? cohorte : null],
+    queryFn: () => getStatsParProjet(programmeId, isIntrap ? cohorte : null),
+    enabled: vue === "table",
+    staleTime: 60_000,
   });
 
   if (loadingProg) {
@@ -160,10 +172,35 @@ function ProgrammePage() {
         <div>
           <h2 className="text-lg font-semibold text-navy">Projets suivis</h2>
           <p className="text-xs text-muted mt-0.5">
-            Chaque projet reçoit des propositions d'AAP au fil des scrapes hebdomadaires.
+            {vue === "grid"
+              ? "Chaque projet reçoit des propositions d'AAP au fil des scrapes hebdomadaires."
+              : "Vue analytique — comparez les projets sur leur volume, urgence et couverture."}
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {/* Toggle Grille / Analyse */}
+          <div className="inline-flex items-center bg-white border border-border rounded-md p-0.5">
+            <button
+              onClick={() => setVue("grid")}
+              title="Vue grille (cartes projet)"
+              className={`inline-flex items-center gap-1 px-2.5 h-8 rounded text-xs font-semibold transition ${
+                vue === "grid" ? "bg-navy text-white" : "text-muted hover:text-navy"
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              Grille
+            </button>
+            <button
+              onClick={() => setVue("table")}
+              title="Vue analytique (tableau)"
+              className={`inline-flex items-center gap-1 px-2.5 h-8 rounded text-xs font-semibold transition ${
+                vue === "table" ? "bg-navy text-white" : "text-muted hover:text-navy"
+              }`}
+            >
+              <TableIcon className="w-3.5 h-3.5" />
+              Analyse
+            </button>
+          </div>
           <button
             onClick={() => setAnalyseOpen(true)}
             title="Tester un projet ad hoc et voir les AAP pertinents (rien n'est sauvegardé)"
@@ -201,7 +238,7 @@ function ProgrammePage() {
         <AnalyseExpressModal onClose={() => setAnalyseOpen(false)} />
       )}
 
-      {/* Grille projets */}
+      {/* Contenu principal — grille OU tableau selon la vue */}
       {loadingProj ? (
         <div className="flex items-center justify-center h-40">
           <Loader2 className="w-5 h-5 animate-spin text-muted" />
@@ -211,12 +248,14 @@ function ProgrammePage() {
           <Sparkles className="w-6 h-6 text-muted mx-auto mb-2" />
           <p className="text-sm text-muted">Aucun projet dans ce programme pour l'instant.</p>
         </div>
-      ) : (
+      ) : vue === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {projets.map((p) => (
             <ProjetCard key={p.id} projet={p} />
           ))}
         </div>
+      ) : (
+        <AnalyseTable projets={projets} stats={stats} />
       )}
     </div>
   );
@@ -313,6 +352,186 @@ function VeilleStatus({ projet }: { projet: ProjetV3 }) {
       <Clock className="w-3 h-3" /> Dernière veille récente
     </span>
   );
+}
+
+// ─── Vue analytique tabulaire ────────────────────────────────────────
+
+type SortKey = "nom" | "retenus" | "prioritaires" | "nouveautes" | "deadlines_30j" | "candidatures" | "veille";
+
+function AnalyseTable({
+  projets,
+  stats,
+}: {
+  projets: ProjetV3[];
+  stats: Record<string, ProjetStats>;
+}) {
+  const [sortKey, setSortKey] = useState<SortKey>("prioritaires");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  const rows = useMemo(() => {
+    return projets.map((p) => {
+      const s = stats[p.id] ?? { projet_id: p.id, retenus: 0, prioritaires: 0, nouveautes: 0, deadlines_30j: 0, candidatures: 0 };
+      const veilleMs = p.derniere_veille_le ? new Date(p.derniere_veille_le).getTime() : 0;
+      return { p, s, veilleMs };
+    });
+  }, [projets, stats]);
+
+  const sorted = useMemo(() => {
+    const arr = [...rows];
+    arr.sort((a, b) => {
+      let va: number | string, vb: number | string;
+      switch (sortKey) {
+        case "nom": va = a.p.nom.toLowerCase(); vb = b.p.nom.toLowerCase(); break;
+        case "retenus": va = a.s.retenus; vb = b.s.retenus; break;
+        case "prioritaires": va = a.s.prioritaires; vb = b.s.prioritaires; break;
+        case "nouveautes": va = a.s.nouveautes; vb = b.s.nouveautes; break;
+        case "deadlines_30j": va = a.s.deadlines_30j; vb = b.s.deadlines_30j; break;
+        case "candidatures": va = a.s.candidatures; vb = b.s.candidatures; break;
+        case "veille": va = a.veilleMs; vb = b.veilleMs; break;
+      }
+      if (va < vb) return sortDir === "asc" ? -1 : 1;
+      if (va > vb) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+    return arr;
+  }, [rows, sortKey, sortDir]);
+
+  function toggle(k: SortKey) {
+    if (k === sortKey) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(k); setSortDir(k === "nom" ? "asc" : "desc"); }
+  }
+
+  return (
+    <div className="bg-white border border-border rounded-xl shadow-sm overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-[10px] uppercase tracking-widest font-semibold text-muted border-b border-border bg-bg">
+              <Th active={sortKey === "nom"} dir={sortDir} onClick={() => toggle("nom")} align="left">Projet</Th>
+              <Th active={sortKey === "retenus"} dir={sortDir} onClick={() => toggle("retenus")}>AAP retenus</Th>
+              <Th active={sortKey === "prioritaires"} dir={sortDir} onClick={() => toggle("prioritaires")}>Prioritaires</Th>
+              <Th active={sortKey === "nouveautes"} dir={sortDir} onClick={() => toggle("nouveautes")}>Nouveautés</Th>
+              <Th active={sortKey === "deadlines_30j"} dir={sortDir} onClick={() => toggle("deadlines_30j")}>Deadline &lt; 30 j</Th>
+              <Th active={sortKey === "candidatures"} dir={sortDir} onClick={() => toggle("candidatures")}>Candidatures</Th>
+              <Th active={sortKey === "veille"} dir={sortDir} onClick={() => toggle("veille")}>Dernière veille</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map(({ p, s, veilleMs }) => (
+              <AnalyseRow key={p.id} projet={p} stats={s} veilleMs={veilleMs} />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function Th({
+  children,
+  active,
+  dir,
+  onClick,
+  align = "right",
+}: {
+  children: React.ReactNode;
+  active: boolean;
+  dir: "asc" | "desc";
+  onClick: () => void;
+  align?: "left" | "right";
+}) {
+  return (
+    <th className={`px-3 py-2.5 ${align === "left" ? "text-left" : "text-right"}`}>
+      <button
+        type="button"
+        onClick={onClick}
+        className={`inline-flex items-center gap-1 hover:text-navy transition ${active ? "text-navy" : ""}`}
+      >
+        {children}
+        {active ? (
+          dir === "desc" ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />
+        ) : (
+          <ArrowUpDown className="w-3 h-3 opacity-40" />
+        )}
+      </button>
+    </th>
+  );
+}
+
+function AnalyseRow({
+  projet,
+  stats,
+  veilleMs,
+}: {
+  projet: ProjetV3;
+  stats: ProjetStats;
+  veilleMs: number;
+}) {
+  const navigate = useNavigate();
+  const veilleLabel = veilleMs
+    ? relativeTime(veilleMs)
+    : "—";
+  return (
+    <tr
+      onClick={() => navigate({ to: "/projets/$id", params: { id: projet.id } })}
+      className="border-b border-border hover:bg-[#FBFBFD] transition cursor-pointer"
+    >
+      <td className="px-3 py-3">
+        <div className="font-semibold text-navy text-sm">{projet.nom}</div>
+        {projet.statut && (
+          <span
+            className={`inline-block text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded mt-1 ${STATUT_TONE[projet.statut as ProjetStatut]}`}
+          >
+            {STATUT_LABEL[projet.statut as ProjetStatut]}
+          </span>
+        )}
+      </td>
+      <td className="px-3 py-3 text-right tabular-nums font-semibold text-text">
+        {stats.retenus > 0 ? stats.retenus : <span className="text-faint">0</span>}
+      </td>
+      <td className="px-3 py-3 text-right tabular-nums">
+        {stats.prioritaires > 0 ? (
+          <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-1.5 rounded bg-emerald-100 text-emerald-700 font-bold">
+            {stats.prioritaires}
+          </span>
+        ) : (
+          <span className="text-faint">0</span>
+        )}
+      </td>
+      <td className="px-3 py-3 text-right tabular-nums">
+        {stats.nouveautes > 0 ? (
+          <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-1.5 rounded bg-pink text-white font-bold">
+            {stats.nouveautes}
+          </span>
+        ) : (
+          <span className="text-faint">0</span>
+        )}
+      </td>
+      <td className="px-3 py-3 text-right tabular-nums">
+        {stats.deadlines_30j > 0 ? (
+          <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-1.5 rounded bg-orange-100 text-orange-700 font-bold">
+            {stats.deadlines_30j}
+          </span>
+        ) : (
+          <span className="text-faint">0</span>
+        )}
+      </td>
+      <td className="px-3 py-3 text-right tabular-nums text-text">
+        {stats.candidatures > 0 ? stats.candidatures : <span className="text-faint">0</span>}
+      </td>
+      <td className="px-3 py-3 text-right text-[11px] text-muted">{veilleLabel}</td>
+    </tr>
+  );
+}
+
+function relativeTime(ms: number): string {
+  const diff = Date.now() - ms;
+  const jours = Math.floor(diff / 86_400_000);
+  if (jours === 0) return "Aujourd'hui";
+  if (jours === 1) return "Hier";
+  if (jours < 7) return `Il y a ${jours} j`;
+  if (jours < 30) return `Il y a ${Math.floor(jours / 7)} sem`;
+  return `Il y a ${Math.floor(jours / 30)} mois`;
 }
 
 function CohorteSwitcher({
