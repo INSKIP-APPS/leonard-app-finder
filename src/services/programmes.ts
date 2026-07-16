@@ -46,16 +46,31 @@ export async function getProjetsCountByProgramme(): Promise<Record<ProgrammeId, 
   return counts as Record<ProgrammeId, number>;
 }
 
-/** Projets d'un programme (V3 = programme_id IS NOT NULL). */
-export async function getProjetsByProgramme(programmeId: ProgrammeId): Promise<ProjetV3[]> {
+/** Projets d'un programme (V3 = programme_id IS NOT NULL). Filtre optionnel par cohorte. */
+export async function getProjetsByProgramme(
+  programmeId: ProgrammeId,
+  cohorte?: number | null,
+): Promise<ProjetV3[]> {
+  if (!supabase) return [];
+  let q = supabase.from("projets").select("*").eq("programme_id", programmeId).order("nom");
+  if (cohorte != null) q = q.eq("cohorte", cohorte);
+  const { data, error } = await q;
+  if (error) throw new Error(`getProjetsByProgramme: ${error.message}`);
+  return (data ?? []) as ProjetV3[];
+}
+
+/** Cohortes distinctes présentes en base pour un programme (utile pour désactiver les tabs vides). */
+export async function getCohortesDispo(programmeId: ProgrammeId): Promise<number[]> {
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("projets")
-    .select("*")
+    .select("cohorte")
     .eq("programme_id", programmeId)
-    .order("nom");
-  if (error) throw new Error(`getProjetsByProgramme: ${error.message}`);
-  return (data ?? []) as ProjetV3[];
+    .not("cohorte", "is", null);
+  if (error) throw new Error(`getCohortesDispo: ${error.message}`);
+  const set = new Set<number>();
+  for (const r of data ?? []) if (r.cohorte != null) set.add(r.cohorte as number);
+  return [...set].sort((a, b) => a - b);
 }
 
 /** Fiche projet complète (une seule ligne). */
@@ -272,6 +287,7 @@ export async function updateProjet(
     mots_cles?: string[];
     porteurs?: Array<{ nom: string; role: string; entite: string }>;
     data?: Record<string, unknown>;
+    cohorte?: number | null;
   },
 ): Promise<void> {
   if (!supabase) return;
@@ -357,6 +373,7 @@ export async function createProjet(input: {
   mots_cles?: string[];
   porteurs?: Array<{ nom: string; role: string; entite: string }>;
   data?: Record<string, unknown>;
+  cohorte?: number | null;
 }): Promise<{ id: string } | null> {
   if (!supabase) return null;
   const row = {
@@ -370,6 +387,7 @@ export async function createProjet(input: {
     mots_cles: input.mots_cles ?? [],
     porteurs: input.porteurs ?? [],
     data: input.data ?? {},
+    cohorte: input.cohorte ?? null,
   };
   const { data, error } = await supabase.from("projets").insert(row).select("id").single();
   if (error) throw new Error(`createProjet: ${error.message}`);

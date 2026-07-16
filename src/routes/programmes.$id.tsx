@@ -11,13 +11,13 @@ import {
   Send,
   Zap,
 } from "lucide-react";
-import { getProgramme, getProjetsByProgramme } from "@/services/programmes";
+import { getProgramme, getProjetsByProgramme, getCohortesDispo } from "@/services/programmes";
 import type {
   ProgrammeId,
   ProjetV3,
   ProjetStatut,
 } from "@/types/programme";
-import { STATUT_LABEL, STATUT_TONE } from "@/types/programme";
+import { STATUT_LABEL, STATUT_TONE, COHORTE_ACTIVE, COHORTES_INTRAP } from "@/types/programme";
 import { NewProjetModal } from "@/components/NewProjetModal";
 import { AnalyseExpressModal } from "@/components/AnalyseExpressModal";
 import { useProfil } from "@/services/auth";
@@ -37,14 +37,23 @@ function ProgrammePage() {
   const canCreate = profil?.role === "admin" || profil?.role === "editeur";
   const [modalOpen, setModalOpen] = useState(false);
   const [analyseOpen, setAnalyseOpen] = useState(false);
+  // Cohorte : uniquement pertinent pour Intrapreneur. Défaut = cohorte active (10).
+  const isIntrap = programmeId === "intrapreneur";
+  const [cohorte, setCohorte] = useState<number>(COHORTE_ACTIVE);
 
   const { data: programme, isLoading: loadingProg } = useQuery({
     queryKey: ["programme", programmeId],
     queryFn: () => getProgramme(programmeId),
   });
   const { data: projets = [], isLoading: loadingProj } = useQuery({
-    queryKey: ["projets-by-programme", programmeId],
-    queryFn: () => getProjetsByProgramme(programmeId),
+    queryKey: ["projets-by-programme", programmeId, isIntrap ? cohorte : null],
+    queryFn: () => getProjetsByProgramme(programmeId, isIntrap ? cohorte : null),
+  });
+  const { data: cohortesDispo = [] } = useQuery({
+    queryKey: ["cohortes-dispo", programmeId],
+    queryFn: () => getCohortesDispo(programmeId),
+    enabled: isIntrap,
+    staleTime: 5 * 60_000,
   });
 
   if (loadingProg) {
@@ -113,6 +122,15 @@ function ProgrammePage() {
             <p className="text-sm md:text-base text-muted max-w-xl">{programme.sous_titre}</p>
           )}
 
+          {/* Sélecteur de cohorte (Intrapreneur uniquement) */}
+          {isIntrap && (
+            <CohorteSwitcher
+              current={cohorte}
+              onChange={setCohorte}
+              disponibles={cohortesDispo}
+            />
+          )}
+
           {/* KPIs */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mt-6">
             <KpiMini label="Projets suivis" value={projets.length}>
@@ -170,9 +188,11 @@ function ProgrammePage() {
         <NewProjetModal
           programmeId={programmeId}
           programmeNom={programme.nom}
+          cohorte={isIntrap ? cohorte : null}
           onClose={() => {
             setModalOpen(false);
             qc.invalidateQueries({ queryKey: ["projets-by-programme", programmeId] });
+            qc.invalidateQueries({ queryKey: ["cohortes-dispo", programmeId] });
           }}
         />
       )}
@@ -292,5 +312,45 @@ function VeilleStatus({ projet }: { projet: ProjetV3 }) {
     <span className="inline-flex items-center gap-1.5 text-muted">
       <Clock className="w-3 h-3" /> Dernière veille récente
     </span>
+  );
+}
+
+function CohorteSwitcher({
+  current,
+  onChange,
+  disponibles,
+}: {
+  current: number;
+  onChange: (n: number) => void;
+  disponibles: number[];
+}) {
+  const dispoSet = new Set(disponibles);
+  return (
+    <div className="mt-5 inline-flex items-center gap-1.5 bg-white/60 backdrop-blur border border-border rounded-full p-1">
+      <span className="text-[10px] uppercase tracking-widest font-bold text-muted px-2.5">
+        Cohorte
+      </span>
+      {COHORTES_INTRAP.map((n) => {
+        const on = n === current;
+        const dispo = dispoSet.has(n);
+        return (
+          <button
+            key={n}
+            type="button"
+            onClick={() => onChange(n)}
+            title={dispo ? `Cohorte #${n}` : `Cohorte #${n} · aucun projet importé`}
+            className={`min-w-[32px] h-7 px-2 rounded-full text-xs font-semibold tabular-nums transition ${
+              on
+                ? "bg-navy text-white shadow-sm"
+                : dispo
+                  ? "text-navy hover:bg-navy/5"
+                  : "text-muted/70 hover:bg-bg"
+            }`}
+          >
+            #{n}
+          </button>
+        );
+      })}
+    </div>
   );
 }

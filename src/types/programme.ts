@@ -54,9 +54,14 @@ export interface ProjetV3 {
   data: ProjetData | null;
   owner_id: string | null;
   derniere_veille_le: string | null;
+  cohorte: number | null;
   created_at: string;
   updated_at: string;
 }
+
+// Cohortes Intrapreneur (numérotation officielle Leonard, cf. General Reporting)
+export const COHORTE_ACTIVE = 10;
+export const COHORTES_INTRAP: number[] = Array.from({ length: 10 }, (_, i) => i + 1);
 
 export const STATUT_LABEL: Record<ProjetStatut, string> = {
   idee: "Idée",

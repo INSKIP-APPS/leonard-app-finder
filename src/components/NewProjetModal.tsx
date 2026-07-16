@@ -56,12 +56,15 @@ export function NewProjetModal({
   onClose,
   mode = "create",
   projet,
+  cohorte,
 }: {
   programmeId: ProgrammeId;
   programmeNom: string;
   onClose: () => void;
   mode?: "create" | "edit";
   projet?: ProjetV3;
+  /** Cohorte à assigner au projet (Intrapreneur uniquement). Ignorée si null. */
+  cohorte?: number | null;
 }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -171,7 +174,11 @@ export function NewProjetModal({
         qc.invalidateQueries({ queryKey: ["projets-count-by-programme"] });
         onClose();
       } else {
-        const created = await createProjet({ programme_id: programmeId, ...payload });
+        const created = await createProjet({
+          programme_id: programmeId,
+          ...payload,
+          cohorte: cohorte ?? null,
+        });
         if (!created) throw new Error("Création échouée.");
         onClose();
         navigate({ to: "/projets/$id", params: { id: created.id } });
