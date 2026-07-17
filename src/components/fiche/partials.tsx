@@ -77,12 +77,12 @@ export function SectionTitle({
   icon?: React.ReactNode;
   children: React.ReactNode;
 }) {
-  // Titre bleu vif + icône dans un cadre bleu clair + séparateur bleu clair
+  // Titre bleu clair vif + icône colorée sans cadre + séparateur fin gris
   // façon slide « Vous aimeriez / Références » Leonard.
   return (
-    <div className="flex items-center gap-2 text-sky-ink font-bold text-sm border-b-2 border-sky/25 pb-2 mb-3">
+    <div className="flex items-center gap-2 text-[#0FAFEE] font-bold text-[15px] border-b border-border pb-2 mb-3">
       {icon && (
-        <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-sky/10 text-sky-ink shrink-0">
+        <span className="inline-flex items-center justify-center text-[#0FAFEE] shrink-0 [&_svg]:w-[18px] [&_svg]:h-[18px]">
           {icon}
         </span>
       )}
@@ -101,11 +101,12 @@ export function InfoLine({ label, value }: { label: string; value: string }) {
 }
 
 export function Puces({ items }: { items: string[] }) {
+  // Puce « + » bleu clair vif, plus grosse, espacement généreux — style Leonard.
   return (
-    <ul className="space-y-1">
+    <ul className="space-y-2">
       {items.map((it) => (
-        <li key={it} className="flex items-start gap-2 text-sm text-text">
-          <span className="text-navy font-bold leading-5 shrink-0">+</span>
+        <li key={it} className="flex items-start gap-2.5 text-sm text-text">
+          <span className="text-[#0FAFEE] font-bold text-base leading-5 shrink-0">+</span>
           <span>{it}</span>
         </li>
       ))}
