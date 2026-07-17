@@ -138,65 +138,67 @@ function exporterPdf(d: Dispositif) {
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; color: #1a2b4a; background: #fff; margin: 0; padding: 0; line-height: 1.5; font-size: 12px; }
 
   /* Header navy band */
-  .hdr-band { background: #1a2b4a; color: #fff; padding: 14mm 15mm 10mm; position: relative; }
+  .hdr-band { background: #1a2b4a; color: #fff; padding: 12mm 15mm 10mm; position: relative; }
   .hdr-band::after { content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: #0FAFEE; }
-  .brand-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8mm; }
-  .brand-row .logo { height: 8mm; object-fit: contain; }
-  .brand-row .doc-type { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.7); font-weight: 500; }
-  .brand-row .doc-type strong { color: #fff; font-weight: 700; }
+  .brand-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9mm; }
+  .logo-wrap { background: #fff; padding: 2.5mm 3.5mm; border-radius: 4px; display: inline-flex; align-items: center; }
+  .logo-wrap img { height: 6.5mm; display: block; }
+  .doc-type { text-align: right; }
+  .doc-type .label { font-size: 8px; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,.55); font-weight: 500; margin-bottom: 1mm; }
+  .doc-type .value { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: #fff; font-weight: 700; }
   .org-caps { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #0FAFEE; font-weight: 700; margin-bottom: 3mm; }
-  .hdr-band h1 { font-size: 22px; font-weight: 700; line-height: 1.25; margin: 0 0 3mm; letter-spacing: -0.01em; }
-  .prog { font-size: 13px; color: rgba(255,255,255,.75); margin-bottom: 4mm; }
-  .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4mm; }
-  .badge { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); color: #fff; font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 999px; letter-spacing: .02em; }
+  .hdr-band h1 { font-size: 22px; font-weight: 700; line-height: 1.25; margin: 0 0 3mm; letter-spacing: -0.01em; max-width: 90%; }
+  .prog { font-size: 12px; color: rgba(255,255,255,.75); margin-bottom: 5mm; }
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; }
+  .badge { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.28); color: #fff; font-size: 10px; font-weight: 500; padding: 3px 10px; border-radius: 999px; letter-spacing: .04em; }
 
   /* Content */
   .body { padding: 10mm 15mm 12mm; }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10mm; }
-  .row2-diag { display: grid; grid-template-columns: 1fr 260px; gap: 10mm; }
+  .row2-diag { display: grid; grid-template-columns: 1fr 250px; gap: 10mm; align-items: start; }
 
   /* Section title avec pipe cyan */
   .sec { margin-bottom: 8mm; }
-  .sec-title { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #1a2b4a; font-weight: 700; margin-bottom: 4mm; }
-  .sec-title::before { content: ""; width: 3px; height: 14px; background: #0FAFEE; display: inline-block; border-radius: 2px; }
+  .sec-title { display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #1a2b4a; font-weight: 700; margin-bottom: 4mm; }
+  .sec-title::before { content: ""; width: 3px; height: 12px; background: #0FAFEE; display: inline-block; border-radius: 2px; }
 
   /* Diagnostic — table élégante */
-  .rrow { display: grid; grid-template-columns: 1fr auto 90px; align-items: center; gap: 16px; padding: 9px 0; }
+  .rrow { display: grid; grid-template-columns: 1fr auto 80px; align-items: center; gap: 14px; padding: 9px 0; }
   .rrow + .rrow { border-top: 1px solid #e7ebf3; }
   .rrow-name { font-size: 13px; font-weight: 600; color: #1a2b4a; }
-  .rrow-marks { display: inline-flex; gap: 4px; }
-  .rrow-val { font-size: 13px; font-weight: 600; color: #1a2b4a; text-align: right; }
+  .rrow-marks { display: inline-flex; gap: 5px; }
+  .rrow-val { font-size: 12px; font-weight: 600; color: #1a2b4a; text-align: right; letter-spacing: .01em; }
 
-  /* Périmètre VINCI tuiles */
-  .bus { display: flex; flex-wrap: wrap; gap: 8px; max-width: 260px; }
-  .tile { display: inline-flex; align-items: center; justify-content: center; width: 124px; height: 46px; padding: 0 8px; border-radius: 6px; border: 1px solid #e7ebf3; background: #fff; }
-  .tile img { max-height: 32px; max-width: 104px; object-fit: contain; }
+  /* Périmètre VINCI tuiles plus subtiles */
+  .bus { display: flex; flex-wrap: wrap; gap: 6px; max-width: 250px; }
+  .tile { display: inline-flex; align-items: center; justify-content: center; width: 120px; height: 42px; padding: 0 8px; border-radius: 4px; border: 1px solid #edf0f5; background: #fff; }
+  .tile img { max-height: 28px; max-width: 100px; object-fit: contain; }
 
   /* Info line */
-  .info-line { margin-bottom: 5mm; }
-  .caps-muted { font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: #6b7a99; font-weight: 600; margin-bottom: 1mm; }
+  .info-line { margin-bottom: 4mm; }
+  .caps-muted { font-size: 8.5px; letter-spacing: .12em; text-transform: uppercase; color: #6b7a99; font-weight: 600; margin-bottom: 1mm; }
   .info-line .v { font-size: 13px; font-weight: 500; color: #1a2b4a; word-break: break-word; }
 
   /* Puces */
   ul.puces { list-style: none; margin: 0; padding: 0; }
-  ul.puces li { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; margin-bottom: 6px; color: #1a2b4a; page-break-inside: avoid; }
-  ul.puces li img { width: 13px; height: 13px; flex-shrink: 0; margin-top: 3px; object-fit: contain; }
-  ul.puces li span { flex: 1; word-break: break-word; line-height: 1.45; }
+  ul.puces li { display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; margin-bottom: 6px; color: #1a2b4a; page-break-inside: avoid; }
+  ul.puces li img { width: 12px; height: 12px; flex-shrink: 0; margin-top: 3px; object-fit: contain; }
+  ul.puces li span { flex: 1; word-break: break-word; line-height: 1.5; }
   .empty { font-size: 12px; color: #6b7a99; font-style: italic; }
 
   /* Analyse Leonard highlighted */
   .analyse { background: #EAF3FC; border-left: 3px solid #0FAFEE; padding: 5mm 6mm; border-radius: 0 4px 4px 0; page-break-inside: avoid; }
-  .analyse .caps-cyan { font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: #0FAFEE; font-weight: 700; margin-bottom: 2mm; }
-  .analyse p { font-size: 13px; margin: 0; line-height: 1.55; color: #1a2b4a; white-space: pre-wrap; word-break: break-word; }
+  .analyse .caps-cyan { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: #0FAFEE; font-weight: 700; margin-bottom: 2mm; }
+  .analyse p { font-size: 12.5px; margin: 0; line-height: 1.55; color: #1a2b4a; white-space: pre-wrap; word-break: break-word; }
 
-  /* Divider entre sections */
-  .divider { height: 1px; background: #e7ebf3; margin: 6mm 0; }
+  /* Divider softer */
+  .divider { height: 1px; background: #eef1f5; margin: 5mm 0; }
 
   /* Footer band navy */
   .foot-band { background: #1a2b4a; color: rgba(255,255,255,.85); padding: 6mm 15mm; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 10px; letter-spacing: .04em; position: relative; }
   .foot-band::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: #0FAFEE; }
-  .foot-band a { color: #0FAFEE; text-decoration: none; word-break: break-all; }
-  .foot-band .brand-foot { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.65); flex-shrink: 0; }
+  .foot-band a { color: #0FAFEE; text-decoration: none; word-break: break-all; font-weight: 500; }
+  .foot-band .brand-foot { font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.65); flex-shrink: 0; }
   .foot-band .brand-foot strong { color: #fff; font-weight: 700; }
 
   @media print {
@@ -208,8 +210,11 @@ function exporterPdf(d: Dispositif) {
 
   <div class="hdr-band">
     <div class="brand-row">
-      <img class="logo" src="${origin}/logos/leonard-brand.png" alt="Leonard">
-      <div class="doc-type"><strong>Veille AAP</strong> · Fiche dispositif</div>
+      <div class="logo-wrap"><img src="${origin}/logos/leonard-brand.png" alt="Leonard"></div>
+      <div class="doc-type">
+        <div class="label">Leonard · Veille AAP</div>
+        <div class="value">Fiche dispositif</div>
+      </div>
     </div>
     <div class="org-caps">${esc(d.organisme)}</div>
     <h1>${esc(d.nom)}</h1>
