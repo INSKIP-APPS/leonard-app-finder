@@ -183,7 +183,7 @@ export function FicheDispositif({
             <div className="label-caps text-[10px] mb-1.5 flex items-center gap-1">
               <Building2 className="w-3 h-3" /> Périmètre VINCI
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 max-w-[268px]">
               {bus.map((bu) => (
                 <BuLogo key={bu.id} bu={bu} />
               ))}
