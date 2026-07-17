@@ -82,7 +82,11 @@ function toAAP(r: Rec, disp: DispRow[], scrapedAt: string, now: number) {
     budget_total: null, budget_par_projet: null, trl_min: null, trl_max: null,
     mots_cles: [...new Set([...thematiques, ...(r.mots_cles ?? [])])].slice(0, 20),
     thematiques,
-    acteurs_eligibles: (r.qui_peut_en_beneficier ?? []).map((x) => x.split(" - ")[0].trim()).slice(0, 8),
+    // qui_peut_en_beneficier arrive sous la forme « Acteur canonique - critère
+    // spécifique » ; plusieurs entrées peuvent partager le même acteur canonique
+    // (ex: « Association - sportive », « Association - culturelle ») → Set pour
+    // dédoublonner en préservant l'ordre de 1re apparition.
+    acteurs_eligibles: [...new Set((r.qui_peut_en_beneficier ?? []).map((x) => x.split(" - ")[0].trim()))].slice(0, 8),
     lien_officiel: r.url_descriptif || "https://www.iledefrance.fr/aides-et-appels-a-projets",
     dispositif_id: mapDispositif(titre, disp),
     echelle: "Régional",
