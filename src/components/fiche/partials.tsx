@@ -100,18 +100,45 @@ export function InfoLine({ label, value }: { label: string; value: string }) {
   );
 }
 
+// Bleu Leonard (roi) et rose/rouge VINCI utilisés dans les puces.
+const LEO_BLUE = "#2B5FA5";
+const LEO_PINK = "#E6175C";
+
+/** Puce « + » : croix bleue façon Leonard avec un point rose au centre. */
+function PuceCroix() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      className="w-[14px] h-[14px] shrink-0 mt-1"
+      aria-hidden
+    >
+      <rect x="6" y="0" width="4" height="16" rx="0.5" fill={LEO_BLUE} />
+      <rect x="0" y="6" width="16" height="4" rx="0.5" fill={LEO_BLUE} />
+      <circle cx="8" cy="8" r="2" fill={LEO_PINK} />
+    </svg>
+  );
+}
+
+/** Puce ◆ : losange bleu façon Leonard avec un demi-disque rose au centre. */
+function PuceLosange() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      className="w-[14px] h-[14px] shrink-0 mt-1"
+      aria-hidden
+    >
+      <polygon points="8,1 15,8 8,15 1,8" fill={LEO_BLUE} />
+      <path d="M 8 5 A 3 3 0 0 1 8 11 Z" fill={LEO_PINK} />
+    </svg>
+  );
+}
+
 export function Puces({ items }: { items: string[] }) {
-  // Puce = symbole VINCI (croix bleue + rouge), reprise du mark utilisé par Rating3.
   return (
     <ul className="space-y-2">
       {items.map((it) => (
         <li key={it} className="flex items-start gap-2.5 text-sm text-text">
-          <img
-            src="/logos/vinci-mark.png"
-            alt=""
-            aria-hidden
-            className="w-[16px] h-[16px] shrink-0 object-contain mt-0.5"
-          />
+          <PuceCroix />
           <span>{it}</span>
         </li>
       ))}
@@ -119,19 +146,13 @@ export function Puces({ items }: { items: string[] }) {
   );
 }
 
-/** Variante « losange Leonard » — puces pour les listes concrètes (références,
- *  exemples, AAP en cours). Chaque item peut être un React node. */
+/** Variante « losange Leonard » pour les listes concrètes (références, exemples). */
 export function PucesLosange({ items }: { items: React.ReactNode[] }) {
   return (
     <ul className="space-y-2">
       {items.map((it, i) => (
         <li key={i} className="flex items-start gap-2.5 text-sm text-text">
-          <img
-            src="/logos/leonard-mark.png"
-            alt=""
-            aria-hidden
-            className="w-[16px] h-[16px] shrink-0 object-contain mt-0.5"
-          />
+          <PuceLosange />
           <span className="flex-1 min-w-0">{it}</span>
         </li>
       ))}
