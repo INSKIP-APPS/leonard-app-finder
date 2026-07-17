@@ -174,7 +174,7 @@ export function FicheDispositif({
         </div>
 
         {/* Niveaux (3 points) + Périmètre VINCI (logos) — carte blanche détachée */}
-        <div className="mx-5 rounded-lg bg-white shadow-sm p-4 grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="mx-5 rounded-lg bg-white shadow-sm p-4 grid grid-cols-1 lg:grid-cols-[1fr_290px] gap-5">
           <div className="space-y-2.5 min-w-0">
             <Rating3 label="Difficulté de montage" valeur={d.difficulte} palette="difficulte" />
             <Rating3 label="Pertinence VINCI" valeur={d.pertinence_vinci} palette="pertinence" />
