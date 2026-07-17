@@ -49,7 +49,7 @@ function BuLogo({ bu }: { bu: PerimetreVinci }) {
   return (
     <span
       title={bu.nom}
-      className="inline-flex items-center justify-center w-[150px] h-[60px] rounded-md border border-border bg-white px-3 shrink-0"
+      className="inline-flex items-center justify-center w-[128px] h-12 rounded-md border border-border bg-white px-2.5 shrink-0"
     >
       {err ? (
         <span className="text-[11px] font-semibold text-navy text-center leading-tight">
@@ -60,7 +60,7 @@ function BuLogo({ bu }: { bu: PerimetreVinci }) {
           src={bu.logo}
           alt={bu.nom}
           onError={() => setErr(true)}
-          className="max-h-11 max-w-[126px] object-contain"
+          className="max-h-9 max-w-[108px] object-contain"
         />
       )}
     </span>
