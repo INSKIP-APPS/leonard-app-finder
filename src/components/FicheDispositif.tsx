@@ -146,7 +146,7 @@ export function FicheDispositif({
       onClick={onClose}
     >
       <div
-        className="bg-[#EAF3FC] rounded-xl w-full max-w-4xl my-8 shadow-xl"
+        className="bg-[#EAF3FC] rounded-xl w-full max-w-5xl my-8 shadow-xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* En-tête (fond bleu très pâle) */}
@@ -192,7 +192,7 @@ export function FicheDispositif({
         </div>
 
         {/* 3 colonnes : périmètre · financement · modalités — fond bleu pâle */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 px-5 py-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1fr_1.4fr] gap-5 px-5 py-5">
           <div className="space-y-3 min-w-0">
             <SectionTitle>Périmètre & nature</SectionTitle>
             <InfoLine label="Organisme" value={d.organisme} />
@@ -234,7 +234,7 @@ export function FicheDispositif({
         {d.commentaires && (
           <div className="mx-5 mb-5 rounded-lg bg-white shadow-sm p-4">
             <div className="label-caps text-[10px] mb-1">Analyse Leonard</div>
-            <p className="text-sm text-text whitespace-pre-wrap">{d.commentaires}</p>
+            <p className="text-sm text-text whitespace-pre-wrap break-words">{d.commentaires}</p>
           </div>
         )}
 

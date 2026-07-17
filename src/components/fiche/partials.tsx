@@ -56,11 +56,11 @@ export function Rating3({
   if (!lvl) return null;
   const src = RATING_MARK[palette];
   return (
-    <div className="flex items-center gap-2.5 flex-wrap">
-      <span className="inline-flex items-center justify-center rounded-full bg-navy text-white text-[11px] font-semibold px-3 py-1.5 shrink-0">
+    <div className="flex items-center gap-2 flex-wrap">
+      <span className="inline-flex items-center justify-center rounded-full bg-navy text-white text-[11px] font-semibold px-2.5 py-1 shrink-0">
         {label}
       </span>
-      <div className="flex items-center gap-1.5 shrink-0">
+      <div className="flex items-center gap-1 shrink-0">
         {[1, 2, 3].map((i) => (
           <RatingMark key={i} src={src} faded={i > lvl} />
         ))}
