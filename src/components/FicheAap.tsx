@@ -237,11 +237,11 @@ function exporterPdf(a: AAP) {
     <div class="row2">
       <div class="sec">
         <div class="sec-title">Acteurs éligibles</div>
-        ${puces((a.acteurs_eligibles ?? []).slice(0, 12), "/logos/leonard-puce-donut.png")}
+        ${puces(Array.from(new Set(a.acteurs_eligibles ?? [])).slice(0, 12), "/logos/leonard-puce-donut.png")}
       </div>
       <div class="sec">
         <div class="sec-title">Thématiques</div>
-        ${puces(a.thematiques ?? [], "/logos/leonard-puce-croix.png")}
+        ${puces(Array.from(new Set(a.thematiques ?? [])), "/logos/leonard-puce-croix.png")}
       </div>
     </div>
 
@@ -250,7 +250,7 @@ function exporterPdf(a: AAP) {
         ? `<div class="divider"></div>
     <div class="sec">
       <div class="sec-title">Aussi référencé sur</div>
-      ${puces(a.sources_multiples, "/logos/leonard-puce-croix.png")}
+      ${puces(Array.from(new Set(a.sources_multiples)), "/logos/leonard-puce-croix.png")}
     </div>`
         : ""
     }
@@ -407,7 +407,7 @@ export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => voi
           <div className="min-w-0">
             <SectionTitle icon={<Users className="w-3.5 h-3.5" />}>Acteurs éligibles</SectionTitle>
             {(aap.acteurs_eligibles ?? []).length > 0 ? (
-              <Puces items={(aap.acteurs_eligibles ?? []).slice(0, 8)} />
+              <Puces items={Array.from(new Set(aap.acteurs_eligibles ?? [])).slice(0, 8)} />
             ) : (
               <div className="text-sm text-muted italic">Non précisé.</div>
             )}
@@ -419,7 +419,7 @@ export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => voi
           <div className="min-w-0">
             <SectionTitle icon={<Layers className="w-3.5 h-3.5" />}>Thématiques</SectionTitle>
             {(aap.thematiques ?? []).length > 0 ? (
-              <Puces items={aap.thematiques} />
+              <Puces items={Array.from(new Set(aap.thematiques))} />
             ) : (
               <div className="text-sm text-muted italic">Non précisé.</div>
             )}
@@ -428,7 +428,7 @@ export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => voi
             {aap.sources_multiples && aap.sources_multiples.length > 0 && (
               <>
                 <SectionTitle>Aussi référencé sur</SectionTitle>
-                <Puces items={aap.sources_multiples} />
+                <Puces items={Array.from(new Set(aap.sources_multiples))} />
               </>
             )}
           </div>

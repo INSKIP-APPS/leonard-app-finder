@@ -258,7 +258,7 @@ function exporterPdf(d: Dispositif) {
 
     <div class="sec">
       <div class="sec-title">Critères &amp; modalités</div>
-      ${puces(modalites, "/logos/leonard-puce-croix.png")}
+      ${puces(Array.from(new Set(modalites)), "/logos/leonard-puce-croix.png")}
     </div>
 
     <div class="divider"></div>
@@ -266,11 +266,11 @@ function exporterPdf(d: Dispositif) {
     <div class="row2">
       <div class="sec">
         <div class="sec-title">Thématiques ciblées</div>
-        ${puces(d.thematiques_liste ?? [], "/logos/leonard-puce-croix.png")}
+        ${puces(Array.from(new Set(d.thematiques_liste ?? [])), "/logos/leonard-puce-croix.png")}
       </div>
       <div class="sec">
         <div class="sec-title">Acteurs ciblés</div>
-        ${puces(d.acteurs_liste ?? [], "/logos/leonard-puce-donut.png")}
+        ${puces(Array.from(new Set(d.acteurs_liste ?? [])), "/logos/leonard-puce-donut.png")}
       </div>
     </div>
 
@@ -405,7 +405,7 @@ export function FicheDispositif({
           <div className="min-w-0">
             <SectionTitle>Critères & modalités</SectionTitle>
             {modalites.length ? (
-              <Puces items={modalites} />
+              <Puces items={Array.from(new Set(modalites))} />
             ) : (
               <div className="text-sm text-muted italic">Non précisé.</div>
             )}
@@ -418,11 +418,11 @@ export function FicheDispositif({
             <SectionTitle icon={<Layers className="w-3.5 h-3.5" />}>
               Thématiques ciblées
             </SectionTitle>
-            <Puces items={d.thematiques_liste ?? []} />
+            <Puces items={Array.from(new Set(d.thematiques_liste ?? []))} />
           </div>
           <div className="min-w-0">
             <SectionTitle icon={<Users className="w-3.5 h-3.5" />}>Acteurs ciblés</SectionTitle>
-            <PucesLosange items={d.acteurs_liste ?? []} />
+            <PucesLosange items={Array.from(new Set(d.acteurs_liste ?? []))} />
           </div>
         </div>
 
