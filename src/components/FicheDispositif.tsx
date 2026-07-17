@@ -162,12 +162,12 @@ function exporterPdf(d: Dispositif) {
   .sec-title { display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #1a2b4a; font-weight: 700; margin-bottom: 4mm; }
   .sec-title::before { content: ""; width: 3px; height: 12px; background: #0FAFEE; display: inline-block; border-radius: 2px; }
 
-  /* Diagnostic — table élégante */
-  .rrow { display: grid; grid-template-columns: 1fr auto 80px; align-items: center; gap: 14px; padding: 9px 0; }
+  /* Diagnostic — inline compact */
+  .rrow { display: flex; align-items: center; gap: 20px; padding: 9px 0; flex-wrap: wrap; }
   .rrow + .rrow { border-top: 1px solid #e7ebf3; }
-  .rrow-name { font-size: 13px; font-weight: 600; color: #1a2b4a; }
-  .rrow-marks { display: inline-flex; gap: 5px; }
-  .rrow-val { font-size: 12px; font-weight: 600; color: #1a2b4a; text-align: right; letter-spacing: .01em; }
+  .rrow-name { font-size: 13px; font-weight: 600; color: #1a2b4a; flex-shrink: 0; }
+  .rrow-marks { display: inline-flex; gap: 5px; flex-shrink: 0; }
+  .rrow-val { font-size: 13px; font-weight: 500; color: #1a2b4a; letter-spacing: .01em; flex-shrink: 0; }
 
   /* Périmètre VINCI tuiles plus subtiles */
   .bus { display: flex; flex-wrap: wrap; gap: 6px; max-width: 250px; }

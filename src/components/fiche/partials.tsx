@@ -71,9 +71,9 @@ export function Rating3({
 }
 
 /**
- * Variante « ligne de tableau » pour la fiche dispositif : label plein +
- * icônes 3 points + valeur alignée à droite. Convient au bloc diagnostic
- * façon fiche produit (2 lignes séparées par un divider fin).
+ * Ligne diagnostic — label + icônes 3 points + valeur, tout serré à
+ * gauche (flex + gap fixe, pas de stretching). Convient aussi bien
+ * pour une ligne unique que pour un empilement de plusieurs lignes.
  */
 export function RatingRow({
   label,
@@ -88,14 +88,14 @@ export function RatingRow({
   if (!lvl) return null;
   const src = RATING_MARK[palette];
   return (
-    <div className="grid grid-cols-[1fr_auto_72px] items-center gap-4 py-2.5">
-      <span className="text-sm font-semibold text-navy">{label}</span>
+    <div className="flex items-center gap-5 py-2.5 flex-wrap">
+      <span className="text-sm font-semibold text-navy shrink-0">{label}</span>
       <div className="flex items-center gap-1 shrink-0">
         {[1, 2, 3].map((i) => (
           <RatingMark key={i} src={src} faded={i > lvl} />
         ))}
       </div>
-      <span className="text-sm font-medium text-text text-right">{valeur}</span>
+      <span className="text-sm font-medium text-text shrink-0">{valeur}</span>
     </div>
   );
 }
