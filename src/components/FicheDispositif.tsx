@@ -49,7 +49,7 @@ function BuLogo({ bu }: { bu: PerimetreVinci }) {
   return (
     <span
       title={bu.nom}
-      className="inline-flex items-center justify-center w-[124px] h-12 rounded-md border border-border bg-white px-2"
+      className="inline-flex items-center justify-center w-[108px] h-11 rounded-md border border-border bg-white px-2 shrink-0"
     >
       {err ? (
         <span className="text-[11px] font-semibold text-navy text-center leading-tight">
@@ -60,7 +60,7 @@ function BuLogo({ bu }: { bu: PerimetreVinci }) {
           src={bu.logo}
           alt={bu.nom}
           onError={() => setErr(true)}
-          className="max-h-8 max-w-[104px] object-contain"
+          className="max-h-7 max-w-[90px] object-contain"
         />
       )}
     </span>
@@ -146,15 +146,17 @@ export function FicheDispositif({
       onClick={onClose}
     >
       <div
-        className="bg-[#EAF3FC] rounded-xl w-full max-w-3xl my-8 shadow-xl"
+        className="bg-[#EAF3FC] rounded-xl w-full max-w-4xl my-8 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* En-tête (fond bleu très pâle) */}
         <div className="flex items-start justify-between gap-4 p-5 rounded-t-xl">
-          <div className="min-w-0">
-            <div className="label-caps text-[10px] mb-1">{d.organisme}</div>
-            <h2 className="text-lg font-bold text-navy leading-snug">{d.nom}</h2>
-            {d.programme && <div className="text-sm text-muted mt-1">{d.programme}</div>}
+          <div className="min-w-0 flex-1">
+            <div className="label-caps text-[10px] mb-1 break-words">{d.organisme}</div>
+            <h2 className="text-lg font-bold text-navy leading-snug break-words">{d.nom}</h2>
+            {d.programme && (
+              <div className="text-sm text-muted mt-1 break-words">{d.programme}</div>
+            )}
             <div className="flex flex-wrap gap-1.5 mt-2">
               <Badge tone="sky">{d.echelle}</Badge>
               {d.statut_ouverture && <Badge tone="sky">{d.statut_ouverture}</Badge>}
@@ -172,12 +174,12 @@ export function FicheDispositif({
         </div>
 
         {/* Niveaux (3 points) + Périmètre VINCI (logos) — carte blanche détachée */}
-        <div className="mx-5 rounded-lg bg-white shadow-sm p-4 grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="space-y-2.5">
+        <div className="mx-5 rounded-lg bg-white shadow-sm p-4 grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="space-y-2.5 min-w-0">
             <Rating3 label="Difficulté de montage" valeur={d.difficulte} palette="difficulte" />
             <Rating3 label="Pertinence VINCI" valeur={d.pertinence_vinci} palette="pertinence" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="label-caps text-[10px] mb-1.5 flex items-center gap-1">
               <Building2 className="w-3 h-3" /> Périmètre VINCI
             </div>
@@ -190,21 +192,21 @@ export function FicheDispositif({
         </div>
 
         {/* 3 colonnes : périmètre · financement · modalités — fond bleu pâle */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 px-5 py-5">
-          <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 px-5 py-5">
+          <div className="space-y-3 min-w-0">
             <SectionTitle>Périmètre & nature</SectionTitle>
             <InfoLine label="Organisme" value={d.organisme} />
             <InfoLine label="Échelle" value={d.echelle} />
             <InfoLine label="Statut" value={d.statut_ouverture ?? "—"} />
           </div>
-          <div className="space-y-3">
+          <div className="space-y-3 min-w-0">
             <SectionTitle icon={<Coins className="w-3.5 h-3.5" />}>Financement</SectionTitle>
             <InfoLine label="Type" value={d.type_financement ?? "—"} />
             <InfoLine label="Montant" value={d.montant ?? "—"} />
             <InfoLine label="Taux max" value={d.taux_max ?? "—"} />
             <InfoLine label="Maturité (TRL)" value={trl ?? "—"} />
           </div>
-          <div>
+          <div className="min-w-0">
             <SectionTitle>Critères & modalités</SectionTitle>
             {modalites.length ? (
               <Puces items={modalites} />
@@ -216,13 +218,13 @@ export function FicheDispositif({
 
         {/* Thématiques · Acteurs */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 px-5 pb-5">
-          <div>
+          <div className="min-w-0">
             <SectionTitle icon={<Layers className="w-3.5 h-3.5" />}>
               Thématiques ciblées
             </SectionTitle>
             <Puces items={d.thematiques_liste ?? []} />
           </div>
-          <div>
+          <div className="min-w-0">
             <SectionTitle icon={<Users className="w-3.5 h-3.5" />}>Acteurs ciblés</SectionTitle>
             <PucesLosange items={d.acteurs_liste ?? []} />
           </div>

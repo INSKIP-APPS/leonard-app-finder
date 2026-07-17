@@ -56,11 +56,11 @@ export function Rating3({
   if (!lvl) return null;
   const src = RATING_MARK[palette];
   return (
-    <div className="flex items-center gap-3">
-      <span className="inline-flex items-center justify-center rounded-full bg-navy text-white text-[11px] font-semibold px-3 py-1.5 min-w-[160px]">
+    <div className="flex items-center gap-2.5 flex-wrap">
+      <span className="inline-flex items-center justify-center rounded-full bg-navy text-white text-[11px] font-semibold px-3 py-1.5 shrink-0">
         {label}
       </span>
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 shrink-0">
         {[1, 2, 3].map((i) => (
           <RatingMark key={i} src={src} faded={i > lvl} />
         ))}
@@ -93,9 +93,9 @@ export function SectionTitle({
 
 export function InfoLine({ label, value }: { label: string; value: string }) {
   return (
-    <div>
+    <div className="min-w-0">
       <div className="label-caps text-[10px]">{label}</div>
-      <div className="text-sm text-text">{value}</div>
+      <div className="text-sm text-text break-words">{value}</div>
     </div>
   );
 }
@@ -107,14 +107,14 @@ export function Puces({ items }: { items: string[] }) {
   return (
     <ul className="space-y-2">
       {items.map((it) => (
-        <li key={it} className="flex items-start gap-2.5 text-sm text-text">
+        <li key={it} className="flex items-start gap-2.5 text-sm text-text min-w-0">
           <img
             src="/logos/leonard-puce-croix.png"
             alt=""
             aria-hidden
             className="w-[14px] h-[14px] shrink-0 mt-0.5 object-contain"
           />
-          <span>{it}</span>
+          <span className="flex-1 min-w-0 break-words">{it}</span>
         </li>
       ))}
     </ul>
@@ -126,14 +126,14 @@ export function PucesLosange({ items }: { items: React.ReactNode[] }) {
   return (
     <ul className="space-y-2">
       {items.map((it, i) => (
-        <li key={i} className="flex items-start gap-2.5 text-sm text-text">
+        <li key={i} className="flex items-start gap-2.5 text-sm text-text min-w-0">
           <img
             src="/logos/leonard-puce-donut.png"
             alt=""
             aria-hidden
             className="w-[14px] h-[14px] shrink-0 mt-0.5 object-contain"
           />
-          <span className="flex-1 min-w-0">{it}</span>
+          <span className="flex-1 min-w-0 break-words">{it}</span>
         </li>
       ))}
     </ul>
