@@ -16,7 +16,7 @@ import { useSavedDispositifIds, toggleSavedDispositif } from "@/utils/savedAaps"
 import { trlLabel, escapeHtml as esc } from "@/utils/format";
 import { Badge } from "@/components/Badge";
 import {
-  Rating3,
+  RatingRow,
   SectionTitle,
   InfoLine,
   Puces,
@@ -173,14 +173,25 @@ export function FicheDispositif({
           </button>
         </div>
 
-        {/* Niveaux (3 points) + Périmètre VINCI (logos) — carte blanche détachée */}
+        {/* Diagnostic Leonard (table) + Périmètre VINCI (logos) — carte blanche */}
         <div className="mx-5 rounded-lg bg-white shadow-sm p-4 grid grid-cols-1 lg:grid-cols-[1fr_290px] gap-5">
-          <div className="space-y-2.5 min-w-0">
-            <Rating3 label="Difficulté de montage" valeur={d.difficulte} palette="difficulte" />
-            <Rating3 label="Pertinence VINCI" valeur={d.pertinence_vinci} palette="pertinence" />
+          <div className="min-w-0">
+            <div className="label-caps text-[10px] mb-2">Diagnostic Leonard</div>
+            <div className="divide-y divide-border">
+              <RatingRow
+                label="Difficulté de montage"
+                valeur={d.difficulte}
+                palette="difficulte"
+              />
+              <RatingRow
+                label="Pertinence VINCI"
+                valeur={d.pertinence_vinci}
+                palette="pertinence"
+              />
+            </div>
           </div>
           <div className="min-w-0">
-            <div className="label-caps text-[10px] mb-1.5 flex items-center gap-1">
+            <div className="label-caps text-[10px] mb-2 flex items-center gap-1">
               <Building2 className="w-3 h-3" /> Périmètre VINCI
             </div>
             <div className="flex flex-wrap items-center gap-2 max-w-[268px]">

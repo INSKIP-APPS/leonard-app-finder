@@ -70,6 +70,36 @@ export function Rating3({
   );
 }
 
+/**
+ * Variante « ligne de tableau » pour la fiche dispositif : label plein +
+ * icônes 3 points + valeur alignée à droite. Convient au bloc diagnostic
+ * façon fiche produit (2 lignes séparées par un divider fin).
+ */
+export function RatingRow({
+  label,
+  valeur,
+  palette,
+}: {
+  label: string;
+  valeur: string | null;
+  palette: "difficulte" | "pertinence";
+}) {
+  const lvl = niveau3(valeur);
+  if (!lvl) return null;
+  const src = RATING_MARK[palette];
+  return (
+    <div className="grid grid-cols-[1fr_auto_72px] items-center gap-4 py-2.5">
+      <span className="text-sm font-semibold text-navy">{label}</span>
+      <div className="flex items-center gap-1 shrink-0">
+        {[1, 2, 3].map((i) => (
+          <RatingMark key={i} src={src} faded={i > lvl} />
+        ))}
+      </div>
+      <span className="text-sm font-medium text-text text-right">{valeur}</span>
+    </div>
+  );
+}
+
 export function SectionTitle({
   icon,
   children,
