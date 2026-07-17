@@ -337,9 +337,9 @@ export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => voi
           </button>
         </div>
 
-        {/* Diagnostic Leonard (table) + Points de vigilance (panel amber) — carte blanche */}
+        {/* Diagnostic Leonard (inline) + Points de vigilance (panel amber) — sur fond bleu pâle */}
         <div
-          className={`mx-5 rounded-lg bg-white shadow-sm p-4 grid grid-cols-1 gap-5 ${
+          className={`px-5 py-4 grid grid-cols-1 gap-5 ${
             diff.points.length > 0 ? "lg:grid-cols-[1fr_300px]" : ""
           }`}
         >
