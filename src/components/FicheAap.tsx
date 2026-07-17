@@ -96,13 +96,14 @@ function exporterPdf(a: AAP) {
     : "Non précisée";
 
   const pointsVigilance = diff.points.slice(0, 3);
+  const warnIcon = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;color:#F59E0B"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`;
   const pointsBloc = pointsVigilance.length
-    ? `<ul class="warn-list">${pointsVigilance
+    ? `<div class="warn-panel"><div class="warn-lab">${warnIcon.replace('width="13" height="13"', 'width="12" height="12"')}<span>Points de vigilance</span></div><ul>${pointsVigilance
         .map(
           (p) =>
-            `<li><span class="warn-mark">⚠</span><span>${esc(p)}</span></li>`,
+            `<li>${warnIcon}<span>${esc(p)}</span></li>`,
         )
-        .join("")}</ul>`
+        .join("")}</ul></div>`
     : "";
 
   const html = `<!doctype html><html lang="fr"><head>
@@ -145,11 +146,14 @@ function exporterPdf(a: AAP) {
   .rrow-marks { display: inline-flex; gap: 5px; }
   .rrow-val { font-size: 12px; font-weight: 600; color: #1a2b4a; text-align: right; letter-spacing: .01em; }
 
-  /* Points de vigilance — style warning list */
-  .warn-list { list-style: none; margin: 0; padding: 0; }
-  .warn-list li { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; margin-bottom: 6px; color: #6b7a99; page-break-inside: avoid; }
-  .warn-list .warn-mark { color: #F59E0B; font-size: 13px; line-height: 1.2; flex-shrink: 0; }
-  .warn-list li span:last-child { flex: 1; word-break: break-word; line-height: 1.5; }
+  /* Points de vigilance — panel amber façon Analyse Leonard */
+  .warn-panel { background: #FFFBEB; border-left: 3px solid #F59E0B; border-radius: 0 4px 4px 0; padding: 4mm 5mm; }
+  .warn-panel .warn-lab { display: flex; align-items: center; gap: 5px; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: #B45309; font-weight: 700; margin-bottom: 3mm; }
+  .warn-panel .warn-lab svg { flex-shrink: 0; color: #F59E0B; }
+  .warn-panel ul { list-style: none; margin: 0; padding: 0; }
+  .warn-panel li { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; margin-bottom: 5px; color: #7C2D12; page-break-inside: avoid; }
+  .warn-panel li:last-child { margin-bottom: 0; }
+  .warn-panel li span { flex: 1; word-break: break-word; line-height: 1.5; }
 
   /* Info line */
   .info-line { margin-bottom: 4mm; }
@@ -201,19 +205,12 @@ function exporterPdf(a: AAP) {
 
   <div class="body">
 
-    <div class="row2-diag">
+    <div class="${pointsVigilance.length ? "row2-diag" : ""}">
       <div class="sec">
         <div class="sec-title">Diagnostic Leonard</div>
         ${ratingRow("Difficulté de candidature", diff.niveau, "/logos/vinci-mark.png")}
       </div>
-      ${
-        pointsVigilance.length
-          ? `<div class="sec">
-        <div class="sec-title">Points de vigilance</div>
-        ${pointsBloc}
-      </div>`
-          : `<div></div>`
-      }
+      ${pointsVigilance.length ? `<div class="sec">${pointsBloc}</div>` : ""}
     </div>
 
     <div class="divider"></div>
@@ -340,8 +337,12 @@ export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => voi
           </button>
         </div>
 
-        {/* Diagnostic Leonard (table) + Points de vigilance — carte blanche */}
-        <div className="mx-5 rounded-lg bg-white shadow-sm p-4 grid grid-cols-1 lg:grid-cols-[1fr_290px] gap-5">
+        {/* Diagnostic Leonard (table) + Points de vigilance (panel amber) — carte blanche */}
+        <div
+          className={`mx-5 rounded-lg bg-white shadow-sm p-4 grid grid-cols-1 gap-5 ${
+            diff.points.length > 0 ? "lg:grid-cols-[1fr_300px]" : ""
+          }`}
+        >
           <div className="min-w-0">
             <div className="label-caps text-[10px] mb-2">Diagnostic Leonard</div>
             <div className="divide-y divide-border">
@@ -352,23 +353,24 @@ export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => voi
               />
             </div>
           </div>
-          <div className="min-w-0">
-            {diff.points.length > 0 ? (
-              <>
-                <div className="label-caps text-[10px] mb-2 flex items-center gap-1">
-                  <AlertTriangle className="w-3 h-3" /> Points de vigilance
-                </div>
-                <ul className="space-y-1.5">
-                  {diff.points.slice(0, 3).map((p) => (
-                    <li key={p} className="flex items-start gap-1.5 text-xs text-muted min-w-0">
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-                      <span className="flex-1 min-w-0 break-words">{p}</span>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            ) : null}
-          </div>
+          {diff.points.length > 0 && (
+            <div className="min-w-0 rounded-md bg-amber-50 border-l-[3px] border-amber-500 px-3.5 py-3">
+              <div className="text-[10px] tracking-[.08em] uppercase font-semibold text-amber-700 mb-2 flex items-center gap-1.5">
+                <AlertTriangle className="w-3 h-3" /> Points de vigilance
+              </div>
+              <ul className="space-y-1.5">
+                {diff.points.slice(0, 3).map((p) => (
+                  <li
+                    key={p}
+                    className="flex items-start gap-2 text-[13px] text-amber-900 min-w-0"
+                  >
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-[3px]" />
+                    <span className="flex-1 min-w-0 break-words leading-snug">{p}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* 3 colonnes : périmètre · financement · acteurs — fond bleu pâle */}
