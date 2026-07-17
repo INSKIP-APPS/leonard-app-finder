@@ -101,13 +101,38 @@ export function InfoLine({ label, value }: { label: string; value: string }) {
 }
 
 export function Puces({ items }: { items: string[] }) {
-  // Puce « + » bleu clair vif, plus grosse, espacement généreux — style Leonard.
+  // Puce = symbole VINCI (croix bleue + rouge), reprise du mark utilisé par Rating3.
   return (
     <ul className="space-y-2">
       {items.map((it) => (
         <li key={it} className="flex items-start gap-2.5 text-sm text-text">
-          <span className="text-[#0FAFEE] font-bold text-base leading-5 shrink-0">+</span>
+          <img
+            src="/logos/vinci-mark.png"
+            alt=""
+            aria-hidden
+            className="w-[16px] h-[16px] shrink-0 object-contain mt-0.5"
+          />
           <span>{it}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Variante « losange Leonard » — puces pour les listes concrètes (références,
+ *  exemples, AAP en cours). Chaque item peut être un React node. */
+export function PucesLosange({ items }: { items: React.ReactNode[] }) {
+  return (
+    <ul className="space-y-2">
+      {items.map((it, i) => (
+        <li key={i} className="flex items-start gap-2.5 text-sm text-text">
+          <img
+            src="/logos/leonard-mark.png"
+            alt=""
+            aria-hidden
+            className="w-[16px] h-[16px] shrink-0 object-contain mt-0.5"
+          />
+          <span className="flex-1 min-w-0">{it}</span>
         </li>
       ))}
     </ul>
