@@ -15,7 +15,13 @@ import { perimetreVinci, type PerimetreVinci } from "@/utils/vinciBU";
 import { useSavedDispositifIds, toggleSavedDispositif } from "@/utils/savedAaps";
 import { trlLabel, escapeHtml as esc } from "@/utils/format";
 import { Badge } from "@/components/Badge";
-import { Rating3, SectionTitle, InfoLine, Puces } from "@/components/fiche/partials";
+import {
+  Rating3,
+  SectionTitle,
+  InfoLine,
+  Puces,
+  PucesLosange,
+} from "@/components/fiche/partials";
 
 // ──────────────────────────────────────────────────────────────────────
 // Fiche détaillée d'un DISPOSITIF (modale), mise en forme inspirée de la
@@ -218,7 +224,7 @@ export function FicheDispositif({
           </div>
           <div>
             <SectionTitle icon={<Users className="w-3.5 h-3.5" />}>Acteurs ciblés</SectionTitle>
-            <Puces items={d.acteurs_liste ?? []} />
+            <PucesLosange items={d.acteurs_liste ?? []} />
           </div>
         </div>
 
