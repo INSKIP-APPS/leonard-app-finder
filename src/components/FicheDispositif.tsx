@@ -140,11 +140,11 @@ export function FicheDispositif({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl w-full max-w-3xl my-8 shadow-xl"
+        className="bg-[#EAF3FC] rounded-xl w-full max-w-3xl my-8 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* En-tête */}
-        <div className="flex items-start justify-between gap-4 p-5 border-b border-border bg-[#F5F8FC] rounded-t-xl">
+        {/* En-tête (fond bleu très pâle) */}
+        <div className="flex items-start justify-between gap-4 p-5 rounded-t-xl">
           <div className="min-w-0">
             <div className="label-caps text-[10px] mb-1">{d.organisme}</div>
             <h2 className="text-lg font-bold text-navy leading-snug">{d.nom}</h2>
@@ -165,8 +165,8 @@ export function FicheDispositif({
           </button>
         </div>
 
-        {/* Niveaux (3 points) + Périmètre VINCI (logos) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 px-5 py-4 border-b border-border">
+        {/* Niveaux (3 points) + Périmètre VINCI (logos) — carte blanche détachée */}
+        <div className="mx-5 rounded-lg bg-white shadow-sm p-4 grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-2.5">
             <Rating3 label="Difficulté de montage" valeur={d.difficulte} palette="difficulte" />
             <Rating3 label="Pertinence VINCI" valeur={d.pertinence_vinci} palette="pertinence" />
@@ -183,8 +183,8 @@ export function FicheDispositif({
           </div>
         </div>
 
-        {/* 3 colonnes : périmètre · financement · modalités */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 px-5 py-4">
+        {/* 3 colonnes : périmètre · financement · modalités — fond bleu pâle */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 px-5 py-5">
           <div className="space-y-3">
             <SectionTitle>Périmètre & nature</SectionTitle>
             <InfoLine label="Organisme" value={d.organisme} />
@@ -209,7 +209,7 @@ export function FicheDispositif({
         </div>
 
         {/* Thématiques · Acteurs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 px-5 pb-4 border-t border-border pt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 px-5 pb-5">
           <div>
             <SectionTitle icon={<Layers className="w-3.5 h-3.5" />}>
               Thématiques ciblées
@@ -222,18 +222,16 @@ export function FicheDispositif({
           </div>
         </div>
 
-        {/* Analyse Leonard */}
+        {/* Analyse Leonard — carte blanche détachée sur fond bleu pâle */}
         {d.commentaires && (
-          <div className="px-5 pb-4">
-            <div className="rounded-lg bg-[#F5F7FB] border border-border p-3">
-              <div className="label-caps text-[10px] mb-1">Analyse Leonard</div>
-              <p className="text-sm text-text whitespace-pre-wrap">{d.commentaires}</p>
-            </div>
+          <div className="mx-5 mb-5 rounded-lg bg-white shadow-sm p-4">
+            <div className="label-caps text-[10px] mb-1">Analyse Leonard</div>
+            <p className="text-sm text-text whitespace-pre-wrap">{d.commentaires}</p>
           </div>
         )}
 
         {/* Actions */}
-        <div className="flex items-center justify-between gap-2 p-5 border-t border-border bg-bg rounded-b-xl">
+        <div className="flex items-center justify-between gap-2 p-5 border-t border-sky/15 bg-white rounded-b-xl">
           <button
             onClick={() => toggleSavedDispositif(d.id)}
             className={`inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm font-medium transition ${saved ? "border-pink/40 bg-pink/10 text-pink" : "border-border text-navy hover:border-navy"}`}
