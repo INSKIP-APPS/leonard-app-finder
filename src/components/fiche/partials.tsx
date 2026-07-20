@@ -84,17 +84,22 @@ export function RatingRow({
   valeur: string | null;
   palette: "difficulte" | "pertinence";
 }) {
+  // Aucune valeur du tout → on masque la ligne. Mais une valeur hors référentiel
+  // 3 points (ex: « Sans objet ») reste affichée sans les icônes (BUG-016) au
+  // lieu de disparaître silencieusement.
+  if (!valeur) return null;
   const lvl = niveau3(valeur);
-  if (!lvl) return null;
   const src = RATING_MARK[palette];
   return (
     <div className="flex items-center gap-5 py-2.5 flex-wrap">
       <span className="text-sm font-semibold text-navy shrink-0">{label}</span>
-      <div className="flex items-center gap-1 shrink-0">
-        {[1, 2, 3].map((i) => (
-          <RatingMark key={i} src={src} faded={i > lvl} />
-        ))}
-      </div>
+      {lvl > 0 && (
+        <div className="flex items-center gap-1 shrink-0">
+          {[1, 2, 3].map((i) => (
+            <RatingMark key={i} src={src} faded={i > lvl} />
+          ))}
+        </div>
+      )}
       <span className="text-sm font-medium text-text shrink-0">{valeur}</span>
     </div>
   );

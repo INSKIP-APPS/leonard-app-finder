@@ -65,11 +65,11 @@ export function AnalyseExpressModal({ onClose }: { onClose: () => void }) {
     e.preventDefault();
     setError(null);
     if (description.trim().length < 40) {
-      setError("Décris le projet en au moins 40 caractères pour un matching utile.");
+      setError("Décrivez le projet en au moins 40 caractères pour un matching utile.");
       return;
     }
     if (secteurs.length === 0) {
-      setError("Sélectionne au moins un secteur.");
+      setError("Sélectionnez au moins un secteur.");
       return;
     }
     setRunning(true);
@@ -110,7 +110,7 @@ export function AnalyseExpressModal({ onClose }: { onClose: () => void }) {
             <div>
               <h2 id="analyse-express-titre" className="text-lg font-bold text-navy tracking-tight">Analyse express</h2>
               <p className="text-xs text-muted mt-1">
-                Teste rapidement un projet — même hors de ton programme — et récupère les AAP
+                Testez rapidement un projet — même hors de votre programme — et récupérez les AAP
                 pertinents en 30 s. Rien n'est sauvegardé.
               </p>
             </div>
@@ -141,7 +141,7 @@ export function AnalyseExpressModal({ onClose }: { onClose: () => void }) {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={5}
-                  placeholder="Décris l'objet du projet, son marché, sa maturité, sa cible… Plus c'est précis, meilleur est le matching."
+                  placeholder="Décrivez l'objet du projet, son marché, sa maturité, sa cible… Plus c'est précis, meilleur est le matching."
                   className="input resize-y min-h-[120px]"
                 />
               </div>
@@ -256,7 +256,7 @@ export function AnalyseExpressModal({ onClose }: { onClose: () => void }) {
                 <div className="p-10 text-center text-sm text-muted">
                   {nbCandidats > 0
                     ? `${nbCandidats} candidat${nbCandidats > 1 ? "s" : ""} analysé${nbCandidats > 1 ? "s" : ""}, mais aucun n'a été jugé pertinent pour ce projet. Essaie d'élargir les secteurs ou de préciser la description.`
-                    : "Aucun AAP candidat après présélection. Précise la description ou les secteurs."}
+                    : "Aucun AAP candidat après présélection. Précisez la description ou les secteurs."}
                 </div>
               ) : (
                 <>

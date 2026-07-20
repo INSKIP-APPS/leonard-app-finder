@@ -19,6 +19,12 @@ export function Sidebar() {
     <aside
       onMouseEnter={() => setCollapsed(false)}
       onMouseLeave={() => setCollapsed(true)}
+      // A11Y-005 : l'utilisateur clavier déplie aussi la sidebar en y entrant
+      // au focus (et la replie en la quittant), pas seulement au survol souris.
+      onFocusCapture={() => setCollapsed(false)}
+      onBlurCapture={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setCollapsed(true);
+      }}
       className={`fixed left-0 top-0 bottom-0 bg-white border-r border-border flex flex-col z-30 transition-[width] duration-300 ${
         collapsed ? "w-[64px]" : "w-[240px]"
       }`}
@@ -44,6 +50,7 @@ export function Sidebar() {
               key={it.to}
               to={it.to}
               title={collapsed ? it.label : undefined}
+              aria-label={it.label}
               className={`flex items-center gap-3 rounded-md text-sm transition ${
                 collapsed ? "justify-center h-10 w-10 mx-auto" : "px-3 py-2.5"
               } ${
@@ -90,6 +97,7 @@ function ProgrammesBlock({ collapsed, pathname }: { collapsed: boolean; pathname
             to="/programmes/$id"
             params={{ id: p.id }}
             title={collapsed ? p.nom : undefined}
+            aria-label={p.nom}
             className={`flex items-center gap-3 rounded-md text-sm transition ${
               collapsed ? "justify-center h-10 w-10 mx-auto" : "px-3 py-2"
             } ${

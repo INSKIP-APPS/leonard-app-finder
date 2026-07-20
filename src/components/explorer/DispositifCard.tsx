@@ -81,7 +81,7 @@ export function DispositifCard({
         <div className="border-t border-border bg-[#F9FAFC] px-4 py-3 space-y-2">
           <div className="label-caps">AAP rattachés ({rattaches.length})</div>
           {rattaches.length === 0 && (
-            <div className="text-xs text-muted italic">Aucun AAP scrapé pour ce dispositif.</div>
+            <div className="text-xs text-muted italic">Aucun appel à projets suivi pour ce dispositif.</div>
           )}
           {rattaches.map((a) => (
             <button
@@ -96,7 +96,7 @@ export function DispositifCard({
               <div className="min-w-0">
                 <div className="text-sm font-medium text-text truncate">{a.titre}</div>
                 <div className="text-xs text-muted mt-0.5">
-                  {a.id} · clôture {fmtDate(a.date_cloture)}
+                  {a.source} · clôture {fmtDate(a.date_cloture)}
                 </div>
               </div>
               <div className="shrink-0 text-right">

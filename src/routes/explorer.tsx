@@ -46,7 +46,7 @@ import {
 export const Route = createFileRoute("/explorer")({
   head: () => ({
     meta: [
-      { title: "Base de dispositifs — Leonard Veille AAP" },
+      { title: "Base de financements — Leonard Veille AAP" },
       { name: "description", content: "Explorez l'ensemble des financements publics disponibles." },
     ],
   }),

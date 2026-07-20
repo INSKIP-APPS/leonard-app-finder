@@ -40,6 +40,16 @@ function modalitesEnPuces(txt: string | null): string[] {
     .filter(Boolean);
 }
 
+/** Montant multi-fourchettes : « 1M€–5M€ | >5M€ » → « 1M€–5M€ ou >5M€ » (WORD-007). */
+function formatMontant(m: string | null): string {
+  if (!m) return "—";
+  return m
+    .split("|")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join(" ou ");
+}
+
 /**
  * Logo d'une BU — tuile de taille FIXE identique pour toutes (logos centrés,
  * fond blanc), pour un rendu homogène malgré des ratios d'images différents.
@@ -123,10 +133,12 @@ function exporterPdf(d: Dispositif) {
     .map((b) => `<span class="badge">${esc(b as string)}</span>`)
     .join("");
 
+  // UX-015 : repli texte (nom de la BU) si le logo ne charge pas — pas d'icône
+  // cassée dans un PDF destiné à un COPIL.
   const buTiles = bus
     .map(
       (bu) =>
-        `<span class="tile" title="${esc(bu.nom)}"><img src="${origin}${bu.logo}" alt="${esc(bu.nom)}"></span>`,
+        `<span class="tile" title="${esc(bu.nom)}"><img src="${origin}${bu.logo}" alt="${esc(bu.nom)}" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'"><span class="tile-fb" style="display:none">${esc(bu.nom)}</span></span>`,
     )
     .join("");
 
@@ -174,6 +186,7 @@ function exporterPdf(d: Dispositif) {
   .bus { display: flex; flex-wrap: wrap; gap: 6px; max-width: 250px; }
   .tile { display: inline-flex; align-items: center; justify-content: center; width: 120px; height: 42px; padding: 0 8px; border-radius: 4px; border: 1px solid #edf0f5; background: #fff; }
   .tile img { max-height: 28px; max-width: 100px; object-fit: contain; }
+  .tile-fb { font-size: 10px; font-weight: 700; color: #1a2b4a; text-align: center; line-height: 1.15; }
 
   /* Info line */
   .info-line { margin-bottom: 4mm; }
@@ -249,7 +262,7 @@ function exporterPdf(d: Dispositif) {
       <div class="sec">
         <div class="sec-title">Financement</div>
         ${infoLine("Type", d.type_financement ?? "—")}
-        ${infoLine("Montant", d.montant ?? "—")}
+        ${infoLine("Montant", formatMontant(d.montant))}
         ${infoLine("Taux max", d.taux_max ?? "—")}
         ${infoLine("Maturité (TRL)", trl ?? "—")}
       </div>
@@ -289,7 +302,7 @@ function exporterPdf(d: Dispositif) {
 
   <div class="foot-band">
     <div>${safeHttpUrl(d.lien_officiel) ? `<a href="${esc(safeHttpUrl(d.lien_officiel))}">${esc(safeHttpUrl(d.lien_officiel))}</a>` : ""}</div>
-    <div class="brand-foot"><strong>Leonard</strong> · Veille AAP · ${new Date().toLocaleDateString("fr-FR")}</div>
+    <div class="brand-foot"><strong>Leonard</strong> · Veille AAP · Exporté le ${new Date().toLocaleDateString("fr-FR")}</div>
   </div>
 
 <script>
@@ -303,7 +316,9 @@ function exporterPdf(d: Dispositif) {
 </script>
 </body></html>`;
 
-  const w = window.open("", "_blank", "width=900,height=1200");
+  // Fenêtre nommée : un double-clic réutilise la même fenêtre au lieu d'en
+  // ouvrir deux (UX-013).
+  const w = window.open("", "leonard-pdf-export", "width=900,height=1200");
   if (!w) {
     alert("Autorisez les fenêtres pop-up pour exporter en PDF.");
     return;
@@ -396,7 +411,7 @@ export function FicheDispositif({
           <div className="space-y-3 min-w-0">
             <SectionTitle icon={<Coins className="w-3.5 h-3.5" />}>Financement</SectionTitle>
             <InfoLine label="Type" value={d.type_financement ?? "—"} />
-            <InfoLine label="Montant" value={d.montant ?? "—"} />
+            <InfoLine label="Montant" value={formatMontant(d.montant)} />
             <InfoLine label="Taux max" value={d.taux_max ?? "—"} />
             <InfoLine label="Maturité (TRL)" value={trl ?? "—"} />
           </div>

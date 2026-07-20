@@ -271,7 +271,7 @@ function exporterPdf(a: AAP) {
 
   <div class="foot-band">
     <div>${safeHttpUrl(a.lien_officiel) ? `<a href="${esc(safeHttpUrl(a.lien_officiel))}">${esc(safeHttpUrl(a.lien_officiel))}</a>` : ""}</div>
-    <div class="brand-foot"><strong>Leonard</strong> · Veille AAP · ${new Date().toLocaleDateString("fr-FR")}</div>
+    <div class="brand-foot"><strong>Leonard</strong> · Veille AAP · Exporté le ${new Date().toLocaleDateString("fr-FR")}</div>
   </div>
 
 <script>
@@ -285,7 +285,8 @@ function exporterPdf(a: AAP) {
 </script>
 </body></html>`;
 
-  const w = window.open("", "_blank", "width=900,height=1200");
+  // Fenêtre nommée : un double-clic réutilise la même fenêtre (UX-013).
+  const w = window.open("", "leonard-pdf-export", "width=900,height=1200");
   if (!w) {
     alert("Autorisez les fenêtres pop-up pour exporter en PDF.");
     return;

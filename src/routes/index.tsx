@@ -220,12 +220,19 @@ function Dashboard() {
   );
 }
 
+const MOMENTUM_SHOWN = 8;
+
 function MomentumBlock() {
-  const { data: items = [], isLoading, isError, refetch } = useQuery({
+  // On demande 1 de plus que l'affichage pour savoir s'il y en a d'autres
+  // (badge « 8+ » honnête au lieu d'un « 8 » qui masque le reste — UX-010).
+  const { data: fetched = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["momentum-feed"],
-    queryFn: () => getMomentumFeed(8),
+    queryFn: () => getMomentumFeed(MOMENTUM_SHOWN + 1),
     staleTime: 60_000,
   });
+  const items = fetched.slice(0, MOMENTUM_SHOWN);
+  const hasMore = fetched.length > MOMENTUM_SHOWN;
+  const badge = hasMore ? `${MOMENTUM_SHOWN}+` : String(items.length);
 
   return (
     <aside className="card-flat p-4 fade-up flex flex-col">
@@ -242,7 +249,7 @@ function MomentumBlock() {
           </div>
           {!isError && items.length > 0 && (
             <span className="text-[10px] font-bold bg-pink text-white rounded-full min-w-[18px] h-[18px] px-1.5 inline-flex items-center justify-center">
-              {items.length}
+              {badge}
             </span>
           )}
         </div>

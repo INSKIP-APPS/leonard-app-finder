@@ -19,6 +19,7 @@
   --color-surface: #ffffff;
   --color-text: #1a1a2e; /* ink */
   --color-muted: #5a5a70; /* grey-700 */
+  --color-faint: #9aa2b1; /* grey-400 — valeurs nulles / texte très discret (BUG-017) */
   --color-border: #eeeef3; /* grey-100 */
   --color-border-strong: #c8c8d4; /* grey-300 */
 }
