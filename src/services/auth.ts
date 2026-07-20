@@ -82,10 +82,39 @@ export function useProfil(): { profil: Profil | null; loading: boolean } {
   return { profil, loading: sessionLoading || loading };
 }
 
+/**
+ * Traduit les messages d'erreur Supabase Auth (anglais) en français.
+ * Fallback : message générique FR plutôt que l'anglais brut.
+ */
+export function authErrorFr(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const m = raw.toLowerCase();
+  if (m.includes("invalid login credentials")) return "Email ou mot de passe incorrect.";
+  if (m.includes("email not confirmed")) return "Email non confirmé — vérifiez votre boîte de réception.";
+  if (m.includes("rate limit") || m.includes("too many requests"))
+    return "Trop de tentatives — patientez quelques minutes avant de réessayer.";
+  if (m.includes("failed to fetch") || m.includes("networkerror") || m.includes("load failed"))
+    return "Connexion au serveur impossible — vérifiez votre réseau.";
+  if (m.includes("invalid") && m.includes("expired")) return "Lien invalide ou expiré.";
+  if (m.includes("session missing") || m.includes("session expired"))
+    return "Session expirée — reconnectez-vous.";
+  if (m.includes("user already registered")) return "Un compte existe déjà pour cet email.";
+  if (m.includes("password should be")) return "Le mot de passe est trop court (minimum 6 caractères).";
+  return "Une erreur est survenue. Réessayez ou contactez un administrateur.";
+}
+
 export async function signIn(email: string, password: string): Promise<{ error: string | null }> {
   if (!supabase) return { error: "Supabase non configuré" };
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  return { error: error?.message ?? null };
+  return { error: authErrorFr(error?.message) };
+}
+
+/** Envoie un email de réinitialisation de mot de passe (flux recovery). */
+export async function resetPassword(email: string): Promise<{ error: string | null }> {
+  if (!supabase) return { error: "Supabase non configuré" };
+  const redirectTo = `${window.location.origin}/auth/callback`;
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+  return { error: authErrorFr(error?.message) };
 }
 
 export async function signOut(): Promise<void> {

@@ -1,7 +1,8 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, KeyRound, CheckCircle2 } from "lucide-react";
+import { Loader2, KeyRound, CheckCircle2, AlertTriangle } from "lucide-react";
 import { supabase } from "@/services/supabase";
+import { authErrorFr } from "@/services/auth";
 
 // Route d'atterrissage après un lien Supabase Auth (invitation, reset password,
 // magic link). Le SDK Supabase parse automatiquement le hash `#access_token=...`
@@ -20,6 +21,9 @@ function AuthCallback() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  // UX-003 : lien invalide/expiré ou absence de session → écran explicatif
+  // (pas le formulaire de mot de passe, qui échouerait avec « session missing »).
+  const [linkInvalid, setLinkInvalid] = useState(false);
 
   useEffect(() => {
     if (!supabase) {
@@ -38,13 +42,19 @@ function AuthCallback() {
 
     // Erreur explicite renvoyée par Supabase (lien expiré, token invalide…)
     const err = params.get("error_description") || params.get("error");
-    if (err) setError(decodeURIComponent(err.replace(/\+/g, " ")));
+    if (err) {
+      const decoded = decodeURIComponent(err.replace(/\+/g, " "));
+      setError(authErrorFr(decoded) ?? "Ce lien est invalide ou a expiré.");
+      setLinkInvalid(true);
+    }
 
     // Attend que la session soit résolue (SDK asynchrone)
     supabase.auth.getSession().then(({ data }) => {
       if (!data.session && !err) {
-        // Pas de session → on renvoie vers /login après une seconde
-        setTimeout(() => navigate({ to: "/login" }), 1200);
+        // Pas de session ET pas de token valide dans le lien → écran explicatif
+        // (au lieu d'une redirection muette ou d'un formulaire qui échouera).
+        setError("Ce lien est invalide ou a expiré. Demandez un nouveau lien pour continuer.");
+        setLinkInvalid(true);
       }
       setReady(true);
     });
@@ -64,7 +74,7 @@ function AuthCallback() {
     setError(null);
     const { error } = await supabase!.auth.updateUser({ password });
     setPending(false);
-    if (error) setError(error.message);
+    if (error) setError(authErrorFr(error.message));
     else {
       setDone(true);
       setTimeout(() => navigate({ to: "/" }), 1200);
@@ -90,7 +100,24 @@ function AuthCallback() {
         </div>
 
         <div className="rounded-2xl border border-border bg-white shadow-lg p-8">
-          {done ? (
+          {linkInvalid ? (
+            <div className="text-center space-y-3">
+              <div className="w-14 h-14 rounded-full bg-[var(--color-destructive)]/10 text-[var(--color-destructive)] mx-auto flex items-center justify-center">
+                <AlertTriangle className="w-7 h-7" />
+              </div>
+              <h1 className="text-xl font-semibold text-navy">Lien invalide ou expiré</h1>
+              <p className="text-sm text-muted">
+                {error ?? "Ce lien n'est plus valable."} Les liens d'invitation et de
+                réinitialisation expirent après un délai — demandez-en un nouveau.
+              </p>
+              <Link
+                to="/login"
+                className="mt-2 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-navy text-white text-sm font-semibold hover:opacity-90 transition"
+              >
+                Retour à la connexion
+              </Link>
+            </div>
+          ) : done ? (
             <div className="text-center space-y-3">
               <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-700 mx-auto flex items-center justify-center">
                 <CheckCircle2 className="w-7 h-7" />
@@ -147,7 +174,10 @@ function AuthCallback() {
                 </div>
 
                 {error && (
-                  <div className="rounded-lg bg-[var(--color-destructive)]/10 border border-[var(--color-destructive)]/30 text-sm text-[var(--color-destructive)] px-3 py-2.5">
+                  <div
+                    role="alert"
+                    className="rounded-lg bg-[var(--color-destructive)]/10 border border-[var(--color-destructive)]/30 text-sm text-[var(--color-destructive)] px-3 py-2.5"
+                  >
                     {error}
                   </div>
                 )}

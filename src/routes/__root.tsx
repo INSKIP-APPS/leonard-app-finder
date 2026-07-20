@@ -113,7 +113,13 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isAuthEnabled) return; // Mode JSON local sans Supabase : pas d'auth
-    if (!loading && !session) navigate({ to: "/login" });
+    if (!loading && !session) {
+      // UX-002 : mémoriser la destination pour y revenir après reconnexion
+      // (deep-link préservé au lieu d'un retour forcé vers « / »).
+      const here = window.location.pathname + window.location.search;
+      const redirect = here && here !== "/login" ? here : undefined;
+      navigate({ to: "/login", search: redirect ? { redirect } : {} });
+    }
   }, [session, loading, navigate]);
 
   // Invalide les caches react-query quand la session change (login/logout).
