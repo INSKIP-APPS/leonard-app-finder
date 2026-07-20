@@ -19,6 +19,7 @@ import {
   trlLabel,
   STATUT_AAP_LABEL,
   escapeHtml as esc,
+  safeHttpUrl,
 } from "@/utils/format";
 import { Badge } from "@/components/Badge";
 import { RatingRow, SectionTitle, InfoLine, Puces } from "@/components/fiche/partials";
@@ -268,7 +269,7 @@ function exporterPdf(a: AAP) {
   </div>
 
   <div class="foot-band">
-    <div><a href="${esc(a.lien_officiel)}">${esc(a.lien_officiel)}</a></div>
+    <div>${safeHttpUrl(a.lien_officiel) ? `<a href="${esc(safeHttpUrl(a.lien_officiel))}">${esc(safeHttpUrl(a.lien_officiel))}</a>` : ""}</div>
     <div class="brand-foot"><strong>Leonard</strong> · Veille AAP · ${new Date().toLocaleDateString("fr-FR")}</div>
   </div>
 
@@ -467,14 +468,16 @@ export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => voi
             >
               <FileDown className="w-4 h-4" /> Exporter en PDF
             </button>
-            <a
-              href={aap.lien_officiel}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-navy text-white text-sm font-medium hover:opacity-90 transition"
-            >
-              Voir l'appel officiel <ExternalLink className="w-4 h-4" />
-            </a>
+            {safeHttpUrl(aap.lien_officiel) && (
+              <a
+                href={safeHttpUrl(aap.lien_officiel)}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-navy text-white text-sm font-medium hover:opacity-90 transition"
+              >
+                Voir l'appel officiel <ExternalLink className="w-4 h-4" />
+              </a>
+            )}
           </div>
         </div>
       </div>

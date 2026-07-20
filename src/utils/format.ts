@@ -134,5 +134,20 @@ export const STATUT_AAP_LABEL: Record<AAP["statut"], string> = {
 
 /** Échappement HTML minimal (exports PDF générés par gabarit). */
 export function escapeHtml(s: string): string {
-  return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return (s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
+ * Renvoie l'URL seulement si elle est un lien http(s) absolu — sinon "".
+ * Garde-fou contre le javascript:/data: et les hrefs relatifs cassés issus
+ * de données scrapées non maîtrisées (fiches AAP / dispositifs).
+ */
+export function safeHttpUrl(u: string | null | undefined): string {
+  const s = (u || "").trim();
+  return /^https?:\/\//i.test(s) ? s : "";
 }

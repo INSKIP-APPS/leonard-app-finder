@@ -598,23 +598,29 @@ function AapRow({
     ? Math.ceil((new Date(aap.date_cloture).getTime() - Date.now()) / 86400000)
     : null;
   const scoreColor =
-    p.score >= 70 ? "bg-emerald-500" : p.score >= 50 ? "bg-amber-500" : "bg-muted";
+    p.score >= 80 ? "bg-emerald-500" : p.score >= 60 ? "bg-amber-500" : "bg-muted";
 
   async function handleFeedback(e: React.MouseEvent, pertinent: boolean) {
     e.stopPropagation();
     const nouveau = p.feedback_pertinent === pertinent ? null : pertinent;
+    const precedent = p.feedback_pertinent;
     // Update optimiste dans le cache
     qc.setQueryData<ProjetAap[]>(["projet-aaps", p.projet_id], (prev) =>
       prev
         ? prev.map((r) => (r.id === p.id ? { ...r, feedback_pertinent: nouveau } : r))
         : prev,
     );
-    if (nouveau !== null) {
-      try {
-        await donnerFeedback(p.id, nouveau);
-      } catch {
-        // silencieux
-      }
+    // Persister aussi le retrait (nouveau === null), sinon le pouce réapparaît
+    // au rechargement et le feedback obsolète continue d'alimenter la calibration.
+    try {
+      await donnerFeedback(p.id, nouveau);
+    } catch {
+      // Rollback du cache sur échec — ne pas laisser un état non persisté.
+      qc.setQueryData<ProjetAap[]>(["projet-aaps", p.projet_id], (prev) =>
+        prev
+          ? prev.map((r) => (r.id === p.id ? { ...r, feedback_pertinent: precedent } : r))
+          : prev,
+      );
     }
   }
 

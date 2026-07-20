@@ -37,6 +37,7 @@ export async function getProjetsCountByProgramme(): Promise<Record<ProgrammeId, 
   const { data, error } = await supabase
     .from("projets")
     .select("programme_id")
+    .eq("actif", true)
     .not("programme_id", "is", null);
   if (error) throw new Error(`getProjetsCountByProgramme: ${error.message}`);
   const counts: Record<string, number> = { ...empty };
@@ -52,7 +53,12 @@ export async function getProjetsByProgramme(
   cohorte?: number | null,
 ): Promise<ProjetV3[]> {
   if (!supabase) return [];
-  let q = supabase.from("projets").select("*").eq("programme_id", programmeId).order("nom");
+  let q = supabase
+    .from("projets")
+    .select("*")
+    .eq("programme_id", programmeId)
+    .eq("actif", true)
+    .order("nom");
   if (cohorte != null) q = q.eq("cohorte", cohorte);
   const { data, error } = await q;
   if (error) throw new Error(`getProjetsByProgramme: ${error.message}`);
@@ -87,20 +93,36 @@ export async function getStatsParProjet(
   const ids = (projets ?? []).map((p) => (p as { id: string }).id);
   if (ids.length === 0) return {};
 
-  // 2) projet_aap actifs de ces projets, joints aux AAP pour la date_cloture
-  const { data, error } = await supabase
-    .from("projet_aap")
-    .select("projet_id, tier, vu, actif, statut_user, aap:aaps(date_cloture)")
-    .in("projet_id", ids);
-  if (error) throw new Error(`getStatsParProjet: ${error.message}`);
+  // 2) projet_aap actifs de ces projets, joints aux AAP pour la date_cloture.
+  //    PostgREST plafonne à 1000 lignes par requête → on pagine explicitement
+  //    (la base dépasse déjà ce seuil, sinon les agrégats sont tronqués).
+  const PAGE = 1000;
+  type Row = {
+    projet_id: string;
+    tier: string | null;
+    vu: boolean;
+    actif: boolean;
+    statut_user: string;
+    aap: { date_cloture: string | null } | null;
+  };
+  const rows: Row[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from("projet_aap")
+      .select("projet_id, tier, vu, actif, statut_user, aap:aaps(date_cloture)")
+      .in("projet_id", ids)
+      .order("id")
+      .range(from, from + PAGE - 1);
+    if (error) throw new Error(`getStatsParProjet: ${error.message}`);
+    const batch = (data ?? []) as unknown as Row[];
+    rows.push(...batch);
+    if (batch.length < PAGE) break;
+  }
 
   const nowMs = Date.now();
   const stats: Record<string, ProjetStats> = {};
   for (const pid of ids) stats[pid] = { projet_id: pid, retenus: 0, prioritaires: 0, nouveautes: 0, deadlines_30j: 0, candidatures: 0 };
-  for (const r of (data ?? []) as unknown as Array<{
-    projet_id: string; tier: string | null; vu: boolean; actif: boolean; statut_user: string;
-    aap: { date_cloture: string | null } | null;
-  }>) {
+  for (const r of rows) {
     const s = stats[r.projet_id];
     if (!s) continue;
     if (["candidate", "obtenu", "refuse"].includes(r.statut_user)) {
@@ -180,10 +202,14 @@ export async function marquerAapVu(projetAapId: string): Promise<void> {
   if (error) throw new Error(`marquerAapVu: ${error.message}`);
 }
 
-/** Enregistre le feedback utilisateur sur une reco : pertinent ou non, avec note optionnelle. */
+/**
+ * Enregistre le feedback utilisateur sur une reco : pertinent ou non, avec note
+ * optionnelle. `pertinent = null` efface le feedback (re-clic sur un pouce actif)
+ * — sinon le pouce réapparaîtrait au rechargement et fausserait la calibration.
+ */
 export async function donnerFeedback(
   projetAapId: string,
-  pertinent: boolean,
+  pertinent: boolean | null,
   note?: string,
 ): Promise<void> {
   if (!supabase) return;
@@ -353,18 +379,31 @@ export async function updateProjet(
   const row: Record<string, unknown> = { ...patch };
   if (patch.nom !== undefined) row.nom = patch.nom.trim();
   row.updated_at = new Date().toISOString();
-  const { error } = await supabase.from("projets").update(row).eq("id", id);
+  // .select() renvoie les lignes réellement modifiées : si RLS filtre tout
+  // (droits insuffisants), PostgREST répond 204 sans erreur — on lève nous-mêmes.
+  const { data, error } = await supabase.from("projets").update(row).eq("id", id).select("id");
   if (error) throw new Error(`updateProjet: ${error.message}`);
+  if (!data || data.length === 0) {
+    throw new Error(
+      "Modification non enregistrée — droits insuffisants sur ce projet (rôle Éditeur : seuls vos projets sont modifiables).",
+    );
+  }
 }
 
 /** Désactive un projet (actif=false). Il disparaît des vues et de la boucle de veille. */
 export async function desactiverProjet(id: string): Promise<void> {
   if (!supabase) return;
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("projets")
     .update({ actif: false, updated_at: new Date().toISOString() })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id");
   if (error) throw new Error(`desactiverProjet: ${error.message}`);
+  if (!data || data.length === 0) {
+    throw new Error(
+      "Désactivation non enregistrée — droits insuffisants sur ce projet (rôle Éditeur : seuls vos projets sont modifiables).",
+    );
+  }
 }
 
 // ── Analyse express (ad-hoc, ne persiste rien) ───────────────────────
@@ -435,11 +474,15 @@ export async function createProjet(input: {
   cohorte?: number | null;
 }): Promise<{ id: string } | null> {
   if (!supabase) return null;
+  // owner_id = créateur : requis par la policy RLS UPDATE (is_admin() OU
+  // editeur+owner). Sans lui, l'éditeur ne pourrait jamais rééditer son projet.
+  const { data: auth } = await supabase.auth.getUser();
   const row = {
     programme_id: input.programme_id,
     nom: input.nom.trim(),
     statut: input.statut,
     actif: true,
+    owner_id: auth.user?.id ?? null,
     sponsor: input.sponsor ?? null,
     description: input.description ?? null,
     trl: input.trl ?? null,

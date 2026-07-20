@@ -513,7 +513,7 @@ export function NewProjetModal({
             <div className="text-[11px] text-muted">
               {isEdit
                 ? "Les modifications seront prises en compte à la prochaine veille."
-                : "La veille sera lancée dès la création."}
+                : "La veille analysera ce projet au prochain passage, ou immédiatement via « Lancer la veille » sur sa fiche."}
             </div>
           )}
           <div className="flex gap-2 shrink-0">

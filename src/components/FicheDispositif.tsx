@@ -13,7 +13,7 @@ import {
 import type { Dispositif } from "@/types/dispositif";
 import { perimetreVinci, type PerimetreVinci } from "@/utils/vinciBU";
 import { useSavedDispositifIds, toggleSavedDispositif } from "@/utils/savedAaps";
-import { trlLabel, escapeHtml as esc } from "@/utils/format";
+import { trlLabel, escapeHtml as esc, safeHttpUrl } from "@/utils/format";
 import { Badge } from "@/components/Badge";
 import {
   RatingRow,
@@ -287,7 +287,7 @@ function exporterPdf(d: Dispositif) {
   </div>
 
   <div class="foot-band">
-    <div>${d.lien_officiel ? `<a href="${esc(d.lien_officiel)}">${esc(d.lien_officiel)}</a>` : ""}</div>
+    <div>${safeHttpUrl(d.lien_officiel) ? `<a href="${esc(safeHttpUrl(d.lien_officiel))}">${esc(safeHttpUrl(d.lien_officiel))}</a>` : ""}</div>
     <div class="brand-foot"><strong>Leonard</strong> · Veille AAP · ${new Date().toLocaleDateString("fr-FR")}</div>
   </div>
 
@@ -457,9 +457,9 @@ export function FicheDispositif({
             >
               <FileDown className="w-4 h-4" /> Exporter en PDF
             </button>
-            {d.lien_officiel && (
+            {safeHttpUrl(d.lien_officiel) && (
               <a
-                href={d.lien_officiel}
+                href={safeHttpUrl(d.lien_officiel)}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-navy text-white text-sm font-medium hover:opacity-90 transition"
