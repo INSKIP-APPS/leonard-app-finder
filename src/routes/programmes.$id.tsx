@@ -12,6 +12,7 @@ import {
   Zap,
   LayoutGrid,
   Table as TableIcon,
+  Download,
   ArrowUpDown,
   ChevronDown,
   ChevronUp,
@@ -33,6 +34,51 @@ export const Route = createFileRoute("/programmes/$id")({
   }),
   component: ProgrammePage,
 });
+
+/** Échappe une valeur pour CSV (guillemets doublés, champ quoté si besoin). */
+function csvCell(v: string | number | null): string {
+  const s = String(v ?? "");
+  return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+/** Export CSV de la vue analytique — livrable COPIL sans dépendance externe. */
+function exportAnalyseCsv(
+  programmeNom: string,
+  projets: ProjetV3[],
+  stats: Record<string, ProjetStats>,
+) {
+  const headers = [
+    "Projet",
+    "Statut",
+    "AAP retenus",
+    "Prioritaires",
+    "Nouveautés",
+    "Clôture ≤ 30 j",
+    "Candidatures",
+    "Dernière veille",
+  ];
+  const lines = projets.map((p) => {
+    const s = stats[p.id] ?? { retenus: 0, prioritaires: 0, nouveautes: 0, deadlines_30j: 0, candidatures: 0 };
+    const veille = p.derniere_veille_le
+      ? new Date(p.derniere_veille_le).toLocaleDateString("fr-FR")
+      : "—";
+    return [p.nom, p.statut, s.retenus, s.prioritaires, s.nouveautes, s.deadlines_30j, s.candidatures, veille]
+      .map(csvCell)
+      .join(";");
+  });
+  // BOM UTF-8 pour qu'Excel lise correctement les accents.
+  const csv = "﻿" + [headers.map(csvCell).join(";"), ...lines].join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const slug = programmeNom.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  a.href = url;
+  a.download = `veille-${slug}-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
 
 function ProgrammePage() {
   const { id } = Route.useParams();
@@ -73,7 +119,7 @@ function ProgrammePage() {
   } = useQuery({
     queryKey: ["stats-par-projet", programmeId, isIntrap ? cohorte : null],
     queryFn: () => getStatsParProjet(programmeId, isIntrap ? cohorte : null),
-    enabled: vue === "table",
+    // Chargé en continu : alimente aussi les KPIs du hero (pas seulement la table).
     staleTime: 60_000,
   });
 
@@ -118,6 +164,12 @@ function ProgrammePage() {
   const prototype = projets.filter((p) => p.statut === "prototype").length;
   const idee = projets.filter((p) => p.statut === "idee").length;
   const actifs = projets.filter((p) => p.actif).length;
+
+  // KPIs hero réels (UX-007) : agrégés depuis les stats par projet.
+  const totalRecommandes = Object.values(stats).reduce((a, s) => a + s.retenus, 0);
+  const totalNouveautes = Object.values(stats).reduce((a, s) => a + s.nouveautes, 0);
+  const kpiRecos = loadingStats ? "…" : totalRecommandes;
+  const kpiNouveautes = loadingStats ? "…" : totalNouveautes;
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -179,11 +231,11 @@ function ProgrammePage() {
                 {idee > 0 && `${idee} idée${idee > 1 ? "s" : ""}`}
               </span>
             </KpiMini>
-            <KpiMini label="AAP recommandés" value="—">
-              <span className="text-muted">disponible après la 1re veille</span>
+            <KpiMini label="AAP recommandés" value={kpiRecos}>
+              <span className="text-muted">retenus sur l'ensemble des projets</span>
             </KpiMini>
-            <KpiMini label="Nouveaux cette semaine" value="—">
-              <span className="text-muted">à venir</span>
+            <KpiMini label="À découvrir" value={kpiNouveautes}>
+              <span className="text-muted">non encore consultés</span>
             </KpiMini>
             <KpiMini label="Projets actifs" value={actifs}>
               <span className="text-muted">recevant la veille</span>
@@ -226,6 +278,16 @@ function ProgrammePage() {
               Analyse
             </button>
           </div>
+          {vue === "table" && projets.length > 0 && (
+            <button
+              onClick={() => exportAnalyseCsv(programme.nom, projets, stats)}
+              title="Exporter le tableau analytique en CSV (pour COPIL / Excel)"
+              className="inline-flex items-center gap-1.5 bg-white text-navy border border-border px-3 py-2 rounded-md text-sm font-medium hover:border-navy transition"
+            >
+              <Download className="w-4 h-4" />
+              Exporter CSV
+            </button>
+          )}
           <button
             onClick={() => setAnalyseOpen(true)}
             title="Tester un projet ad hoc et voir les AAP pertinents (rien n'est sauvegardé)"
@@ -271,7 +333,23 @@ function ProgrammePage() {
       ) : projets.length === 0 ? (
         <div className="border border-dashed border-border-strong rounded-xl p-10 text-center">
           <Sparkles className="w-6 h-6 text-muted mx-auto mb-2" />
-          <p className="text-sm text-muted">Aucun projet dans ce programme pour l'instant.</p>
+          <p className="text-sm text-muted">
+            {isIntrap
+              ? `Aucun projet actif dans la cohorte #${cohorte}.`
+              : `Aucun projet suivi dans le programme ${programme.nom} pour l'instant.`}
+          </p>
+          {canCreate ? (
+            <button
+              onClick={() => setModalOpen(true)}
+              className="mt-4 inline-flex items-center gap-1.5 bg-navy text-white px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 transition"
+            >
+              <Plus className="w-4 h-4" /> Ajouter le premier projet
+            </button>
+          ) : (
+            <p className="text-xs text-muted mt-2">
+              Les projets sont ajoutés par un administrateur ou un éditeur du programme.
+            </p>
+          )}
         </div>
       ) : vue === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -606,18 +684,22 @@ function CohorteSwitcher({
       {COHORTES_INTRAP.map((n) => {
         const on = n === current;
         const dispo = dispoSet.has(n);
+        // UX-008 : une cohorte vide n'est pas cliquable (sauf celle déjà active),
+        // pour ne pas mener à un écran vide trompeur.
+        const disabled = !dispo && !on;
         return (
           <button
             key={n}
             type="button"
             onClick={() => onChange(n)}
+            disabled={disabled}
             title={dispo ? `Cohorte #${n}` : `Cohorte #${n} · aucun projet importé`}
             className={`min-w-[32px] h-7 px-2 rounded-full text-xs font-semibold tabular-nums transition ${
               on
                 ? "bg-navy text-white shadow-sm"
                 : dispo
                   ? "text-navy hover:bg-navy/5"
-                  : "text-muted/70 hover:bg-bg"
+                  : "text-muted/40 cursor-not-allowed"
             }`}
           >
             #{n}

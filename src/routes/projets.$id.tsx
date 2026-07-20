@@ -149,14 +149,26 @@ function ProjetHero({
     setRunning(false);
     if (r.ok) {
       const s = r.stats as { aap_ajoutes?: number; aap_ecartes?: number } | undefined;
+      const ajoutes = s?.aap_ajoutes ?? 0;
+      const ecartes = s?.aap_ecartes ?? 0;
       setMsg({
         kind: "ok",
-        text: `Veille lancée · ${s?.aap_ajoutes ?? 0} retenus, ${s?.aap_ecartes ?? 0} écartés.`,
+        text:
+          ajoutes === 0 && ecartes === 0
+            ? "Veille à jour — aucun nouvel AAP pour ce projet."
+            : `Veille lancée · ${ajoutes} retenus, ${ecartes} écartés.`,
       });
       qc.invalidateQueries({ queryKey: ["projet-aaps", projet.id] });
       qc.invalidateQueries({ queryKey: ["projet-v3", projet.id] });
     } else {
-      setMsg({ kind: "err", text: r.message ?? "Échec de la veille." });
+      // Traduire les erreurs serveur connues (l'edge function répond en anglais).
+      const raw = (r.message ?? "").toLowerCase();
+      const text = raw.includes("forbidden")
+        ? "Rôle Éditeur ou Administrateur requis pour lancer la veille."
+        : raw.includes("session")
+          ? "Session expirée — reconnectez-vous."
+          : r.message || "Échec de la veille.";
+      setMsg({ kind: "err", text });
     }
     setTimeout(() => setMsg(null), 6000);
   }
@@ -205,18 +217,22 @@ function ProjetHero({
         </div>
         <div className="flex flex-col items-end gap-2">
           <div className="flex gap-2">
-            <button
-              onClick={relancer}
-              disabled={running}
-              className="inline-flex items-center gap-1.5 border border-border-strong px-3 py-2 rounded-md text-xs font-semibold text-muted bg-white hover:border-navy hover:text-navy disabled:opacity-50 transition"
-            >
-              {running ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <RefreshCw className="w-3.5 h-3.5" />
-              )}
-              {running ? "Veille en cours…" : "Relancer la veille"}
-            </button>
+            {/* BUG-006 : la veille n'est déclenchable que par éditeur/admin
+                (l'edge function renvoie 403 sinon) → bouton masqué au rôle lecture. */}
+            {canEdit && (
+              <button
+                onClick={relancer}
+                disabled={running}
+                className="inline-flex items-center gap-1.5 border border-border-strong px-3 py-2 rounded-md text-xs font-semibold text-muted bg-white hover:border-navy hover:text-navy disabled:opacity-50 transition"
+              >
+                {running ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-3.5 h-3.5" />
+                )}
+                {running ? "Veille en cours…" : "Relancer la veille"}
+              </button>
+            )}
             {canEdit && (
               <button
                 onClick={() => setEditOpen(true)}
@@ -388,6 +404,8 @@ function VeilleRight({
 }) {
   const [tab, setTab] = useState<"recommandes" | "ecartes" | "candidatures">("recommandes");
   const qc = useQueryClient();
+  const { profil } = useProfil();
+  const canEdit = profil?.role === "admin" || profil?.role === "editeur";
 
   const { data: propositions = [], isLoading } = useQuery({
     queryKey: ["projet-aaps", projet.id],
@@ -439,8 +457,10 @@ function VeilleRight({
           )}
         </h2>
         <p className="text-xs text-muted mt-1">
-          Croisement automatique du projet avec les aides ouvertes — cliquez « Relancer la veille »
-          pour actualiser.
+          Croisement automatique du projet avec les aides ouvertes.
+          {canEdit
+            ? " Utilisez « Relancer la veille » pour actualiser."
+            : " Actualisée automatiquement au fil des veilles."}
         </p>
       </div>
 
@@ -482,7 +502,7 @@ function VeilleRight({
           <Loader2 className="w-5 h-5 animate-spin text-muted" />
         </div>
       ) : nbTotal === 0 ? (
-        <VeilleEmpty projet={projet} />
+        <VeilleEmpty projet={projet} canEdit={canEdit} />
       ) : tab === "recommandes" ? (
         <RecommandesContent
           nouveautes={nouveautes}
@@ -565,7 +585,7 @@ function RecommandesContent({
   );
 }
 
-function VeilleEmpty({ projet }: { projet: ProjetV3 }) {
+function VeilleEmpty({ projet, canEdit }: { projet: ProjetV3; canEdit: boolean }) {
   return (
     <div className="p-10 text-center">
       <div className="w-14 h-14 mx-auto rounded-full bg-cyan-soft flex items-center justify-center mb-4">
@@ -575,8 +595,14 @@ function VeilleEmpty({ projet }: { projet: ProjetV3 }) {
         La veille n'a pas encore analysé ce projet
       </h3>
       <p className="text-xs text-muted max-w-sm mx-auto leading-relaxed">
-        Cliquez sur <span className="font-semibold">« Relancer la veille »</span> en haut pour
-        obtenir les AAP compatibles.
+        {canEdit ? (
+          <>
+            Cliquez sur <span className="font-semibold">« Relancer la veille »</span> en haut pour
+            obtenir les AAP compatibles.
+          </>
+        ) : (
+          "Les AAP compatibles apparaîtront ici après le prochain passage de la veille."
+        )}
       </p>
       <div className="mt-4 text-[11px] text-muted">
         <span className="font-medium">Périmètre pris en compte :</span>{" "}
