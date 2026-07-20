@@ -23,6 +23,7 @@ import {
 } from "@/utils/format";
 import { Badge } from "@/components/Badge";
 import { Dialog } from "@/components/Dialog";
+import { PDF_PRINT_SCRIPT, openPrintWindow } from "@/utils/pdfExport";
 import { RatingRow, SectionTitle, InfoLine, Puces } from "@/components/fiche/partials";
 
 // ──────────────────────────────────────────────────────────────────────
@@ -273,26 +274,10 @@ function exporterPdf(a: AAP) {
     <div>${safeHttpUrl(a.lien_officiel) ? `<a href="${esc(safeHttpUrl(a.lien_officiel))}">${esc(safeHttpUrl(a.lien_officiel))}</a>` : ""}</div>
     <div class="brand-foot"><strong>Leonard</strong> · Veille AAP · Exporté le ${new Date().toLocaleDateString("fr-FR")}</div>
   </div>
-
-<script>
-  window.addEventListener('load', function () {
-    var imgs = Array.prototype.slice.call(document.querySelectorAll('img'));
-    Promise.all(imgs.map(function (img) {
-      if (img.complete && img.naturalHeight !== 0) return Promise.resolve();
-      return new Promise(function (r) { img.onload = r; img.onerror = r; });
-    })).then(function () { setTimeout(function () { window.print(); }, 300); });
-  });
-</script>
+${PDF_PRINT_SCRIPT}
 </body></html>`;
 
-  // Fenêtre nommée : un double-clic réutilise la même fenêtre (UX-013).
-  const w = window.open("", "leonard-pdf-export", "width=900,height=1200");
-  if (!w) {
-    alert("Autorisez les fenêtres pop-up pour exporter en PDF.");
-    return;
-  }
-  w.document.write(html);
-  w.document.close();
+  openPrintWindow(html);
 }
 
 export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => void }) {

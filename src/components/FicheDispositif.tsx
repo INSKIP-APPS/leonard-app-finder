@@ -14,6 +14,7 @@ import type { Dispositif } from "@/types/dispositif";
 import { perimetreVinci, type PerimetreVinci } from "@/utils/vinciBU";
 import { useSavedDispositifIds, toggleSavedDispositif } from "@/utils/savedAaps";
 import { trlLabel, escapeHtml as esc, safeHttpUrl } from "@/utils/format";
+import { PDF_PRINT_SCRIPT, openPrintWindow } from "@/utils/pdfExport";
 import { Badge } from "@/components/Badge";
 import { Dialog } from "@/components/Dialog";
 import {
@@ -304,27 +305,10 @@ function exporterPdf(d: Dispositif) {
     <div>${safeHttpUrl(d.lien_officiel) ? `<a href="${esc(safeHttpUrl(d.lien_officiel))}">${esc(safeHttpUrl(d.lien_officiel))}</a>` : ""}</div>
     <div class="brand-foot"><strong>Leonard</strong> · Veille AAP · Exporté le ${new Date().toLocaleDateString("fr-FR")}</div>
   </div>
-
-<script>
-  window.addEventListener('load', function () {
-    var imgs = Array.prototype.slice.call(document.querySelectorAll('img'));
-    Promise.all(imgs.map(function (img) {
-      if (img.complete && img.naturalHeight !== 0) return Promise.resolve();
-      return new Promise(function (r) { img.onload = r; img.onerror = r; });
-    })).then(function () { setTimeout(function () { window.print(); }, 300); });
-  });
-</script>
+${PDF_PRINT_SCRIPT}
 </body></html>`;
 
-  // Fenêtre nommée : un double-clic réutilise la même fenêtre au lieu d'en
-  // ouvrir deux (UX-013).
-  const w = window.open("", "leonard-pdf-export", "width=900,height=1200");
-  if (!w) {
-    alert("Autorisez les fenêtres pop-up pour exporter en PDF.");
-    return;
-  }
-  w.document.write(html);
-  w.document.close();
+  openPrintWindow(html);
 }
 
 export function FicheDispositif({
