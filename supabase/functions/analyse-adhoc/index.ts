@@ -1,15 +1,14 @@
-// Edge Function : analyse-adhoc (v2)
+// Edge Function : analyse-adhoc (v3)
 // Matching ad-hoc pour un projet fourni inline. Ne persiste RIEN en base
 // (sauf une ligne d'observabilité dans veille_runs, mode='adhoc').
 // Utilisé par le bouton "Analyse express" sur les pages programme.
-// v2 (audit couche IA) :
-//   - retry (2×, backoff) sur les erreurs transitoires Anthropic (429/529/timeout)
-//   - concurrence bridée à 4 appels simultanés
-//   - failed_batches renvoyé au front (échecs partiels visibles, plus silencieux)
-//   - usage tokens capturé + journalisé dans veille_runs
+// v2 : retry, pool de 4, failed_batches, tokens journalisés.
+// v3 : règles de jugement et plomberie déplacées dans _shared/judge.ts —
+//      SOURCE UNIQUE partagée avec run-veille et claude-judge.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import Anthropic from "npm:@anthropic-ai/sdk@0.68.0";
+import { runJudge, normalizeVerdict } from "../_shared/judge.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -18,38 +17,6 @@ const CORS = {
 };
 const json = (b, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { ...CORS, "Content-Type": "application/json" } });
-
-const SYSTEM = [
-  "Tu es un expert des financements publics de l'innovation en France et Europe.",
-  "On te donne UN projet et une liste d'AAP candidats. Pour CHAQUE AAP, rends un VERDICT et un SCORE.",
-  "",
-  "BAREME 0-100 :",
-  "- 90-100 : Correspondance parfaite. L'AAP finance exactement l'objet du projet, cibles alignees, TRL compatible.",
-  "- 75-89 : Bonne correspondance. L'objet est aligne, avec des contraintes secondaires.",
-  "- 60-74 : Correspondance partielle.",
-  "- 40-59 : Correspondance faible.",
-  "- 0-39 : Non pertinent.",
-  "",
-  "REGLE DURE D'ELIGIBILITE ACTEUR :",
-  "- Chaque AAP a une liste acteurs_eligibles.",
-  "- Si la liste contient UNIQUEMENT des types incompatibles (ex. seulement Commune/Departement/Region/Association pour un Grand groupe) -> score PLAFONNE a 35.",
-  "- Si la liste contient UNIQUEMENT PME/TPE/Micro-entreprise/Start-up et que le projet est Grand groupe/Filiale de grand groupe/ETI -> score PLAFONNE a 35.",
-  "- 'Tout type d'entite juridique' = compatible.",
-  "- 'Filiale d'un grand groupe' = 'Grand groupe' pour l'analyse.",
-  "",
-  "Autres regles : STRICT dans le doute. Domaine general ne suffit pas. pertinent = score >= 60. Aucune invention.",
-  "",
-  "Reponds UNIQUEMENT en JSON valide :",
-  '{"results":[{"id":"...","score":85,"pertinent":true,"raison":"1-2 phrases","motif_ecart":"si pertinent=false"}]}',
-  "Un objet par AAP, meme ordre, id exact.",
-].join("\n");
-
-function parseJsonLenient(text) {
-  try { return JSON.parse(text); } catch {}
-  const m = text.match(/\{[\s\S]*\}/);
-  if (m) { try { return JSON.parse(m[0]); } catch {} }
-  throw new Error("reponse non-JSON du modele");
-}
 
 function norm(s) {
   return (s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
@@ -85,88 +52,6 @@ function preselectionne(projet, aaps) {
   }
   scored.sort((x, y) => y.preScore - x.preScore);
   return scored.slice(0, 60); // Cap plus dur pour tenir dans la limite Edge Function
-}
-
-// ── v2 : appel Claude robuste (retry transitoire) + pool de concurrence ──
-
-const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 529]);
-
-async function callWithRetry(fn, tries = 3) {
-  let lastErr;
-  for (let i = 0; i < tries; i++) {
-    try {
-      return await fn();
-    } catch (e) {
-      lastErr = e;
-      const status = e?.status ?? e?.response?.status;
-      const retryable = RETRYABLE_STATUS.has(status) || e?.name === "APIConnectionError";
-      if (!retryable || i === tries - 1) throw e;
-      await new Promise((r) => setTimeout(r, (i === 0 ? 2000 : 6000) + Math.random() * 500));
-    }
-  }
-  throw lastErr;
-}
-
-async function pool(tasks, limit = 4) {
-  const results = new Array(tasks.length);
-  let next = 0;
-  async function worker() {
-    while (next < tasks.length) {
-      const i = next++;
-      try {
-        results[i] = { status: "fulfilled", value: await tasks[i]() };
-      } catch (e) {
-        results[i] = { status: "rejected", reason: e };
-      }
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(limit, tasks.length) }, worker));
-  return results;
-}
-
-async function jugeIA(anthropic, projet, candidats, usage) {
-  const projetBloc = [
-    "PROJET",
-    "- Nom : " + (projet.nom || "(sans titre)"),
-    "- Description : " + (projet.description || "").slice(0, 2000),
-    "- Secteurs : " + (projet.secteurs || []).join(", "),
-    "- Type d'acteur : " + (projet.type_acteur || "(non precise)"),
-  ].join("\n");
-
-  const chunks = [];
-  for (let i = 0; i < candidats.length; i += 10) chunks.push(candidats.slice(i, i + 10));
-  const model = Deno.env.get("JUDGE_MODEL") || "claude-haiku-4-5-20251001";
-
-  const tasks = chunks.map((chunk) => () =>
-    callWithRetry(() =>
-      anthropic.messages.create({
-        model,
-        max_tokens: 3000,
-        system: SYSTEM,
-        messages: [{ role: "user", content: projetBloc + "\n\nAAP CANDIDATS (" + chunk.length + ") :\n" + JSON.stringify(chunk.map((c) => ({
-          id: c.aap.id, titre: c.aap.titre, source: c.aap.source, type_action: c.aap.type_action,
-          trl_min: c.aap.trl_min, trl_max: c.aap.trl_max, thematiques: c.aap.thematiques,
-          acteurs_eligibles: c.aap.data?.acteurs_eligibles || null,
-          description: (c.aap.description || "").slice(0, 1000),
-        })), null, 1) }],
-      })
-    ).then((resp) => {
-      usage.input += resp.usage?.input_tokens ?? 0;
-      usage.output += resp.usage?.output_tokens ?? 0;
-      const tb = resp.content.find((b) => b.type === "text");
-      const text = tb && "text" in tb ? tb.text : "{}";
-      return parseJsonLenient(text).results || [];
-    })
-  );
-
-  const settled = await pool(tasks, 4);
-  const results = [];
-  let failed = 0;
-  for (const s of settled) {
-    if (s.status === "fulfilled") results.push(...s.value);
-    else failed++;
-  }
-  return { results, batches: settled.length, failed };
 }
 
 Deno.serve(async (req) => {
@@ -215,27 +100,41 @@ Deno.serve(async (req) => {
   }
 
   const anthropic = new Anthropic({ apiKey: ANTHROPIC_KEY });
-  const usage = { input: 0, output: 0 };
-  const { results: verdicts, batches, failed } = await jugeIA(anthropic, projet, candidats, usage);
+  const projetBloc = [
+    "PROJET",
+    "- Nom : " + (projet.nom || "(sans titre)"),
+    "- Description : " + (projet.description || "").slice(0, 2000),
+    "- Secteurs : " + (projet.secteurs || []).join(", "),
+    "- Type d'acteur : " + (projet.type_acteur || "(non precise)"),
+  ].join("\n");
+
+  const { results: verdicts, batches, failed, usage } = await runJudge(anthropic, {
+    projetBloc,
+    items: candidats.map((c) => ({
+      id: c.aap.id, titre: c.aap.titre, source: c.aap.source, type_action: c.aap.type_action,
+      trl_min: c.aap.trl_min, trl_max: c.aap.trl_max, thematiques: c.aap.thematiques,
+      acteurs_eligibles: c.aap.data?.acteurs_eligibles || null,
+      description: (c.aap.description || "").slice(0, 1000),
+    })),
+    maxTokens: 3000,
+  });
   const byId = new Map(verdicts.map((v) => [v.id, v]));
 
   const resultats = [];
   for (const c of candidats) {
     const v = byId.get(c.aap.id);
     if (!v) continue;
-    const rawScore = typeof v.score === "number" ? v.score : (v.pertinent ? 60 : 30);
-    const score = Math.max(0, Math.min(100, Math.round(rawScore)));
-    const pertinent = v.pertinent === true && score >= 60;
+    const n = normalizeVerdict(v);
     resultats.push({
       id: c.aap.id,
       titre: c.aap.titre,
       source: c.aap.source,
       date_cloture: c.aap.date_cloture,
-      score,
-      tier: pertinent ? (score >= 80 ? "prioritaire" : "a_etudier") : null,
-      pertinent,
-      raison: v.raison || null,
-      motif_ecart: pertinent ? null : (v.motif_ecart || null),
+      score: n.score,
+      tier: n.tier,
+      pertinent: n.pertinent,
+      raison: n.raison,
+      motif_ecart: n.motif_ecart,
     });
   }
   resultats.sort((a, b) => b.score - a.score);

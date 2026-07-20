@@ -116,6 +116,9 @@ export async function jugerCandidats(
               ? `${c.aap.trl_min ?? "?"}-${c.aap.trl_max ?? "?"}`
               : null,
           thematiques: c.aap.thematiques,
+          // Permet à la règle dure d'éligibilité acteur (prompt partagé) de
+          // s'appliquer aussi sur la page /matching.
+          acteurs_eligibles: c.aap.acteurs_eligibles ?? null,
           montant: c.aap.montants ?? null,
           flags: c.flags,
           description: c.aap.description,
