@@ -395,9 +395,14 @@ function VeilleRight({
     enabled: !!projet.id,
   });
 
-  const recommandes = propositions.filter((p) => p.actif && p.statut_user !== "ecarte");
+  // Définition « retenus » alignée sur le tableau analytique (programmes.ts) :
+  // actif, non écarté ET hors candidature (les candidatures ont leur propre onglet).
+  const CANDIDATURE_STATUTS = ["candidate", "obtenu", "refuse"];
+  const candidatures = propositions.filter((p) => CANDIDATURE_STATUTS.includes(p.statut_user));
+  const recommandes = propositions.filter(
+    (p) => p.actif && p.statut_user !== "ecarte" && !CANDIDATURE_STATUTS.includes(p.statut_user),
+  );
   const ecartes = propositions.filter((p) => !p.actif || p.statut_user === "ecarte");
-  const candidatures = propositions.filter((p) => ["candidate", "obtenu", "refuse"].includes(p.statut_user));
   const nbTotal = propositions.length;
 
   // « Nouveautés » = recommandations jamais ouvertes (vu=false).
