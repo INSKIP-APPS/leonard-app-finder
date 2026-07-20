@@ -12,6 +12,8 @@ import {
   Database,
   UserPlus,
   ShieldCheck,
+  Activity,
+  AlertTriangle,
 } from "lucide-react";
 import {
   getScrapeLogs,
@@ -28,6 +30,8 @@ import {
   type Role,
 } from "@/services/data-store";
 import { fmtDateHeure } from "@/utils/format";
+import { getVeilleRuns, type VeilleRun } from "@/services/programmes";
+import type { ScrapeLog } from "@/services/data-store";
 import { useProfil, isAuthEnabled } from "@/services/auth";
 
 export const Route = createFileRoute("/admin")({
@@ -57,7 +61,7 @@ function useAdminGuard() {
 
 function Admin() {
   const { profil, loading } = useAdminGuard();
-  const [tab, setTab] = useState<"sources" | "users">("sources");
+  const [tab, setTab] = useState<"sante" | "sources" | "users">("sante");
 
   if (dataSource !== "supabase") {
     return (
@@ -93,6 +97,16 @@ function Admin() {
       <div className="border-b border-border">
         <div className="flex gap-1">
           <button
+            onClick={() => setTab("sante")}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition ${
+              tab === "sante"
+                ? "text-navy border-sky"
+                : "text-muted border-transparent hover:text-text"
+            }`}
+          >
+            <Activity className="w-4 h-4" /> Santé de la veille
+          </button>
+          <button
             onClick={() => setTab("sources")}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition ${
               tab === "sources"
@@ -115,8 +129,301 @@ function Admin() {
         </div>
       </div>
 
+      {tab === "sante" && <SantePanel />}
       {tab === "sources" && <ScrapingPanel />}
       {tab === "users" && <UsersPanel />}
+    </div>
+  );
+}
+
+// ── Onglet Santé de la veille ─────────────────────────────────────────
+//
+// Vue d'ensemble opérationnelle : la veille IA tourne-t-elle, les scrapers
+// passent-ils, combien de tokens consommés ? Alimenté par veille_runs (journal
+// des runs IA, démarré le 20/07/2026) et scrape_logs (exécutions scrapers).
+
+const MODE_LABEL: Record<string, string> = {
+  delta: "Veille hebdo (delta)",
+  full: "Veille complète",
+  adhoc: "Analyse express",
+  matching: "Matching",
+};
+
+const JOUR_MS = 86_400_000;
+
+// Sources rafraîchies par cron (hebdo) — les seules dont le silence est anormal.
+// Les autres (ADEME, Bpifrance, BdT, recherche) sont des scrapes ponctuels figés.
+const SOURCES_CRON = new Set([
+  "SEDIA",
+  "Aides-territoires",
+  "les-aides.fr",
+  "Région Île-de-France (opendata)",
+]);
+
+function SantePanel() {
+  const qc = useQueryClient();
+  const { data: runs = [], isLoading: loadingRuns } = useQuery({
+    queryKey: ["veilleRuns"],
+    queryFn: () => getVeilleRuns(60),
+  });
+  const { data: logs = [] } = useQuery({
+    queryKey: ["scrapeLogs", 100],
+    queryFn: () => getScrapeLogs(100),
+  });
+
+  const now = Date.now();
+
+  // Dernier passage par source de scraping (logs triés desc → 1er vu = dernier run).
+  const parSource = new Map<string, ScrapeLog>();
+  for (const l of logs) {
+    const key = l.source ?? "(source inconnue)";
+    if (!parSource.has(key)) parSource.set(key, l);
+  }
+  const sources = [...parSource.entries()].sort((a, b) => a[0].localeCompare(b[0], "fr"));
+
+  // ── Alertes ──
+  const alerts: { kind: "err" | "warn"; text: string }[] = [];
+  const derniereVeille = runs.find((r) => r.mode === "delta" || r.mode === "full");
+  if (derniereVeille) {
+    const age = (now - Date.parse(derniereVeille.started_at)) / JOUR_MS;
+    if (age > 8) {
+      alerts.push({
+        kind: "err",
+        text: `Aucune veille automatique depuis ${Math.floor(age)} jours (attendu : hebdomadaire, lundi matin).`,
+      });
+    } else if (!derniereVeille.ok) {
+      alerts.push({
+        kind: "err",
+        text: `Le dernier run de veille a rencontré un problème : ${derniereVeille.error ?? "erreur inconnue"}.`,
+      });
+    }
+  } else if (!loadingRuns) {
+    alerts.push({
+      kind: "warn",
+      text: "Aucun run de veille journalisé pour l'instant (journal démarré le 20/07/2026 — le premier cron le remplira).",
+    });
+  }
+  for (const [src, l] of sources) {
+    if (!SOURCES_CRON.has(src)) continue; // sources ponctuelles : jamais d'alerte
+    const age = (now - Date.parse(l.run_at)) / JOUR_MS;
+    if (age > 8) {
+      alerts.push({ kind: "warn", text: `Scraper « ${src} » sans exécution depuis ${Math.floor(age)} jours.` });
+    } else if (!l.ok) {
+      alerts.push({ kind: "err", text: `Dernier passage « ${src} » en échec : ${l.error ?? "erreur inconnue"}.` });
+    }
+  }
+  const lotsKo7j = runs
+    .filter((r) => now - Date.parse(r.started_at) < 7 * JOUR_MS)
+    .reduce((s, r) => s + r.batches_failed, 0);
+  if (lotsKo7j > 0) {
+    alerts.push({
+      kind: "warn",
+      text: `${lotsKo7j} lot${lotsKo7j > 1 ? "s" : ""} de jugement IA en échec sur 7 jours — certains AAP n'ont pas été évalués (relancer la veille du projet concerné).`,
+    });
+  }
+
+  // ── Agrégats 30 jours ──
+  const runs30 = runs.filter((r) => now - Date.parse(r.started_at) < 30 * JOUR_MS);
+  const juges30 = runs30.reduce((s, r) => s + r.total_juges, 0);
+  const lotsKo30 = runs30.reduce((s, r) => s + r.batches_failed, 0);
+  const tokens30 = runs30.reduce((s, r) => s + r.input_tokens + r.output_tokens, 0);
+
+  const fmtNb = (n: number) => n.toLocaleString("fr-FR");
+
+  return (
+    <div className="space-y-6">
+      {/* Alertes */}
+      {alerts.length === 0 ? (
+        <div className="flex items-center gap-2 text-sm px-3 py-2.5 rounded-md bg-[#E8F5F0] text-emerald-800">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
+          Tout est au vert : veille et scrapers ont tourné récemment, sans échec détecté.
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {alerts.map((a, i) => (
+            <div
+              key={i}
+              className={`flex items-start gap-2 text-sm px-3 py-2.5 rounded-md ${
+                a.kind === "err" ? "bg-[#FDECEC] text-red-800" : "bg-[#FFF8E6] text-amber-800"
+              }`}
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{a.text}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* KPIs 30 jours */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <SanteKpi label="Runs de veille (30 j)" value={fmtNb(runs30.length)} sub="cron + manuels + analyses" />
+        <SanteKpi label="AAP jugés par l'IA (30 j)" value={fmtNb(juges30)} sub="candidats soumis au juge" />
+        <SanteKpi
+          label="Lots en échec (30 j)"
+          value={fmtNb(lotsKo30)}
+          sub={lotsKo30 > 0 ? "AAP non évalués" : "aucune perte"}
+          alert={lotsKo30 > 0}
+        />
+        <SanteKpi label="Tokens Claude (30 j)" value={fmtNb(tokens30)} sub="entrée + sortie (facture : console Anthropic)" />
+      </div>
+
+      {/* Derniers runs de veille */}
+      <div className="card-flat p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-semibold text-navy">Derniers runs de la veille IA</h2>
+          <button
+            onClick={() => qc.invalidateQueries({ queryKey: ["veilleRuns"] })}
+            className="inline-flex items-center gap-1.5 text-xs text-navy hover:underline"
+          >
+            <RefreshCw className="w-3.5 h-3.5" /> Rafraîchir
+          </button>
+        </div>
+        {loadingRuns ? (
+          <div className="text-sm text-muted py-6 text-center">Chargement…</div>
+        ) : runs.length === 0 ? (
+          <div className="text-sm text-muted py-6 text-center">
+            Aucun run journalisé pour l'instant — le journal se remplit à chaque veille, analyse
+            express ou matching.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-[11px] uppercase tracking-wide text-muted border-b border-border">
+                  <th className="py-2 pr-3 font-medium">Date</th>
+                  <th className="py-2 px-3 font-medium">Type</th>
+                  <th className="py-2 px-3 font-medium">Statut</th>
+                  <th className="py-2 px-3 font-medium text-right">Jugés</th>
+                  <th className="py-2 px-3 font-medium text-right">Retenus</th>
+                  <th className="py-2 px-3 font-medium text-right">Lots KO</th>
+                  <th className="py-2 px-3 font-medium text-right">Tokens</th>
+                  <th className="py-2 pl-3 font-medium text-right">Durée</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {runs.slice(0, 20).map((r) => (
+                  <VeilleRunRow key={r.id} r={r} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Dernier passage par source */}
+      <div className="card-flat p-5">
+        <h2 className="text-base font-semibold text-navy mb-1">Dernier passage des scrapers</h2>
+        <p className="text-xs text-muted mb-4">
+          Les sources automatisées passent chaque lundi (cron 6 h UTC). Les sources « Ponctuel »
+          ont été importées une fois et ne se rafraîchissent pas — leur ancienneté est normale.
+        </p>
+        {sources.length === 0 ? (
+          <div className="text-sm text-muted py-6 text-center">Aucune exécution enregistrée.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-[11px] uppercase tracking-wide text-muted border-b border-border">
+                  <th className="py-2 pr-3 font-medium">Source</th>
+                  <th className="py-2 px-3 font-medium">Dernier passage</th>
+                  <th className="py-2 px-3 font-medium">Statut</th>
+                  <th className="py-2 px-3 font-medium text-right">Récupérés</th>
+                  <th className="py-2 pl-3 font-medium text-right">Nouveaux</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {sources.map(([src, l]) => {
+                  const cron = SOURCES_CRON.has(src);
+                  const age = (now - Date.parse(l.run_at)) / JOUR_MS;
+                  const muet = cron && age > 8;
+                  return (
+                    <tr key={src} className="text-text">
+                      <td className="py-2 pr-3 font-medium">
+                        {src}
+                        {!cron && (
+                          <span className="ml-2 text-[10px] font-semibold uppercase tracking-wide text-muted bg-[#F0F0F5] px-1.5 py-0.5 rounded">
+                            Ponctuel
+                          </span>
+                        )}
+                      </td>
+                      <td className={`py-2 px-3 whitespace-nowrap ${muet ? "text-amber-700 font-medium" : ""}`}>
+                        {fmtDateHeure(l.run_at)}
+                        {muet && " ⚠"}
+                      </td>
+                      <td className="py-2 px-3">
+                        {l.ok ? (
+                          <span className="inline-flex items-center gap-1 text-emerald-700">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> OK
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-red-700" title={l.error ?? ""}>
+                            <XCircle className="w-3.5 h-3.5" /> Échec
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-2 px-3 text-right tabular-nums">{l.fetched}</td>
+                      <td className="py-2 pl-3 text-right tabular-nums font-medium text-navy">{l.nouveaux}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function VeilleRunRow({ r }: { r: VeilleRun }) {
+  return (
+    <tr className="text-text">
+      <td className="py-2 pr-3 whitespace-nowrap">{fmtDateHeure(r.started_at)}</td>
+      <td className="py-2 px-3 whitespace-nowrap">{MODE_LABEL[r.mode ?? ""] ?? r.mode ?? "—"}</td>
+      <td className="py-2 px-3">
+        {r.ok ? (
+          <span className="inline-flex items-center gap-1 text-emerald-700">
+            <CheckCircle2 className="w-3.5 h-3.5" /> OK
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 text-amber-700" title={r.error ?? ""}>
+            <AlertTriangle className="w-3.5 h-3.5" /> Partiel
+          </span>
+        )}
+      </td>
+      <td className="py-2 px-3 text-right tabular-nums">{r.total_juges}</td>
+      <td className="py-2 px-3 text-right tabular-nums font-medium text-navy">{r.aap_ajoutes}</td>
+      <td className={`py-2 px-3 text-right tabular-nums ${r.batches_failed > 0 ? "text-amber-700 font-semibold" : "text-muted"}`}>
+        {r.batches_failed}
+      </td>
+      <td className="py-2 px-3 text-right tabular-nums text-muted">
+        {(r.input_tokens + r.output_tokens).toLocaleString("fr-FR")}
+      </td>
+      <td className="py-2 pl-3 text-right tabular-nums text-muted">
+        {r.duration_ms != null ? `${(r.duration_ms / 1000).toFixed(1)} s` : "—"}
+      </td>
+    </tr>
+  );
+}
+
+function SanteKpi({
+  label,
+  value,
+  sub,
+  alert = false,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  alert?: boolean;
+}) {
+  return (
+    <div className="card-flat p-4">
+      <div className="label-caps text-[10px] mb-2">{label}</div>
+      <div className={`text-2xl font-bold tabular-nums leading-none ${alert ? "text-amber-700" : "text-navy"}`}>
+        {value}
+      </div>
+      <div className="text-[10px] text-muted mt-1.5">{sub}</div>
     </div>
   );
 }

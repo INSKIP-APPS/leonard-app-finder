@@ -329,6 +329,8 @@ export async function deleteProjet(id: string): Promise<void> {
 export interface ScrapeLog {
   id: number;
   run_at: string;
+  /** Source scrapée (colonne présente en base, ex. « EU Funding & Tenders (SEDIA) »). */
+  source: string | null;
   fetched: number;
   nouveaux: number;
   mis_a_jour: number;

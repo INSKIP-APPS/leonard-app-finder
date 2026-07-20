@@ -38,6 +38,38 @@ export interface ProjetAap {
   };
 }
 
+// ── Observabilité : journal des runs de veille IA ────────────────────
+
+export interface VeilleRun {
+  id: number;
+  started_at: string;
+  /** delta | full | adhoc | matching */
+  mode: string | null;
+  ok: boolean;
+  error: string | null;
+  projets_traites: number;
+  aap_ajoutes: number;
+  aap_ecartes: number;
+  total_juges: number;
+  batches_ok: number;
+  batches_failed: number;
+  input_tokens: number;
+  output_tokens: number;
+  duration_ms: number;
+}
+
+/** Derniers runs de la veille IA (cron, manuels, analyses express, matching). */
+export async function getVeilleRuns(limit = 50): Promise<VeilleRun[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("veille_runs")
+    .select("*")
+    .order("started_at", { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(`getVeilleRuns: ${error.message}`);
+  return (data ?? []) as VeilleRun[];
+}
+
 /** Marque une recommandation comme vue par l'utilisateur (sort de "Nouveautés"). */
 export async function marquerAapVu(projetAapId: string): Promise<void> {
   if (!supabase) return;
