@@ -20,6 +20,7 @@ import { aapEchelle } from "@/utils/echelle";
 import { joursRestants, parseMontantEuros, type ProjetInput } from "@/utils/scoring-engine";
 import { THEMATIQUE_LABELS, type Thematiques } from "@/types/dispositif";
 import { fmtMillions } from "@/utils/format";
+import { stripAccents as norm } from "@/utils/text";
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -80,13 +81,6 @@ const STOPWORDS = new Set(
     "with that this from will your the and for expected outcome outcomes proposals results"
   ).split(/\s+/),
 );
-
-function norm(s: string): string {
-  return (s || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "");
-}
 
 /** Singularisation légère : « flottes » et « flotte » comptent pareil. */
 function sing(w: string): string {

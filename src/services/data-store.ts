@@ -12,6 +12,7 @@
 import { supabase } from "./supabase";
 import type { Dispositif } from "@/types/dispositif";
 import type { AAP } from "@/types/aap";
+import { empreinteTitre } from "@/utils/text";
 
 // Données de repli LOCAL (dev sans Supabase). Chargées à la demande via import()
 // dynamique : elles ne sont PAS embarquées dans le bundle principal en prod
@@ -69,11 +70,7 @@ const sourceRank = (s: string | undefined) => SOURCE_PRIORITY[s ?? ""] ?? 99;
 
 /** Empreinte de fusion = titre normalisé (sans accents ni ponctuation). */
 function empreinte(a: AAP): string {
-  return (a.titre || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/[^a-z0-9]/g, "");
+  return empreinteTitre(a.titre || "");
 }
 
 /**

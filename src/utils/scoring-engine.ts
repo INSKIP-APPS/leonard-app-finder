@@ -12,6 +12,7 @@
 
 import type { AAP } from "@/types/aap";
 import { THEMATIQUE_LABELS, type Thematiques } from "@/types/dispositif";
+import { stripAccents as norm } from "./text";
 
 export interface ProjetInput {
   nom: string;
@@ -83,13 +84,6 @@ function secteursToThematiques(secteurs: string[]): string[] {
 
 function clamp(n: number, lo = 0, hi = 100): number {
   return Math.max(lo, Math.min(hi, Math.round(n)));
-}
-
-function norm(s: string): string {
-  return (s || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "");
 }
 
 /** Parse un montant en euros depuis un texte libre ("2,5 M€", "800 k€", "1 000 000"). */

@@ -19,12 +19,7 @@ import { THEMATIQUE_LABELS } from "@/types/dispositif";
 import type { AAP } from "@/types/aap";
 import { aapEchelle } from "@/utils/echelle";
 import { useSavedIds } from "@/utils/savedAaps";
-
-/** Minuscule + suppression des accents — recherche insensible aux diacritiques
- *  sur un corpus 100 % français (UX-005 : « energie » trouve « énergie »). */
-function norm(s: string): string {
-  return (s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
-}
+import { stripAccents as norm } from "@/utils/text";
 
 // Nombre d'items rendus par « page » — évite de monter ~2 500 cartes d'un coup
 // dans le DOM (PERF-001). L'utilisateur charge la suite à la demande.
