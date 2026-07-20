@@ -49,6 +49,7 @@ export function AnalyseExpressModal({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<AnalyseAdhocResult[] | null>(null);
   const [nbCandidats, setNbCandidats] = useState(0);
+  const [failedBatches, setFailedBatches] = useState(0);
 
   // A11Y-002 : confirmation avant fermeture (Échap / clic extérieur) si des
   // informations ont été saisies et qu'aucun résultat n'est encore affiché.
@@ -85,6 +86,7 @@ export function AnalyseExpressModal({ onClose }: { onClose: () => void }) {
       } else {
         setResults(r.resultats);
         setNbCandidats(r.aap_candidats);
+        setFailedBatches(r.failed_batches ?? 0);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -252,10 +254,19 @@ export function AnalyseExpressModal({ onClose }: { onClose: () => void }) {
                 </button>
               </div>
 
+              {failedBatches > 0 && (
+                <div className="px-6 py-2.5 bg-amber-50 border-b border-amber-200 text-xs text-amber-800">
+                  ⚠ Analyse partielle : {failedBatches} lot{failedBatches > 1 ? "s" : ""} de
+                  candidats n'{failedBatches > 1 ? "ont" : "a"} pas pu être évalué
+                  {failedBatches > 1 ? "s" : ""} (service IA temporairement saturé). Relancez
+                  l'analyse pour un résultat complet.
+                </div>
+              )}
+
               {results.length === 0 ? (
                 <div className="p-10 text-center text-sm text-muted">
                   {nbCandidats > 0
-                    ? `${nbCandidats} candidat${nbCandidats > 1 ? "s" : ""} analysé${nbCandidats > 1 ? "s" : ""}, mais aucun n'a été jugé pertinent pour ce projet. Essaie d'élargir les secteurs ou de préciser la description.`
+                    ? `${nbCandidats} candidat${nbCandidats > 1 ? "s" : ""} analysé${nbCandidats > 1 ? "s" : ""}, mais aucun n'a été jugé pertinent pour ce projet. Essayez d'élargir les secteurs ou de préciser la description.`
                     : "Aucun AAP candidat après présélection. Précisez la description ou les secteurs."}
                 </div>
               ) : (

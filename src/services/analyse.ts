@@ -29,6 +29,8 @@ export interface AnalyseAdhocResponse {
   ok: boolean;
   aap_candidats: number;
   resultats_pertinents: number;
+  /** Nombre de lots du juge IA en échec — si > 0, l'analyse est partielle. */
+  failed_batches?: number;
   resultats: AnalyseAdhocResult[];
   message?: string;
   error?: string;
@@ -59,7 +61,7 @@ export async function analyseAdhoc(input: AnalyseAdhocInput): Promise<AnalyseAdh
   } catch (e) {
     const msg =
       e instanceof DOMException && e.name === "AbortError"
-        ? "L'analyse a dépassé 60 s — réessaie ou simplifie la description."
+        ? "L'analyse a dépassé 60 s — réessayez ou simplifiez la description."
         : e instanceof Error
           ? e.message
           : String(e);
