@@ -81,66 +81,32 @@ export interface ProjetStats {
   candidatures: number;
 }
 
-/** Compte les projet_aap agrégés par projet pour la vue analyse d'un programme.
- *  On récupère TOUT en une seule requête puis on agrège côté client (bien plus
- *  simple qu'une vue matérialisée pour un volume < 1000 lignes).
+/**
+ * Agrégats projet_aap par projet pour la vue analyse (perf #1). Délégué à la
+ * base via le RPC `stats_par_projet` (GROUP BY côté Postgres) au lieu de
+ * paginer toutes les lignes puis agréger côté client. Logique identique,
+ * validée ligne à ligne (11/11 projets Intrapreneur) contre l'ancienne version.
  */
 export async function getStatsParProjet(
   programmeId: ProgrammeId,
   cohorte?: number | null,
 ): Promise<Record<string, ProjetStats>> {
   if (!supabase) return {};
-  // 1) IDs des projets du programme (+ cohorte optionnelle)
-  let projQ = supabase.from("projets").select("id").eq("programme_id", programmeId).eq("actif", true);
-  if (cohorte != null) projQ = projQ.eq("cohorte", cohorte);
-  const { data: projets, error: pErr } = await projQ;
-  if (pErr) throw new Error(`getStatsParProjet projets: ${pErr.message}`);
-  const ids = (projets ?? []).map((p) => (p as { id: string }).id);
-  if (ids.length === 0) return {};
-
-  // 2) projet_aap actifs de ces projets, joints aux AAP pour la date_cloture.
-  //    PostgREST plafonne à 1000 lignes par requête → on pagine explicitement
-  //    (la base dépasse déjà ce seuil, sinon les agrégats sont tronqués).
-  const PAGE = 1000;
-  type Row = {
-    projet_id: string;
-    tier: string | null;
-    vu: boolean;
-    actif: boolean;
-    statut_user: string;
-    aap: { date_cloture: string | null } | null;
-  };
-  const rows: Row[] = [];
-  for (let from = 0; ; from += PAGE) {
-    const { data, error } = await supabase
-      .from("projet_aap")
-      .select("projet_id, tier, vu, actif, statut_user, aap:aaps(date_cloture)")
-      .in("projet_id", ids)
-      .order("id")
-      .range(from, from + PAGE - 1);
-    if (error) throw new Error(`getStatsParProjet: ${error.message}`);
-    const batch = (data ?? []) as unknown as Row[];
-    rows.push(...batch);
-    if (batch.length < PAGE) break;
-  }
-
-  const nowMs = Date.now();
+  const { data, error } = await supabase.rpc("stats_par_projet", {
+    p_programme: programmeId,
+    p_cohorte: cohorte ?? null,
+  });
+  if (error) throw new Error(`getStatsParProjet: ${error.message}`);
   const stats: Record<string, ProjetStats> = {};
-  for (const pid of ids) stats[pid] = { projet_id: pid, retenus: 0, prioritaires: 0, nouveautes: 0, deadlines_30j: 0, candidatures: 0 };
-  for (const r of rows) {
-    const s = stats[r.projet_id];
-    if (!s) continue;
-    if (["candidate", "obtenu", "refuse"].includes(r.statut_user)) {
-      s.candidatures += 1;
-      continue;
-    }
-    if (r.actif && !["ecarte"].includes(r.statut_user)) {
-      s.retenus += 1;
-      if (r.tier === "prioritaire") s.prioritaires += 1;
-      if (!r.vu) s.nouveautes += 1;
-      const dl = r.aap?.date_cloture ? new Date(r.aap.date_cloture).getTime() : null;
-      if (dl != null && dl > nowMs && dl - nowMs <= 30 * 86_400_000) s.deadlines_30j += 1;
-    }
+  for (const r of (data ?? []) as ProjetStats[]) {
+    stats[r.projet_id] = {
+      projet_id: r.projet_id,
+      retenus: r.retenus,
+      prioritaires: r.prioritaires,
+      nouveautes: r.nouveautes,
+      deadlines_30j: r.deadlines_30j,
+      candidatures: r.candidatures,
+    };
   }
   return stats;
 }
