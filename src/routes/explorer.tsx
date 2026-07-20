@@ -9,7 +9,6 @@ import {
   LayoutGrid,
   Layers,
   FileText,
-  AlertTriangle,
   X,
   Bookmark,
 } from "lucide-react";
@@ -20,6 +19,7 @@ import type { AAP } from "@/types/aap";
 import { aapEchelle } from "@/utils/echelle";
 import { useSavedIds } from "@/utils/savedAaps";
 import { stripAccents as norm } from "@/utils/text";
+import { QueryError } from "@/components/QueryError";
 
 // Nombre d'items rendus par « page » — évite de monter ~2 500 cartes d'un coup
 // dans le DOM (PERF-001). L'utilisateur charge la suite à la demande.
@@ -266,22 +266,15 @@ function Explorer() {
   // sinon la panne serait indistinguable d'une base vide (« 0 dispositifs »).
   if (hasError) {
     return (
-      <div className="max-w-[1200px] mx-auto flex flex-col items-center justify-center py-32 text-center gap-3">
-        <AlertTriangle className="w-8 h-8 text-pink" />
-        <div className="text-navy font-semibold">Impossible de charger la base de financements.</div>
-        <div className="text-sm text-muted max-w-md">
-          Vérifiez votre connexion, puis réessayez.
-        </div>
-        <button
-          onClick={() => {
-            refetchD();
-            refetchA();
-          }}
-          className="mt-1 inline-flex items-center gap-2 px-4 py-2 rounded-md bg-navy text-white text-sm font-medium hover:opacity-90 transition"
-        >
-          Réessayer
-        </button>
-      </div>
+      <QueryError
+        title="Impossible de charger la base de financements."
+        hint="Vérifiez votre connexion, puis réessayez."
+        onRetry={() => {
+          refetchD();
+          refetchA();
+        }}
+        className="max-w-[1200px] mx-auto flex flex-col items-center justify-center py-32 text-center gap-3"
+      />
     );
   }
 

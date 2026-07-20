@@ -12,6 +12,7 @@ import { joursRestants, statutEffectif } from "@/utils/scoring-engine";
 import type { AAP } from "@/types/aap";
 import type { Programme, ProgrammeId } from "@/types/programme";
 import { FicheAap } from "@/components/FicheAap";
+import { QueryError } from "@/components/QueryError";
 
 import {
   AlertCircle,
@@ -115,20 +116,11 @@ function Dashboard() {
   // « 0 AAP en base » avec des KPIs à zéro présentés comme réels.
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center py-32 text-center gap-3">
-        <AlertCircle className="w-8 h-8 text-pink" />
-        <div className="text-navy font-semibold">Impossible de charger la base d'AAP.</div>
-        <div className="text-sm text-muted max-w-md">
-          Vérifiez votre connexion, puis réessayez. Si le problème persiste, contactez un
-          administrateur.
-        </div>
-        <button
-          onClick={() => refetch()}
-          className="mt-1 inline-flex items-center gap-2 px-4 py-2 rounded-md bg-navy text-white text-sm font-medium hover:opacity-90 transition"
-        >
-          <Loader2 className="w-4 h-4" /> Réessayer
-        </button>
-      </div>
+      <QueryError
+        title="Impossible de charger la base d'AAP."
+        hint="Vérifiez votre connexion, puis réessayez. Si le problème persiste, contactez un administrateur."
+        onRetry={() => refetch()}
+      />
     );
   }
 

@@ -26,6 +26,7 @@ import type {
 import { STATUT_LABEL, STATUT_TONE, COHORTE_ACTIVE, COHORTES_INTRAP } from "@/types/programme";
 import { NewProjetModal } from "@/components/NewProjetModal";
 import { AnalyseExpressModal } from "@/components/AnalyseExpressModal";
+import { QueryError } from "@/components/QueryError";
 import { useProfil } from "@/services/auth";
 
 export const Route = createFileRoute("/programmes/$id")({
@@ -134,16 +135,12 @@ function ProgrammePage() {
   // simple coupure affiche « Programme introuvable ».
   if (errorProg) {
     return (
-      <div className="max-w-lg mx-auto text-center pt-16">
-        <h2 className="text-lg font-semibold text-navy">Impossible de charger ce programme</h2>
-        <p className="text-sm text-muted mt-2">Vérifiez votre connexion, puis réessayez.</p>
-        <button
-          onClick={() => refetchProg()}
-          className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-md bg-navy text-white text-sm font-medium hover:opacity-90 transition"
-        >
-          Réessayer
-        </button>
-      </div>
+      <QueryError
+        title="Impossible de charger ce programme"
+        hint="Vérifiez votre connexion, puis réessayez."
+        onRetry={() => refetchProg()}
+        className="max-w-lg mx-auto flex flex-col items-center text-center pt-16 gap-3"
+      />
     );
   }
   if (!programme) {
