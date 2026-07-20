@@ -247,7 +247,9 @@ export function AnalyseExpressModal({ onClose }: { onClose: () => void }) {
 
               {results.length === 0 ? (
                 <div className="p-10 text-center text-sm text-muted">
-                  Aucun AAP candidat après présélection. Précise la description ou les secteurs.
+                  {nbCandidats > 0
+                    ? `${nbCandidats} candidat${nbCandidats > 1 ? "s" : ""} analysé${nbCandidats > 1 ? "s" : ""}, mais aucun n'a été jugé pertinent pour ce projet. Essaie d'élargir les secteurs ou de préciser la description.`
+                    : "Aucun AAP candidat après présélection. Précise la description ou les secteurs."}
                 </div>
               ) : (
                 <>
@@ -284,7 +286,7 @@ function ResultRow({ r }: { r: AnalyseAdhocResult }) {
     ? Math.ceil((new Date(r.date_cloture).getTime() - Date.now()) / 86400000)
     : null;
   const scoreColor =
-    r.score >= 70 ? "bg-emerald-500" : r.score >= 50 ? "bg-amber-500" : "bg-muted";
+    r.score >= 80 ? "bg-emerald-500" : r.score >= 60 ? "bg-amber-500" : "bg-muted";
 
   return (
     <div className="grid grid-cols-[46px_1fr] gap-3 items-start px-6 py-3.5 border-b border-border">

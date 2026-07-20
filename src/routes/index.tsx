@@ -52,7 +52,12 @@ const SOURCE_SHORT: Record<string, string> = {
 };
 
 function Dashboard() {
-  const { data: aaps = [], isLoading } = useQuery({ queryKey: ["aaps"], queryFn: () => getAaps() });
+  const {
+    data: aaps = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({ queryKey: ["aaps"], queryFn: () => getAaps() });
   const { data: programmes = [] } = useQuery({
     queryKey: ["programmes"],
     queryFn: getProgrammes,
@@ -83,11 +88,20 @@ function Dashboard() {
   );
   const nbSources = useMemo(() => new Set(aaps.map((a) => a.source)).size, [aaps]);
 
-  const today = new Date().toLocaleDateString("fr-FR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  // WORD-002 : fraîcheur RÉELLE des données = max(date_scraping) de la base,
+  // pas la date du jour (qui masquerait une panne de scraping).
+  const derniereMaj = useMemo(() => {
+    let max = 0;
+    for (const a of aaps) {
+      const t = a.date_scraping ? Date.parse(a.date_scraping) : NaN;
+      if (!Number.isNaN(t) && t > max) max = t;
+    }
+    return max || null;
+  }, [aaps]);
+  const majLabel = derniereMaj
+    ? new Date(derniereMaj).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })
+    : null;
+  const joursDepuisMaj = derniereMaj ? Math.floor((Date.now() - derniereMaj) / 86_400_000) : null;
 
   if (isLoading) {
     return (
@@ -97,12 +111,46 @@ function Dashboard() {
     );
   }
 
+  // BUG-002 : sur erreur de chargement, on affiche une vraie erreur au lieu de
+  // « 0 AAP en base » avec des KPIs à zéro présentés comme réels.
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 text-center gap-3">
+        <AlertCircle className="w-8 h-8 text-pink" />
+        <div className="text-navy font-semibold">Impossible de charger la base d'AAP.</div>
+        <div className="text-sm text-muted max-w-md">
+          Vérifiez votre connexion, puis réessayez. Si le problème persiste, contactez un
+          administrateur.
+        </div>
+        <button
+          onClick={() => refetch()}
+          className="mt-1 inline-flex items-center gap-2 px-4 py-2 rounded-md bg-navy text-white text-sm font-medium hover:opacity-90 transition"
+        >
+          <Loader2 className="w-4 h-4" /> Réessayer
+        </button>
+      </div>
+    );
+  }
+
   return (
     <>
       <header className="mb-5 flex items-end justify-between fade-up">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Cockpit veille AAP</h1>
-          <div className="text-xs text-muted mt-1">Données mises à jour le {today}</div>
+          <div className="text-xs text-muted mt-1">
+            {majLabel ? (
+              <>
+                Données mises à jour le {majLabel}
+                {joursDepuisMaj != null && joursDepuisMaj > 8 && (
+                  <span className="ml-2 text-pink font-medium">
+                    ⚠ veille inactive depuis {joursDepuisMaj} j
+                  </span>
+                )}
+              </>
+            ) : (
+              "Fraîcheur des données indisponible"
+            )}
+          </div>
         </div>
         <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-border text-xs font-medium">
           <span className="w-2 h-2 rounded-full bg-sky live-dot" />{" "}
@@ -173,7 +221,7 @@ function Dashboard() {
 }
 
 function MomentumBlock() {
-  const { data: items = [], isLoading } = useQuery({
+  const { data: items = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["momentum-feed"],
     queryFn: () => getMomentumFeed(8),
     staleTime: 60_000,
@@ -186,13 +234,13 @@ function MomentumBlock() {
           <Bell className="w-4 h-4 text-pink" />
           <div className="flex-1">
             <h3 className="text-sm font-semibold text-navy leading-none">
-              Ce qui a besoin de toi
+              Ce qui a besoin de vous
             </h3>
             <div className="text-[10px] text-muted mt-1">
-              Urgences et nouveautés sur tes projets actifs
+              Urgences et nouveautés sur les projets actifs
             </div>
           </div>
-          {items.length > 0 && (
+          {!isError && items.length > 0 && (
             <span className="text-[10px] font-bold bg-pink text-white rounded-full min-w-[18px] h-[18px] px-1.5 inline-flex items-center justify-center">
               {items.length}
             </span>
@@ -204,11 +252,20 @@ function MomentumBlock() {
         <div className="flex items-center justify-center py-6">
           <Loader2 className="w-4 h-4 animate-spin text-muted" />
         </div>
+      ) : isError ? (
+        // BUG-003 : ne pas afficher « vous êtes à jour » quand le chargement a
+        // échoué — ce serait un faux rassurant masquant de vraies urgences.
+        <div className="text-xs text-center py-6 leading-relaxed">
+          <div className="text-pink font-medium">Impossible de charger les urgences.</div>
+          <button onClick={() => refetch()} className="mt-2 text-navy underline hover:no-underline">
+            Réessayer
+          </button>
+        </div>
       ) : items.length === 0 ? (
         <div className="text-xs text-muted text-center py-6 leading-relaxed">
           Rien d'urgent pour l'instant.
           <br />
-          Tu es à jour sur tous tes projets.
+          Vous êtes à jour sur tous vos projets.
         </div>
       ) : (
         <div className="space-y-2 flex-1">

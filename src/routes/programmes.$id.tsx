@@ -47,7 +47,12 @@ function ProgrammePage() {
   const [cohorte, setCohorte] = useState<number>(COHORTE_ACTIVE);
   const [vue, setVue] = useState<"grid" | "table">("grid");
 
-  const { data: programme, isLoading: loadingProg } = useQuery({
+  const {
+    data: programme,
+    isLoading: loadingProg,
+    isError: errorProg,
+    refetch: refetchProg,
+  } = useQuery({
     queryKey: ["programme", programmeId],
     queryFn: () => getProgramme(programmeId),
   });
@@ -61,7 +66,11 @@ function ProgrammePage() {
     enabled: isIntrap,
     staleTime: 5 * 60_000,
   });
-  const { data: stats = {} } = useQuery({
+  const {
+    data: stats = {},
+    isLoading: loadingStats,
+    isError: errorStats,
+  } = useQuery({
     queryKey: ["stats-par-projet", programmeId, isIntrap ? cohorte : null],
     queryFn: () => getStatsParProjet(programmeId, isIntrap ? cohorte : null),
     enabled: vue === "table",
@@ -72,6 +81,22 @@ function ProgrammePage() {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-5 h-5 animate-spin text-muted" />
+      </div>
+    );
+  }
+  // BUG-007 : distinguer l'erreur (réseau/RLS) du « introuvable » — sinon une
+  // simple coupure affiche « Programme introuvable ».
+  if (errorProg) {
+    return (
+      <div className="max-w-lg mx-auto text-center pt-16">
+        <h2 className="text-lg font-semibold text-navy">Impossible de charger ce programme</h2>
+        <p className="text-sm text-muted mt-2">Vérifiez votre connexion, puis réessayez.</p>
+        <button
+          onClick={() => refetchProg()}
+          className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-md bg-navy text-white text-sm font-medium hover:opacity-90 transition"
+        >
+          Réessayer
+        </button>
       </div>
     );
   }
@@ -255,7 +280,12 @@ function ProgrammePage() {
           ))}
         </div>
       ) : (
-        <AnalyseTable projets={projets} stats={stats} />
+        <AnalyseTable
+          projets={projets}
+          stats={stats}
+          loading={loadingStats}
+          error={errorStats}
+        />
       )}
     </div>
   );
@@ -361,9 +391,13 @@ type SortKey = "nom" | "retenus" | "prioritaires" | "nouveautes" | "deadlines_30
 function AnalyseTable({
   projets,
   stats,
+  loading = false,
+  error = false,
 }: {
   projets: ProjetV3[];
   stats: Record<string, ProjetStats>;
+  loading?: boolean;
+  error?: boolean;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("prioritaires");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -399,6 +433,26 @@ function AnalyseTable({
   function toggle(k: SortKey) {
     if (k === sortKey) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortKey(k); setSortDir(k === "nom" ? "asc" : "desc"); }
+  }
+
+  // BUG-012 : ne pas présenter un tableau de zéros comme réel pendant le
+  // chargement, ni le laisser à zéro silencieusement sur erreur.
+  if (error) {
+    return (
+      <div className="bg-white border border-border rounded-xl shadow-sm p-8 text-center">
+        <div className="text-sm font-medium text-pink">Impossible de charger les statistiques.</div>
+        <div className="text-xs text-muted mt-1">
+          Les chiffres ci-dessous ne peuvent pas être affichés pour l'instant — réessayez plus tard.
+        </div>
+      </div>
+    );
+  }
+  if (loading) {
+    return (
+      <div className="bg-white border border-border rounded-xl shadow-sm p-8 flex items-center justify-center gap-2 text-muted">
+        <Loader2 className="w-4 h-4 animate-spin" /> Calcul des statistiques…
+      </div>
+    );
   }
 
   return (

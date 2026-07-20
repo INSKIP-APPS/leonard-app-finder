@@ -9,6 +9,7 @@ import {
   LayoutGrid,
   Layers,
   FileText,
+  AlertTriangle,
 } from "lucide-react";
 import { getDispositifs, getAaps } from "@/services/data-store";
 import type { Dispositif, Thematiques } from "@/types/dispositif";
@@ -78,11 +79,21 @@ function aapMatchesSecteur(a: AAP, secteur: string): boolean {
 }
 
 function Explorer() {
-  const { data: dispositifs = [], isLoading: loadingD } = useQuery({
+  const {
+    data: dispositifs = [],
+    isLoading: loadingD,
+    isError: errorD,
+    refetch: refetchD,
+  } = useQuery({
     queryKey: ["dispositifs"],
     queryFn: getDispositifs,
   });
-  const { data: aaps = [], isLoading: loadingA } = useQuery({
+  const {
+    data: aaps = [],
+    isLoading: loadingA,
+    isError: errorA,
+    refetch: refetchA,
+  } = useQuery({
     queryKey: ["aaps"],
     queryFn: () => getAaps(),
   });
@@ -201,6 +212,30 @@ function Explorer() {
   }, [aaps, aapHaystacks, q, geoActif, secteurActif]);
 
   const loading = loadingD || loadingA;
+  const hasError = errorD || errorA;
+
+  // BUG-004 : sur erreur de chargement, écran d'erreur explicite avec relance —
+  // sinon la panne serait indistinguable d'une base vide (« 0 dispositifs »).
+  if (hasError) {
+    return (
+      <div className="max-w-[1200px] mx-auto flex flex-col items-center justify-center py-32 text-center gap-3">
+        <AlertTriangle className="w-8 h-8 text-pink" />
+        <div className="text-navy font-semibold">Impossible de charger la base de financements.</div>
+        <div className="text-sm text-muted max-w-md">
+          Vérifiez votre connexion, puis réessayez.
+        </div>
+        <button
+          onClick={() => {
+            refetchD();
+            refetchA();
+          }}
+          className="mt-1 inline-flex items-center gap-2 px-4 py-2 rounded-md bg-navy text-white text-sm font-medium hover:opacity-90 transition"
+        >
+          Réessayer
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-[1200px] mx-auto space-y-6">
@@ -212,9 +247,11 @@ function Explorer() {
             Explorez l'ensemble des dispositifs et des appels à projets suivis par la veille
           </p>
         </div>
-        <span className="text-xs text-muted whitespace-nowrap">
-          {dispositifs.length} dispositifs · {aaps.length} appels à projets
-        </span>
+        {!loading && (
+          <span className="text-xs text-muted whitespace-nowrap">
+            {dispositifs.length} dispositifs · {aaps.length} appels à projets
+          </span>
+        )}
       </header>
 
       {/* Toggle Dispositifs / AAP */}

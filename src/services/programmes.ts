@@ -19,7 +19,12 @@ export async function getProgrammes(): Promise<Programme[]> {
 export async function getProgramme(id: ProgrammeId): Promise<Programme | null> {
   if (!supabase) return null;
   const { data, error } = await supabase.from("programmes").select("*").eq("id", id).single();
-  if (error) return null;
+  // PGRST116 = 0 ligne (introuvable) → null légitime. Toute autre erreur (réseau,
+  // RLS, 500) doit remonter, sinon une panne s'affiche comme « Programme introuvable ».
+  if (error) {
+    if (error.code === "PGRST116") return null;
+    throw new Error(`getProgramme: ${error.message}`);
+  }
   return data as Programme;
 }
 
@@ -158,7 +163,11 @@ export async function getCohortesDispo(programmeId: ProgrammeId): Promise<number
 export async function getProjetV3(id: string): Promise<ProjetV3 | null> {
   if (!supabase) return null;
   const { data, error } = await supabase.from("projets").select("*").eq("id", id).single();
-  if (error) return null;
+  // PGRST116 = introuvable → null ; autres erreurs propagées (voir getProgramme).
+  if (error) {
+    if (error.code === "PGRST116") return null;
+    throw new Error(`getProjetV3: ${error.message}`);
+  }
   return data as ProjetV3;
 }
 
@@ -444,11 +453,15 @@ export async function analyseAdhoc(input: AnalyseAdhocInput): Promise<AnalyseAdh
   if (!token) return { ok: false, aap_candidats: 0, resultats_pertinents: 0, resultats: [], error: "Session expirée — reconnectez-vous." };
   const url = import.meta.env.VITE_SUPABASE_URL as string;
   const anon = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+  // Timeout dur (~60 s) : sans lui, une fonction qui traîne = spinner infini.
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 60_000);
   try {
     const res = await fetch(`${url}/functions/v1/analyse-adhoc`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, apikey: anon },
       body: JSON.stringify(input),
+      signal: ctrl.signal,
     });
     const body = await res.json().catch(() => ({}));
     if (!res.ok || body?.ok === false) {
@@ -456,7 +469,15 @@ export async function analyseAdhoc(input: AnalyseAdhocInput): Promise<AnalyseAdh
     }
     return body as AnalyseAdhocResponse;
   } catch (e) {
-    return { ok: false, aap_candidats: 0, resultats_pertinents: 0, resultats: [], error: e instanceof Error ? e.message : String(e) };
+    const msg =
+      e instanceof DOMException && e.name === "AbortError"
+        ? "L'analyse a dépassé 60 s — réessaie ou simplifie la description."
+        : e instanceof Error
+          ? e.message
+          : String(e);
+    return { ok: false, aap_candidats: 0, resultats_pertinents: 0, resultats: [], error: msg };
+  } finally {
+    clearTimeout(timer);
   }
 }
 
