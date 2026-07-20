@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import {
   Search,
   SlidersHorizontal,
@@ -10,12 +10,27 @@ import {
   Layers,
   FileText,
   AlertTriangle,
+  X,
+  Bookmark,
 } from "lucide-react";
 import { getDispositifs, getAaps } from "@/services/data-store";
 import type { Dispositif, Thematiques } from "@/types/dispositif";
 import { THEMATIQUE_LABELS } from "@/types/dispositif";
 import type { AAP } from "@/types/aap";
 import { aapEchelle } from "@/utils/echelle";
+import { useSavedIds } from "@/utils/savedAaps";
+
+/** Minuscule + suppression des accents — recherche insensible aux diacritiques
+ *  sur un corpus 100 % français (UX-005 : « energie » trouve « énergie »). */
+function norm(s: string): string {
+  return (s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+}
+
+// Nombre d'items rendus par « page » — évite de monter ~2 500 cartes d'un coup
+// dans le DOM (PERF-001). L'utilisateur charge la suite à la demande.
+const PAGE_SIZE = 60;
+
+type SortBy = "cloture" | "recent" | "alpha";
 import { FicheAap } from "@/components/FicheAap";
 import { FicheDispositif } from "@/components/FicheDispositif";
 import { DispositifCard } from "@/components/explorer/DispositifCard";
@@ -103,6 +118,10 @@ function Explorer() {
   const [secteurActif, setSecteurActif] = useState<string | null>(null);
   const [vue, setVue] = useState<"liste" | "cartes">("liste");
   const [query, setQuery] = useState("");
+  const [sortBy, setSortBy] = useState<SortBy>("cloture");
+  const [savedOnly, setSavedOnly] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const savedIds = useSavedIds();
   const [expanded, setExpanded] = useState<string | null>(null);
   const [selectedAap, setSelectedAap] = useState<AAP | null>(null);
   const [selectedDispositif, setSelectedDispositif] = useState<Dispositif | null>(null);
@@ -115,7 +134,7 @@ function Explorer() {
   // Recherche différée : la frappe reste fluide, le filtrage des ~2 500 lignes
   // suit avec un léger décalage (même résultat, priorité au champ de saisie).
   const deferredQuery = useDeferredValue(query);
-  const q = deferredQuery.trim().toLowerCase();
+  const q = norm(deferredQuery.trim());
 
   // Rattachement exact via la clé étrangère dispositif_id (Phase 2).
   const aapsByDispositif = useMemo(() => {
@@ -137,16 +156,16 @@ function Explorer() {
     for (const a of aaps)
       m.set(
         a.id,
-        [
-          a.titre,
-          a.programme,
-          a.cluster ?? "",
-          a.description,
-          ...a.thematiques,
-          ...(a.mots_cles ?? []),
-        ]
-          .join("\n")
-          .toLowerCase(),
+        norm(
+          [
+            a.titre,
+            a.programme,
+            a.cluster ?? "",
+            a.description,
+            ...a.thematiques,
+            ...(a.mots_cles ?? []),
+          ].join("\n"),
+        ),
       );
     return m;
   }, [aaps]);
@@ -160,17 +179,17 @@ function Explorer() {
       ]);
       m.set(
         d.id,
-        [
-          d.nom,
-          d.organisme,
-          d.programme,
-          d.commentaires ?? "",
-          d.thematiques_texte ?? "",
-          d.acteurs_texte ?? "",
-          ...enfants,
-        ]
-          .join("\n")
-          .toLowerCase(),
+        norm(
+          [
+            d.nom,
+            d.organisme,
+            d.programme,
+            d.commentaires ?? "",
+            d.thematiques_texte ?? "",
+            d.acteurs_texte ?? "",
+            ...enfants,
+          ].join("\n"),
+        ),
       );
     }
     return m;
@@ -195,8 +214,11 @@ function Explorer() {
     });
   }, [dispositifs, dispositifHaystacks, q, geoActif, secteurActif, adv]);
 
+  const savedSet = useMemo(() => new Set(savedIds), [savedIds]);
+
   const filteredAaps = useMemo(() => {
-    return aaps.filter((a) => {
+    const list = aaps.filter((a) => {
+      if (savedOnly && !savedSet.has(a.id)) return false;
       if (geoActif) {
         const ech = aapEchelle(a);
         const match =
@@ -209,10 +231,41 @@ function Explorer() {
       if (!q) return true;
       return (aapHaystacks.get(a.id) ?? "").includes(q);
     });
-  }, [aaps, aapHaystacks, q, geoActif, secteurActif]);
+    // Tri (UX-006). Clôture : les plus proches d'abord, sans date en dernier.
+    const byCloture = (a: AAP) =>
+      a.date_cloture ? new Date(a.date_cloture).getTime() : Number.POSITIVE_INFINITY;
+    const sorted = [...list];
+    if (sortBy === "cloture") sorted.sort((a, b) => byCloture(a) - byCloture(b));
+    else if (sortBy === "recent")
+      sorted.sort(
+        (a, b) =>
+          (b.date_scraping ? Date.parse(b.date_scraping) : 0) -
+          (a.date_scraping ? Date.parse(a.date_scraping) : 0),
+      );
+    else sorted.sort((a, b) => a.titre.localeCompare(b.titre, "fr", { sensitivity: "base" }));
+    return sorted;
+  }, [aaps, aapHaystacks, q, geoActif, secteurActif, sortBy, savedOnly, savedSet]);
 
-  const loading = loadingD || loadingA;
+  // PERF-002 : chaque vue n'attend que ses propres données. La liste des
+  // dispositifs s'affiche sans attendre le téléchargement des ~2 500 AAP
+  // (dont elle n'a besoin que pour des badges secondaires).
+  const loading = mode === "aap" ? loadingA : loadingD;
   const hasError = errorD || errorA;
+
+  // Réinitialise la pagination quand les critères changent (PERF-001).
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [q, geoActif, secteurActif, adv, mode, sortBy, savedOnly]);
+
+  const resetFiltres = () => {
+    setQuery("");
+    setGeoActif(null);
+    setSecteurActif(null);
+    setSavedOnly(false);
+    setAdv(EMPTY_ADV);
+  };
+  const hasActiveFilters =
+    !!query || !!geoActif || !!secteurActif || savedOnly || nbAdv > 0;
 
   // BUG-004 : sur erreur de chargement, écran d'erreur explicite avec relance —
   // sinon la panne serait indistinguable d'une base vide (« 0 dispositifs »).
@@ -258,6 +311,7 @@ function Explorer() {
       <div className="inline-flex items-center rounded-lg border border-border bg-white p-1">
         <button
           onClick={() => setMode("dispositifs")}
+          aria-pressed={mode === "dispositifs"}
           className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition ${
             mode === "dispositifs" ? "bg-navy text-white" : "text-text hover:text-navy"
           }`}
@@ -267,6 +321,7 @@ function Explorer() {
         </button>
         <button
           onClick={() => setMode("aap")}
+          aria-pressed={mode === "aap"}
           className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition ${
             mode === "aap" ? "bg-navy text-white" : "text-text hover:text-navy"
           }`}
@@ -283,13 +338,23 @@ function Explorer() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          aria-label={mode === "dispositifs" ? "Rechercher un dispositif" : "Rechercher un appel à projets"}
           placeholder={
             mode === "dispositifs"
               ? "Rechercher un dispositif, un organisme ou un AAP rattaché..."
               : "Rechercher un AAP, un mot-clé, un dispositif parent..."
           }
-          className="w-full pl-10 pr-4 h-11 rounded-lg border border-border bg-white text-sm focus:outline-none focus:border-navy"
+          className="w-full pl-10 pr-10 h-11 rounded-lg border border-border bg-white text-sm focus:outline-none focus:border-navy"
         />
+        {query && (
+          <button
+            onClick={() => setQuery("")}
+            aria-label="Effacer la recherche"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-navy"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Filtres */}
@@ -302,6 +367,7 @@ function Explorer() {
                 <button
                   key={g}
                   onClick={() => setGeoActif(geoActif === g ? null : g)}
+                  aria-pressed={geoActif === g}
                   className={`px-3 py-1 rounded-full text-xs font-medium border transition ${
                     geoActif === g
                       ? "bg-navy text-white border-navy"
@@ -318,6 +384,7 @@ function Explorer() {
                 <button
                   key={s}
                   onClick={() => setSecteurActif(secteurActif === s ? null : s)}
+                  aria-pressed={secteurActif === s}
                   className={`px-3 py-1 rounded-full text-xs font-medium border transition ${
                     secteurActif === s
                       ? "bg-navy text-white border-navy"
@@ -361,16 +428,52 @@ function Explorer() {
       </div>
 
       {/* Tri + vue */}
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-xs text-muted">
-          {mode === "dispositifs"
-            ? `${filteredDispositifs.length} dispositif(s)`
-            : `${filteredAaps.length} AAP`}
-        </span>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
+          <span className="text-xs text-muted">
+            {mode === "dispositifs"
+              ? `${filteredDispositifs.length} dispositif(s)`
+              : `${filteredAaps.length} AAP`}
+          </span>
+          {hasActiveFilters && (
+            <button
+              onClick={resetFiltres}
+              className="inline-flex items-center gap-1 text-xs font-medium text-sky-ink hover:text-navy"
+            >
+              <X className="w-3 h-3" /> Réinitialiser
+            </button>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          {mode === "aap" && (
+            <>
+              <button
+                onClick={() => setSavedOnly((v) => !v)}
+                aria-pressed={savedOnly}
+                title="N'afficher que les AAP sauvegardés"
+                className={`inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md border text-xs font-medium transition ${
+                  savedOnly ? "border-pink/40 bg-pink/10 text-pink" : "border-border bg-white text-text hover:border-navy"
+                }`}
+              >
+                <Bookmark className="w-3.5 h-3.5" />
+                Sauvegardés
+              </button>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortBy)}
+                aria-label="Trier les appels à projets"
+                className="h-8 rounded-md border border-border bg-white text-xs font-medium text-text px-2 focus:outline-none focus:border-navy"
+              >
+                <option value="cloture">Clôture la plus proche</option>
+                <option value="recent">Ajout récent</option>
+                <option value="alpha">Alphabétique</option>
+              </select>
+            </>
+          )}
           <div className="flex items-center rounded-md border border-border bg-white overflow-hidden">
             <button
               onClick={() => setVue("liste")}
+              aria-pressed={vue === "liste"}
               className={`p-2 ${vue === "liste" ? "bg-navy text-white" : "text-text"}`}
               title="Vue liste"
             >
@@ -378,6 +481,7 @@ function Explorer() {
             </button>
             <button
               onClick={() => setVue("cartes")}
+              aria-pressed={vue === "cartes"}
               className={`p-2 ${vue === "cartes" ? "bg-navy text-white" : "text-text"}`}
               title="Vue cartes"
             >
@@ -394,7 +498,7 @@ function Explorer() {
       {/* === Vue Dispositifs === */}
       {!loading && mode === "dispositifs" && (
         <div className={vue === "cartes" ? "grid grid-cols-1 md:grid-cols-2 gap-3" : "space-y-3"}>
-          {filteredDispositifs.map((d) => (
+          {filteredDispositifs.slice(0, visibleCount).map((d) => (
             <DispositifCard
               key={d.id}
               d={d}
@@ -405,33 +509,67 @@ function Explorer() {
               onOpenAap={setSelectedAap}
             />
           ))}
-          {filteredDispositifs.length === 0 && (
-            <div className="text-sm text-muted italic text-center py-8">
-              Aucun dispositif ne correspond à votre recherche.
-            </div>
-          )}
+          {filteredDispositifs.length === 0 && <EmptyResult onReset={hasActiveFilters ? resetFiltres : undefined} />}
         </div>
       )}
 
       {/* === Vue AAP === */}
       {!loading && mode === "aap" && (
         <div className={vue === "cartes" ? "grid grid-cols-1 md:grid-cols-2 gap-3" : "space-y-3"}>
-          {filteredAaps.map((a) => (
+          {filteredAaps.slice(0, visibleCount).map((a) => (
             <AapCard key={a.id} a={a} onOpen={setSelectedAap} />
           ))}
           {filteredAaps.length === 0 && (
-            <div className="text-sm text-muted italic text-center py-8">
-              Aucun AAP ne correspond à votre recherche.
-            </div>
+            <EmptyResult
+              label={savedOnly ? "Aucun AAP sauvegardé pour l'instant." : undefined}
+              onReset={hasActiveFilters ? resetFiltres : undefined}
+            />
           )}
         </div>
       )}
+
+      {/* Pagination progressive (PERF-001) */}
+      {!loading &&
+        (() => {
+          const total = mode === "dispositifs" ? filteredDispositifs.length : filteredAaps.length;
+          if (total <= visibleCount) return null;
+          const restants = total - visibleCount;
+          return (
+            <div className="text-center pt-2">
+              <button
+                onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-border bg-white text-sm font-medium text-navy hover:border-navy transition"
+              >
+                Afficher plus ({restants} restant{restants > 1 ? "s" : ""})
+              </button>
+            </div>
+          );
+        })()}
 
       <FicheAap aap={selectedAap} onClose={() => setSelectedAap(null)} />
       <FicheDispositif
         dispositif={selectedDispositif}
         onClose={() => setSelectedDispositif(null)}
       />
+    </div>
+  );
+}
+
+/** État vide de recherche, avec une sortie explicite (réinitialiser) — UX-012. */
+function EmptyResult({ label, onReset }: { label?: string; onReset?: () => void }) {
+  return (
+    <div className="text-sm text-muted italic text-center py-10">
+      {label ?? "Aucun résultat ne correspond à votre recherche."}
+      {onReset && (
+        <div className="mt-3">
+          <button
+            onClick={onReset}
+            className="not-italic inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-white text-xs font-medium text-navy hover:border-navy transition"
+          >
+            <X className="w-3.5 h-3.5" /> Réinitialiser les filtres
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -142,6 +142,9 @@ export async function getAaps(filter: AapFilter = {}): Promise<AAP[]> {
     let q = supabase
       .from("aaps")
       .select("data, titre_std, description_std")
+      // .order("id") : ordre stable entre les lots paginés (BUG-014), sinon
+      // PostgREST peut renvoyer des doublons/omissions entre deux pages.
+      .order("id", { ascending: true })
       .range(from, from + PAGE - 1);
     if (filter.dispositifId) q = q.eq("dispositif_id", filter.dispositifId);
     if (filter.statut) q = q.eq("statut", filter.statut);
