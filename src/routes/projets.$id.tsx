@@ -26,7 +26,7 @@ import {
   marquerAapVu,
   donnerFeedback,
 } from "@/services/programmes";
-import { getAaps } from "@/services/data-store";
+import { getAapById } from "@/services/data-store";
 import type { ProjetV3, ProjetStatut, ProgrammeId } from "@/types/programme";
 import type { ProjetAap } from "@/services/programmes";
 import { STATUT_LABEL, STATUT_TONE } from "@/types/programme";
@@ -52,15 +52,14 @@ function FicheProjetPage() {
     queryFn: () => (projet?.programme_id ? getProgramme(projet.programme_id) : null),
     enabled: !!projet?.programme_id,
   });
-  // Charge tous les AAP en cache (déjà utilisé ailleurs) et sélectionne l'AAP courant
-  const { data: allAaps = [] } = useQuery({
-    queryKey: ["aaps"],
-    queryFn: () => getAaps(),
+  // Résout l'AAP sélectionné à la demande (1 ligne indexée) au lieu de charger
+  // tout le catalogue pour en trouver une (perf #2 + corrige PERF-003).
+  const { data: selectedAap = null } = useQuery({
+    queryKey: ["aap", selectedAapId],
+    queryFn: () => (selectedAapId ? getAapById(selectedAapId) : null),
+    enabled: !!selectedAapId,
     staleTime: 10 * 60_000,
   });
-  const selectedAap = selectedAapId
-    ? allAaps.find((a) => a.id === selectedAapId) ?? null
-    : null;
 
   if (isLoading) {
     return (

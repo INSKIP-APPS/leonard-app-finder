@@ -160,6 +160,30 @@ export async function getAaps(filter: AapFilter = {}): Promise<AAP[]> {
   return dedupeAaps(all);
 }
 
+/**
+ * Charge UN seul AAP par id (fiche détaillée), sans tirer tout le catalogue.
+ * Applique le même mapping titre_std/description_std que getAaps. Renvoie null
+ * si introuvable. Évite de charger ~2600 lignes juste pour en résoudre une
+ * (perf #2 + corrige PERF-003 : la fiche s'ouvre sans dépendre du gros fetch).
+ */
+export async function getAapById(id: string): Promise<AAP | null> {
+  if (!supabase) {
+    const localAaps = await loadLocalAaps();
+    return localAaps.find((a) => a.id === id) ?? null;
+  }
+  const { data, error } = await supabase
+    .from("aaps")
+    .select("data, titre_std, description_std")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw new Error(`getAapById: ${error.message}`);
+  if (!data) return null;
+  const aap = { ...(data.data as AAP) };
+  if (data.titre_std) aap.titre = data.titre_std;
+  if (data.description_std) aap.description = data.description_std;
+  return aap;
+}
+
 // ── Écriture (CRUD AAP — utilisé par le pipeline de scraping) ──────────
 
 /** Colonnes scalaires dérivées d'un AAP pour l'indexation Supabase. */
