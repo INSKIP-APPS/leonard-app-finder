@@ -8,6 +8,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { analyseAdhoc, type AnalyseAdhocResult } from "@/services/programmes";
+import { Dialog } from "@/components/Dialog";
 
 // Sources : libellé court pour l'UI.
 const SOURCE_SHORT: Record<string, string> = {
@@ -49,6 +50,13 @@ export function AnalyseExpressModal({ onClose }: { onClose: () => void }) {
   const [results, setResults] = useState<AnalyseAdhocResult[] | null>(null);
   const [nbCandidats, setNbCandidats] = useState(0);
 
+  // A11Y-002 : confirmation avant fermeture (Échap / clic extérieur) si des
+  // informations ont été saisies et qu'aucun résultat n'est encore affiché.
+  const confirmClose = () =>
+    results !== null ||
+    (!description.trim() && secteurs.length === 0) ||
+    window.confirm("Fermer l'analyse ? Les informations saisies seront perdues.");
+
   function toggleSecteur(s: string) {
     setSecteurs((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
   }
@@ -86,14 +94,13 @@ export function AnalyseExpressModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div
+    <Dialog
+      onClose={onClose}
+      labelledBy="analyse-express-titre"
+      confirmClose={confirmClose}
       className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto"
-      onClick={onClose}
+      panelClassName="bg-white rounded-2xl w-full max-w-3xl my-8 shadow-2xl overflow-hidden"
     >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-2xl w-full max-w-3xl my-8 shadow-2xl overflow-hidden"
-      >
         {/* En-tête */}
         <div className="px-6 py-5 border-b border-border bg-gradient-to-br from-[#FFF3F6] to-[#ECE8FB] flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
@@ -101,7 +108,7 @@ export function AnalyseExpressModal({ onClose }: { onClose: () => void }) {
               <Zap className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-navy tracking-tight">Analyse express</h2>
+              <h2 id="analyse-express-titre" className="text-lg font-bold text-navy tracking-tight">Analyse express</h2>
               <p className="text-xs text-muted mt-1">
                 Teste rapidement un projet — même hors de ton programme — et récupère les AAP
                 pertinents en 30 s. Rien n'est sauvegardé.
@@ -276,8 +283,7 @@ export function AnalyseExpressModal({ onClose }: { onClose: () => void }) {
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </Dialog>
   );
 }
 

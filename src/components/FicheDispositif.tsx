@@ -15,6 +15,7 @@ import { perimetreVinci, type PerimetreVinci } from "@/utils/vinciBU";
 import { useSavedDispositifIds, toggleSavedDispositif } from "@/utils/savedAaps";
 import { trlLabel, escapeHtml as esc, safeHttpUrl } from "@/utils/format";
 import { Badge } from "@/components/Badge";
+import { Dialog } from "@/components/Dialog";
 import {
   RatingRow,
   SectionTitle,
@@ -326,19 +327,16 @@ export function FicheDispositif({
   const bus = perimetreVinci(d);
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center p-4 overflow-y-auto"
-      onClick={onClose}
+    <Dialog
+      onClose={onClose}
+      labelledBy="fiche-dispositif-titre"
+      panelClassName="bg-[#EAF3FC] rounded-xl w-full max-w-5xl my-8 shadow-xl overflow-hidden"
     >
-      <div
-        className="bg-[#EAF3FC] rounded-xl w-full max-w-5xl my-8 shadow-xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
         {/* En-tête (fond bleu très pâle) */}
         <div className="flex items-start justify-between gap-4 p-5 rounded-t-xl">
           <div className="min-w-0 flex-1">
             <div className="label-caps text-[10px] mb-1 break-words">{d.organisme}</div>
-            <h2 className="text-lg font-bold text-navy leading-snug break-words">{d.nom}</h2>
+            <h2 id="fiche-dispositif-titre" className="text-lg font-bold text-navy leading-snug break-words">{d.nom}</h2>
             {d.programme && (
               <div className="text-sm text-muted mt-1 break-words">{d.programme}</div>
             )}
@@ -469,7 +467,6 @@ export function FicheDispositif({
             )}
           </div>
         </div>
-      </div>
-    </div>
+    </Dialog>
   );
 }

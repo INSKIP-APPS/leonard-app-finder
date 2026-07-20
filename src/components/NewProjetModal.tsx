@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { X, Loader2, Plus, Check, PowerOff } from "lucide-react";
 import { createProjet, updateProjet, desactiverProjet } from "@/services/programmes";
+import { Dialog } from "@/components/Dialog";
 import type { ProgrammeId, ProjetStatut, ProjetV3 } from "@/types/programme";
 
 const SECTEURS = [
@@ -73,6 +74,11 @@ export function NewProjetModal({
   const [err, setErr] = useState<string | null>(null);
   const [confirmDesactivation, setConfirmDesactivation] = useState(false);
   const [desactPending, setDesactPending] = useState(false);
+  // A11Y-002 : anti-perte de saisie — confirmation si le formulaire a été
+  // modifié et qu'on tente de fermer par Échap / clic extérieur.
+  const [dirty, setDirty] = useState(false);
+  const confirmClose = () =>
+    !dirty || window.confirm("Des modifications non enregistrées seront perdues. Fermer quand même ?");
 
   // Identité — pré-remplies si mode edit
   const [nom, setNom] = useState(projet?.nom ?? "");
@@ -210,18 +216,17 @@ export function NewProjetModal({
   }
 
   return (
-    <div
+    <Dialog
+      onClose={onClose}
+      labelledBy="new-projet-titre"
+      confirmClose={confirmClose}
       className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto"
-      onClick={onClose}
+      panelClassName="bg-white rounded-2xl w-full max-w-2xl my-8 shadow-2xl overflow-hidden"
     >
-      <form
-        onSubmit={submit}
-        onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-2xl w-full max-w-2xl my-8 shadow-2xl overflow-hidden"
-      >
+      <form onSubmit={submit} onChange={() => setDirty(true)}>
         {/* En-tête */}
         <div className="px-6 py-5 border-b border-border bg-gradient-to-br from-[#ECE8FB] to-[#E2F7FC] flex items-start justify-between gap-4">
-          <div>
+          <div id="new-projet-titre">
             <div className="text-[10px] uppercase tracking-widest font-bold text-cyan-ink mb-1">
               Programme {programmeNom}
             </div>
@@ -591,7 +596,7 @@ export function NewProjetModal({
           </div>
         )}
       </form>
-    </div>
+    </Dialog>
   );
 }
 

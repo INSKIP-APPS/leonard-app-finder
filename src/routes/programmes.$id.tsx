@@ -260,6 +260,7 @@ function ProgrammePage() {
             <button
               onClick={() => setVue("grid")}
               title="Vue grille (cartes projet)"
+              aria-pressed={vue === "grid"}
               className={`inline-flex items-center gap-1 px-2.5 h-8 rounded text-xs font-semibold transition ${
                 vue === "grid" ? "bg-navy text-white" : "text-muted hover:text-navy"
               }`}
@@ -270,6 +271,7 @@ function ProgrammePage() {
             <button
               onClick={() => setVue("table")}
               title="Vue analytique (tableau)"
+              aria-pressed={vue === "table"}
               className={`inline-flex items-center gap-1 px-2.5 h-8 rounded text-xs font-semibold transition ${
                 vue === "table" ? "bg-navy text-white" : "text-muted hover:text-navy"
               }`}
@@ -491,15 +493,20 @@ function AnalyseTable({
   const sorted = useMemo(() => {
     const arr = [...rows];
     arr.sort((a, b) => {
-      let va: number | string, vb: number | string;
+      // Tri du nom : localeCompare FR (BUG-018) — sinon « Éco… » passe après « z ».
+      if (sortKey === "nom") {
+        const c = a.p.nom.localeCompare(b.p.nom, "fr", { sensitivity: "base" });
+        return sortDir === "asc" ? c : -c;
+      }
+      let va: number, vb: number;
       switch (sortKey) {
-        case "nom": va = a.p.nom.toLowerCase(); vb = b.p.nom.toLowerCase(); break;
         case "retenus": va = a.s.retenus; vb = b.s.retenus; break;
         case "prioritaires": va = a.s.prioritaires; vb = b.s.prioritaires; break;
         case "nouveautes": va = a.s.nouveautes; vb = b.s.nouveautes; break;
         case "deadlines_30j": va = a.s.deadlines_30j; vb = b.s.deadlines_30j; break;
         case "candidatures": va = a.s.candidatures; vb = b.s.candidatures; break;
         case "veille": va = a.veilleMs; vb = b.veilleMs; break;
+        default: va = 0; vb = 0;
       }
       if (va < vb) return sortDir === "asc" ? -1 : 1;
       if (va > vb) return sortDir === "asc" ? 1 : -1;
@@ -543,7 +550,7 @@ function AnalyseTable({
               <Th active={sortKey === "retenus"} dir={sortDir} onClick={() => toggle("retenus")}>AAP retenus</Th>
               <Th active={sortKey === "prioritaires"} dir={sortDir} onClick={() => toggle("prioritaires")}>Prioritaires</Th>
               <Th active={sortKey === "nouveautes"} dir={sortDir} onClick={() => toggle("nouveautes")}>Nouveautés</Th>
-              <Th active={sortKey === "deadlines_30j"} dir={sortDir} onClick={() => toggle("deadlines_30j")}>Deadline &lt; 30 j</Th>
+              <Th active={sortKey === "deadlines_30j"} dir={sortDir} onClick={() => toggle("deadlines_30j")}>Clôture ≤ 30 j</Th>
               <Th active={sortKey === "candidatures"} dir={sortDir} onClick={() => toggle("candidatures")}>Candidatures</Th>
               <Th active={sortKey === "veille"} dir={sortDir} onClick={() => toggle("veille")}>Dernière veille</Th>
             </tr>
@@ -573,7 +580,11 @@ function Th({
   align?: "left" | "right";
 }) {
   return (
-    <th className={`px-3 py-2.5 ${align === "left" ? "text-left" : "text-right"}`}>
+    <th
+      scope="col"
+      aria-sort={active ? (dir === "desc" ? "descending" : "ascending") : "none"}
+      className={`px-3 py-2.5 ${align === "left" ? "text-left" : "text-right"}`}
+    >
       <button
         type="button"
         onClick={onClick}
@@ -609,7 +620,16 @@ function AnalyseRow({
       className="border-b border-border hover:bg-[#FBFBFD] transition cursor-pointer"
     >
       <td className="px-3 py-3">
-        <div className="font-semibold text-navy text-sm">{projet.nom}</div>
+        {/* A11Y-003 : le nom est un vrai lien → focusable et activable au clavier
+            (le onClick de la ligne reste un raccourci souris). */}
+        <Link
+          to="/projets/$id"
+          params={{ id: projet.id }}
+          onClick={(e) => e.stopPropagation()}
+          className="font-semibold text-navy text-sm hover:underline focus-visible:underline outline-none"
+        >
+          {projet.nom}
+        </Link>
         {projet.statut && (
           <span
             className={`inline-block text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded mt-1 ${STATUT_TONE[projet.statut as ProjetStatut]}`}

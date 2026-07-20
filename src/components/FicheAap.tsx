@@ -22,6 +22,7 @@ import {
   safeHttpUrl,
 } from "@/utils/format";
 import { Badge } from "@/components/Badge";
+import { Dialog } from "@/components/Dialog";
 import { RatingRow, SectionTitle, InfoLine, Puces } from "@/components/fiche/partials";
 
 // ──────────────────────────────────────────────────────────────────────
@@ -303,19 +304,16 @@ export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => voi
   const diff = difficulteCandidature(aap);
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center p-4 overflow-y-auto"
-      onClick={onClose}
+    <Dialog
+      onClose={onClose}
+      labelledBy="fiche-aap-titre"
+      panelClassName="bg-[#EAF3FC] rounded-xl w-full max-w-5xl my-8 shadow-xl overflow-hidden"
     >
-      <div
-        className="bg-[#EAF3FC] rounded-xl w-full max-w-5xl my-8 shadow-xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
         {/* En-tête (fond bleu très pâle) */}
         <div className="flex items-start justify-between gap-4 p-5 rounded-t-xl">
           <div className="min-w-0 flex-1">
             <div className="label-caps text-[10px] mb-1 break-words">{aap.source}</div>
-            <h2 className="text-lg font-bold text-navy leading-snug break-words">{aap.titre}</h2>
+            <h2 id="fiche-aap-titre" className="text-lg font-bold text-navy leading-snug break-words">{aap.titre}</h2>
             <div className="text-sm text-muted mt-1 break-words">
               {aap.programme}
               {aap.cluster ? ` · ${aap.cluster}` : ""}
@@ -480,7 +478,6 @@ export function FicheAap({ aap, onClose }: { aap: AAP | null; onClose: () => voi
             )}
           </div>
         </div>
-      </div>
-    </div>
+    </Dialog>
   );
 }
