@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SauvegardesRouteImport } from './routes/sauvegardes'
 import { Route as PushRouteImport } from './routes/push'
 import { Route as MatchingRouteImport } from './routes/matching'
 import { Route as LoginRouteImport } from './routes/login'
@@ -19,6 +20,11 @@ import { Route as ProjetsIdRouteImport } from './routes/projets.$id'
 import { Route as ProgrammesIdRouteImport } from './routes/programmes.$id'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 
+const SauvegardesRoute = SauvegardesRouteImport.update({
+  id: '/sauvegardes',
+  path: '/sauvegardes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PushRoute = PushRouteImport.update({
   id: '/push',
   path: '/push',
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/matching': typeof MatchingRoute
   '/push': typeof PushRoute
+  '/sauvegardes': typeof SauvegardesRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/programmes/$id': typeof ProgrammesIdRoute
   '/projets/$id': typeof ProjetsIdRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/matching': typeof MatchingRoute
   '/push': typeof PushRoute
+  '/sauvegardes': typeof SauvegardesRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/programmes/$id': typeof ProgrammesIdRoute
   '/projets/$id': typeof ProjetsIdRoute
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/matching': typeof MatchingRoute
   '/push': typeof PushRoute
+  '/sauvegardes': typeof SauvegardesRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/programmes/$id': typeof ProgrammesIdRoute
   '/projets/$id': typeof ProjetsIdRoute
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/matching'
     | '/push'
+    | '/sauvegardes'
     | '/auth/callback'
     | '/programmes/$id'
     | '/projets/$id'
@@ -119,6 +129,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/matching'
     | '/push'
+    | '/sauvegardes'
     | '/auth/callback'
     | '/programmes/$id'
     | '/projets/$id'
@@ -130,6 +141,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/matching'
     | '/push'
+    | '/sauvegardes'
     | '/auth/callback'
     | '/programmes/$id'
     | '/projets/$id'
@@ -142,6 +154,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MatchingRoute: typeof MatchingRoute
   PushRoute: typeof PushRoute
+  SauvegardesRoute: typeof SauvegardesRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   ProgrammesIdRoute: typeof ProgrammesIdRoute
   ProjetsIdRoute: typeof ProjetsIdRoute
@@ -149,6 +162,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sauvegardes': {
+      id: '/sauvegardes'
+      path: '/sauvegardes'
+      fullPath: '/sauvegardes'
+      preLoaderRoute: typeof SauvegardesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/push': {
       id: '/push'
       path: '/push'
@@ -222,6 +242,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MatchingRoute: MatchingRoute,
   PushRoute: PushRoute,
+  SauvegardesRoute: SauvegardesRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   ProgrammesIdRoute: ProgrammesIdRoute,
   ProjetsIdRoute: ProjetsIdRoute,
