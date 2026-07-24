@@ -86,7 +86,7 @@ function ProgrammePage() {
   const programmeId = id as ProgrammeId;
   const qc = useQueryClient();
   const { profil } = useProfil();
-  const canCreate = profil?.role === "admin" || profil?.role === "editeur";
+  const canCreate = profil?.role === "super_admin" || profil?.role === "admin" || profil?.role === "editeur";
   const [modalOpen, setModalOpen] = useState(false);
   const [analyseOpen, setAnalyseOpen] = useState(false);
   // Cohorte : uniquement pertinent pour Intrapreneur. Défaut = cohorte active (10).

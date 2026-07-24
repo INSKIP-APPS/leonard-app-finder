@@ -402,7 +402,7 @@ export async function runScrapeNow(): Promise<{ ok: boolean; message?: string }>
 
 // ── Administration : utilisateurs & rôles (Sécurité étape 2 phase D) ─
 
-export type Role = "admin" | "editeur" | "lecture";
+export type Role = "super_admin" | "admin" | "editeur" | "lecture";
 export interface AdminUser {
   id: string;
   email: string;

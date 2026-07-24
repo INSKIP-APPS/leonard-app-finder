@@ -134,8 +134,16 @@ function UserBlock({ collapsed }: { collapsed: boolean }) {
     .map((s) => s[0]?.toUpperCase())
     .join("");
 
-  const roleLabel = { admin: "Administrateur", editeur: "Éditeur", lecture: "Lecture" }[profil.role];
-  const isAdmin = profil.role === "admin";
+  const roleLabel = {
+    super_admin: "Super administrateur",
+    admin: "Administrateur",
+    editeur: "Éditeur",
+    lecture: "Lecture",
+  }[profil.role];
+  // super_admin/admin/editeur accèdent à l'Administration (contenu adapté au rôle) ;
+  // lecture n'y a pas accès.
+  const canAccessAdmin =
+    profil.role === "super_admin" || profil.role === "admin" || profil.role === "editeur";
   const onAdmin = pathname.startsWith("/admin");
 
   async function handleSignOut() {
@@ -145,7 +153,7 @@ function UserBlock({ collapsed }: { collapsed: boolean }) {
 
   return (
     <div className="border-t border-border px-2 py-3 space-y-1">
-      {isAdmin && (
+      {canAccessAdmin && (
         <Link
           to="/admin"
           title={collapsed ? "Administration" : undefined}

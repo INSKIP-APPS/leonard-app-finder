@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase, isSupabaseConfigured } from "./supabase";
 
-export type Role = "admin" | "editeur" | "lecture";
+export type Role = "super_admin" | "admin" | "editeur" | "lecture";
 
 export interface Profil {
   id: string;

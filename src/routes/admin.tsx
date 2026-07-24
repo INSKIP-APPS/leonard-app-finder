@@ -47,21 +47,37 @@ export const Route = createFileRoute("/admin")({
   component: Admin,
 });
 
-// ── Garde admin : redirige les non-admin vers l'accueil ─────────────
+// Rôles autorisés à ouvrir /admin. Le contenu affiché dépend ensuite du rôle :
+// - super_admin : tout (Santé de la veille + Sources & scraping + Utilisateurs) ;
+// - admin : Utilisateurs (gestion complète : invitations + changement de rôle) ;
+// - editeur : Utilisateurs en lecture seule (consultation des comptes) ;
+// - lecture : aucun accès.
+const ADMIN_ROLES = new Set<Role>(["super_admin", "admin", "editeur"]);
+
+// ── Garde : redirige vers l'accueil les rôles sans accès admin ──────
 function useAdminGuard() {
   const { profil, loading } = useProfil();
   const navigate = useNavigate();
   useEffect(() => {
     if (!isAuthEnabled) return;
     if (loading) return;
-    if (!profil || profil.role !== "admin") navigate({ to: "/" });
+    if (!profil || !ADMIN_ROLES.has(profil.role)) navigate({ to: "/" });
   }, [profil, loading, navigate]);
   return { profil, loading };
 }
 
 function Admin() {
   const { profil, loading } = useAdminGuard();
-  const [tab, setTab] = useState<"sante" | "sources" | "users">("sante");
+
+  // Seul le super_admin voit les onglets techniques (veille + scraping).
+  const isSuperAdmin = profil?.role === "super_admin";
+  const canManageUsers = profil?.role === "super_admin" || profil?.role === "admin";
+
+  const [tab, setTab] = useState<"sante" | "sources" | "users">("users");
+  // Le super_admin atterrit sur la Santé de la veille ; les autres sur Utilisateurs.
+  useEffect(() => {
+    if (isSuperAdmin) setTab("sante");
+  }, [isSuperAdmin]);
 
   if (dataSource !== "supabase") {
     return (
@@ -76,7 +92,7 @@ function Admin() {
     );
   }
 
-  if (isAuthEnabled && (loading || !profil || profil.role !== "admin")) {
+  if (isAuthEnabled && (loading || !profil || !ADMIN_ROLES.has(profil.role))) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-5 h-5 animate-spin text-muted" />
@@ -84,54 +100,44 @@ function Admin() {
     );
   }
 
+  const tabClass = (active: boolean) =>
+    `flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition ${
+      active ? "text-navy border-sky" : "text-muted border-transparent hover:text-text"
+    }`;
+
   return (
     <div className="max-w-5xl space-y-6">
       <header>
         <h1 className="text-2xl">Administration</h1>
         <div className="text-sm text-muted mt-1">
-          Pilotez la veille automatique, ses exécutions et les accès à la plateforme.
+          {isSuperAdmin
+            ? "Pilotez la veille automatique, ses exécutions et les accès à la plateforme."
+            : "Gérez les accès à la plateforme."}
         </div>
       </header>
 
       {/* Onglets */}
       <div className="border-b border-border">
         <div className="flex gap-1">
-          <button
-            onClick={() => setTab("sante")}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition ${
-              tab === "sante"
-                ? "text-navy border-sky"
-                : "text-muted border-transparent hover:text-text"
-            }`}
-          >
-            <Activity className="w-4 h-4" /> Santé de la veille
-          </button>
-          <button
-            onClick={() => setTab("sources")}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition ${
-              tab === "sources"
-                ? "text-navy border-sky"
-                : "text-muted border-transparent hover:text-text"
-            }`}
-          >
-            <Database className="w-4 h-4" /> Sources &amp; scraping
-          </button>
-          <button
-            onClick={() => setTab("users")}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition ${
-              tab === "users"
-                ? "text-navy border-sky"
-                : "text-muted border-transparent hover:text-text"
-            }`}
-          >
+          {isSuperAdmin && (
+            <>
+              <button onClick={() => setTab("sante")} className={tabClass(tab === "sante")}>
+                <Activity className="w-4 h-4" /> Santé de la veille
+              </button>
+              <button onClick={() => setTab("sources")} className={tabClass(tab === "sources")}>
+                <Database className="w-4 h-4" /> Sources &amp; scraping
+              </button>
+            </>
+          )}
+          <button onClick={() => setTab("users")} className={tabClass(tab === "users")}>
             <Users className="w-4 h-4" /> Utilisateurs
           </button>
         </div>
       </div>
 
-      {tab === "sante" && <SantePanel />}
-      {tab === "sources" && <ScrapingPanel />}
-      {tab === "users" && <UsersPanel />}
+      {isSuperAdmin && tab === "sante" && <SantePanel />}
+      {isSuperAdmin && tab === "sources" && <ScrapingPanel />}
+      {tab === "users" && <UsersPanel canManage={canManageUsers} isSuperAdmin={!!isSuperAdmin} />}
     </div>
   );
 }
@@ -636,14 +642,20 @@ function ScrapingPanel() {
 }
 
 // ── Onglet Utilisateurs ───────────────────────────────────────────────
-const ROLE_LABEL: Record<Role, string> = { admin: "Administrateur", editeur: "Éditeur", lecture: "Lecture" };
+const ROLE_LABEL: Record<Role, string> = {
+  super_admin: "Super administrateur",
+  admin: "Administrateur",
+  editeur: "Éditeur",
+  lecture: "Lecture",
+};
 const ROLE_TONE: Record<Role, string> = {
+  super_admin: "bg-navy text-white",
   admin: "bg-[#ECE8FB] text-purple",
   editeur: "bg-[#E2F7FC] text-sky-ink",
   lecture: "bg-[#F0F0F5] text-muted",
 };
 
-function UsersPanel() {
+function UsersPanel({ canManage, isSuperAdmin }: { canManage: boolean; isSuperAdmin: boolean }) {
   const qc = useQueryClient();
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ["adminUsers"],
@@ -651,6 +663,11 @@ function UsersPanel() {
   });
   const [inviteOpen, setInviteOpen] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+
+  // Rôles assignables : seul le super_admin peut accorder/retirer le super_admin.
+  const assignableRoles: Role[] = isSuperAdmin
+    ? ["super_admin", "admin", "editeur", "lecture"]
+    : ["admin", "editeur", "lecture"];
 
   async function onRoleChange(user: AdminUser, role: Role) {
     if (role === user.role) return;
@@ -685,16 +702,20 @@ function UsersPanel() {
               <ShieldCheck className="w-4 h-4" /> Utilisateurs &amp; rôles
             </h2>
             <p className="text-xs text-muted mt-0.5">
-              {users.length} compte{users.length > 1 ? "s" : ""} · seuls les admins peuvent inviter et
-              modifier les rôles.
+              {users.length} compte{users.length > 1 ? "s" : ""}
+              {canManage
+                ? " · seuls les administrateurs peuvent inviter et modifier les rôles."
+                : " · consultation seule (seuls les administrateurs modifient les rôles)."}
             </p>
           </div>
-          <button
-            onClick={() => setInviteOpen(true)}
-            className="inline-flex items-center gap-2 bg-navy text-white px-4 py-2 rounded-md text-sm font-medium hover:opacity-90"
-          >
-            <UserPlus className="w-4 h-4" /> Inviter un utilisateur
-          </button>
+          {canManage && (
+            <button
+              onClick={() => setInviteOpen(true)}
+              className="inline-flex items-center gap-2 bg-navy text-white px-4 py-2 rounded-md text-sm font-medium hover:opacity-90"
+            >
+              <UserPlus className="w-4 h-4" /> Inviter un utilisateur
+            </button>
+          )}
         </div>
 
         {isLoading ? (
@@ -730,16 +751,20 @@ function UsersPanel() {
                         >
                           {ROLE_LABEL[u.role]}
                         </span>
-                        <select
-                          value={u.role}
-                          onChange={(e) => onRoleChange(u, e.target.value as Role)}
-                          className="text-xs border border-border-strong rounded px-2 py-1 bg-white focus:outline-none focus:border-navy"
-                          title="Changer le rôle"
-                        >
-                          <option value="admin">Administrateur</option>
-                          <option value="editeur">Éditeur</option>
-                          <option value="lecture">Lecture</option>
-                        </select>
+                        {canManage && (
+                          <select
+                            value={u.role}
+                            onChange={(e) => onRoleChange(u, e.target.value as Role)}
+                            className="text-xs border border-border-strong rounded px-2 py-1 bg-white focus:outline-none focus:border-navy"
+                            title="Changer le rôle"
+                          >
+                            {assignableRoles.map((r) => (
+                              <option key={r} value={r}>
+                                {ROLE_LABEL[r]}
+                              </option>
+                            ))}
+                          </select>
+                        )}
                       </div>
                     </td>
                     <td className="py-3 px-3 text-muted whitespace-nowrap">
@@ -758,6 +783,7 @@ function UsersPanel() {
 
       {inviteOpen && (
         <InviteModal
+          assignableRoles={assignableRoles}
           onClose={() => setInviteOpen(false)}
           onInvited={(email) => {
             setMsg({ kind: "ok", text: `Invitation envoyée à ${email}` });
@@ -770,9 +796,11 @@ function UsersPanel() {
 }
 
 function InviteModal({
+  assignableRoles,
   onClose,
   onInvited,
 }: {
+  assignableRoles: Role[];
   onClose: () => void;
   onInvited: (email: string) => void;
 }) {
@@ -849,7 +877,11 @@ function InviteModal({
           </div>
           <Field label="Rôle initial">
             <div className="flex gap-2">
-              {(["lecture", "editeur", "admin"] as Role[]).map((r) => (
+              {/* Le rôle super_admin ne s'accorde pas à l'invitation : on promeut
+                  un compte existant via le menu déroulant (RPC admin_set_role). */}
+              {(["lecture", "editeur", "admin"] as Role[])
+                .filter((r) => assignableRoles.includes(r))
+                .map((r) => (
                 <button
                   key={r}
                   type="button"

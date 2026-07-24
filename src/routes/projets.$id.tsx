@@ -139,7 +139,7 @@ function ProjetHero({
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const { profil } = useProfil();
-  const canEdit = profil?.role === "admin" || profil?.role === "editeur";
+  const canEdit = profil?.role === "super_admin" || profil?.role === "admin" || profil?.role === "editeur";
 
   async function relancer() {
     setRunning(true);
@@ -404,7 +404,7 @@ function VeilleRight({
   const [tab, setTab] = useState<"recommandes" | "ecartes" | "candidatures">("recommandes");
   const qc = useQueryClient();
   const { profil } = useProfil();
-  const canEdit = profil?.role === "admin" || profil?.role === "editeur";
+  const canEdit = profil?.role === "super_admin" || profil?.role === "admin" || profil?.role === "editeur";
 
   const { data: propositions = [], isLoading } = useQuery({
     queryKey: ["projet-aaps", projet.id],
